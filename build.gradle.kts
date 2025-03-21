@@ -4,7 +4,7 @@ plugins {
     application
 }
 
-group = "space.aleph"
+group = "home"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -15,6 +15,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("org.openjfx:javafx-controls:21")
+    implementation("org.openjfx:javafx-fxml:21")
     implementation("org.openjfx:javafx-graphics:21")
 }
 
@@ -24,9 +25,16 @@ javafx {
 }
 
 application {
-    mainClass.set("space.aleph.Main")
+    mainClass.set("home.Main")
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.withType<JavaExec> {
+    jvmArgs = listOf(
+        "--module-path", classpath.asPath,
+        "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics"
+    )
 }

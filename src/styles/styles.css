@@ -1,0 +1,203 @@
+/* proof responsive design */
+.main-container {
+    -fx-padding: 15px;
+    -fx-background-color: #f5f7fa;
+}
+
+.os-control {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-background-radius: 15px;
+}
+.danger { -fx-background-color: #ff5f57; } /* Red close button */
+
+.profile-box {
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 8px;
+    -fx-padding: 12px;
+}
+
+.motivation-box {
+    -fx-background-color: #fff3cd;
+    -fx-padding: 15px;
+    -fx-border-radius: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+}
+
+/* Dynamic project cards */
+.project-card {
+    -fx-background-color: white;
+    -fx-border-radius: 6px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 3, 0, 0, 1);
+}
+.project-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0, 0, 2);
+}
+
+/* Vertical List (Profile Variables) */
+.vertical-list {
+    -fx-background-color: transparent; /* Eliminate default background */
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+/* Cells styling */
+.vertical-list .list-cell {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1px 0; /* Bottom border only */
+    -fx-padding: 8px 12px;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.02), 2, 0, 0, 1);
+}
+
+/* Selected cell (if interactivity needed) */
+.vertical-list .list-cell:filled:selected {
+    -fx-background-color: #e3f2fd; /* Light blue for medical seriousness */
+    -fx-text-fill: #1976d2;
+}
+
+/* Hover effect for critical feedback */
+.vertical-list .list-cell:hover {
+    -fx-background-color: #f8f9fa;
+    -fx-cursor: hand;
+}
+
+/* Scrollbar for  navigation */
+.vertical-list .scroll-bar:vertical {
+    -fx-opacity: 0;
+    -fx-pref-width: 8px;
+    -fx-background-color: transparent;
+}
+
+.vertical-list .scroll-bar:vertical .track {
+    -fx-background-color: #f0f0f0;
+    -fx-background-radius: 4px;
+}
+
+.vertical-list .scroll-bar:vertical .thumb {
+    -fx-background-color: #bdbdbd;
+    -fx-background-radius: 4px;
+}
+
+.vertical-list:hover .scroll-bar:vertical {
+    -fx-opacity: 1; /* Show scrollbar only when needed */
+}
+
+
+/* FILTER BOX (Date/Result Filters) */
+.filter-box {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-padding: 12px;
+    -fx-spacing: 15px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 3, 0, 0, 1);
+}
+
+/* Date Picker  Styling */
+.date-picker, .combo-box {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #ced4da;
+    -fx-border-radius: 4px;
+    -fx-pref-height: 36px;
+    -fx-font-size: 14px;
+}
+
+.date-picker:focused, .combo-box:focused {
+    -fx-border-color: #80bdff;
+    -fx-effect: innershadow(gaussian, rgba(128, 189, 255, 0.25), 5, 0, 0, 2);
+}
+
+/* Combo Box Critical Items */
+.combo-box-popup .list-cell {
+    -fx-padding: 8px 12px;
+    -fx-border-width: 0 0 1px 0;
+    -fx-border-color: #e0e0e0;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #e3f2fd; /* Match selected state from vertical-list */
+}
+
+/* Clear Filters Button (If added later) */
+.clear-btn {
+    -fx-background-color: #dc3545;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 16px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-transition: -fx-background-color 0.3s;
+}
+
+.clear-btn:hover {
+    -fx-background-color: #bb2d3b;
+}
+
+/* Search Field */
+.search-field {
+    -fx-pref-width: 180px;
+    -fx-pref-height: 36px;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #ced4da;
+    -fx-border-radius: 4px;
+    -fx-prompt-text-fill: #6c757d;
+    -fx-font-size: 14px;
+}
+
+.search-field:focused {
+    -fx-border-color: #80bdff;
+    -fx-effect: innershadow(gaussian, rgba(128, 189, 255, 0.25), 5, 0, 0, 2);
+}
+
+/* Compact ComboBoxes */
+.combo-box {
+    -fx-pref-width: 140px;
+}
+
+/* Radio Button Group Container */
+.radio-group {
+    -fx-spacing: 5px;
+    -fx-padding: 0 5px;
+}
+
+/* Date Picker Adjustments */
+.date-picker {
+    -fx-pref-width: 140px;
+}
+
+/* Preserving Search Field */
+.search {
+    -fx-pref-width: 200px;
+    -fx-pref-height: 36px;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #ced4da;
+    -fx-border-radius: 4px;
+    -fx-prompt-text-fill: #6c757d;
+    -fx-font-size: 14px;
+}
+
+.search:focused {
+    -fx-border-color: #80bdff;
+    -fx-effect: innershadow(gaussian, rgba(128, 189, 255, 0.25), 5, 0, 0, 2);
+}
+
+/*  Radio Buttons */
+.radio {
+    -fx-font-size: 14px;
+    -fx-text-fill: #495057;
+    -fx-padding: 8px 12px;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #ced4da;
+    -fx-border-radius: 4px;
+}
+
+.radio:selected {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #80bdff;
+    -fx-font-weight: bold;
+}
