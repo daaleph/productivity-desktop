@@ -2,64 +2,56 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.GridPane?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="home.controllers.Home"
-            prefHeight="600.0" prefWidth="800.0">
+            fx:controller="home.controllers.Home">
     <!-- Custom title bar with window control buttons -->
     <top>
-        <HBox style="-fx-background-color: #f0f0f0; -fx-padding: 5;"
-              prefHeight="40.0" minHeight="40.0">
-            <Label text="AS Productivity AS"
-                   style="-fx-font-size: 14px; -fx-padding: 0 10 0 10;"/>
+        <HBox style="-fx-background-color: #f0f0f0; -fx-padding: 5;">
             <Region HBox.hgrow="ALWAYS" />
-            <HBox spacing="5">
-                <Button fx:id="minimizeButton" text="_" prefWidth="40" prefHeight="25"
-                        style="-fx-background-color: #e0e0e0; -fx-font-size: 12px;" />
-                <Button fx:id="maximizeButton" text="□" prefWidth="40" prefHeight="25"
-                        style="-fx-background-color: #e0e0e0; -fx-font-size: 12px;" />
-                <Button fx:id="closeButton" text="X" prefWidth="40" prefHeight="25"
-                        style="-fx-background-color: #ff5555; -fx-font-size: 12px;" />
-            </HBox>
+            <Button fx:id="minimizeButton" text="_" prefWidth="40" prefHeight="25"
+                    style="-fx-background-color: #e0e0e0;" />
+            <Button fx:id="maximizeButton" text="□" prefWidth="40" prefHeight="25"
+                    style="-fx-background-color: #e0e0e0;" />
+            <Button fx:id="closeButton" text="X" prefWidth="40" prefHeight="25"
+                    style="-fx-background-color: #ff5555;" />
             <Region prefWidth="10" />
         </HBox>
     </top>
-
-    <!-- Main content area -->
+    <!-- Original content in the center -->
     <center>
-        <VBox spacing="20" style="-fx-padding: 20;">
-            <!-- First section -->
-            <GridPane fx:id="containerGrid" hgap="20" vgap="20"
-                      alignment="CENTER"
-                      VBox.vgrow="ALWAYS">
-                <Label fx:id="container1" text="How are you feeling today"
-                       GridPane.columnIndex="0" GridPane.rowIndex="0"
-                       GridPane.columnSpan="2" GridPane.halignment="CENTER"
-                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
-                <Label fx:id="subContainer1" text="Profile"
-                       GridPane.columnIndex="0" GridPane.rowIndex="1"
-                       style="-fx-font-size: 14px;"/>
-                <Label fx:id="subContainer2" text="My Organizations"
-                       GridPane.columnIndex="1" GridPane.rowIndex="1"
-                       style="-fx-font-size: 14px;"/>
-                <Label fx:id="subContainer3" text="Fav Projects"
-                       GridPane.columnIndex="0" GridPane.rowIndex="2"
-                       style="-fx-font-size: 14px;"/>
-                <Label fx:id="subContainer4" text="My Branches"
-                       GridPane.columnIndex="1" GridPane.rowIndex="2"
-                       style="-fx-font-size: 14px;"/>
-            </GridPane>
-
-            <!-- Second section -->
-            <HBox alignment="CENTER" spacing="20" VBox.vgrow="ALWAYS">
-                <Label text="Container 2"
-                       style="-fx-font-size: 16px; -fx-padding: 10;"
-                       HBox.hgrow="ALWAYS"
-                       alignment="CENTER"/>
-            </HBox>
+        <VBox>
+            <VBox>
+                <Region prefHeight="50" />
+                <HBox>
+                    <Region prefWidth="50" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <GridPane fx:id="containerGrid" hgap="10" vgap="10">
+                        <Label fx:id="container1" text="How are you feeling today" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                               GridPane.columnSpan="2" GridPane.halignment="CENTER"/>
+                        <Label fx:id="subContainer1" text="Profile" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <Label fx:id="subContainer2" text="My Organizations" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        <Label fx:id="subContainer3" text="Fav Projects" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <Label fx:id="subContainer4" text="My Branches" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    </GridPane>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Region prefWidth="50" />
+                </HBox>
+            </VBox>
+            <VBox>
+                <Region prefHeight="50" />
+                <HBox>
+                    <Region prefWidth="50" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label text="Container 2" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Region prefWidth="50" />
+                </HBox>
+            </VBox>
         </VBox>
     </center>
 </BorderPane>
