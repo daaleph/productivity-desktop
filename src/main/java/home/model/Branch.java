@@ -1,8 +1,10 @@
 package home.model;
 
+import java.util.Map;
+
 public class Branch {
-    protected int id;
-    protected String name;
+    private final int id;
+    private String name;
 
     public Branch(int id) {
         this.id = id;
@@ -24,7 +26,7 @@ public class Branch {
 }
 
 public abstract class ProjectBranch extends Branch {
-    protected List<Project> projects;
+    private Map<UUID, Project> projects;
 
     public ProjectBranch(int id) {
         super(id);
@@ -33,7 +35,7 @@ public abstract class ProjectBranch extends Branch {
 
     public abstract void fetchData();
 
-    public List<Project> getProjects() {
+    public Map<UUID, Project> getProjects() {
         return projects;
     }
 }

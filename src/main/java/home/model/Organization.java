@@ -24,7 +24,7 @@ public class Organization {
 }
 
 public abstract class BranchedOrganization extends Organization {
-    protected List<Branch> branches;
+    protected Map<Integer, Branch> branches;
 
     public BranchedOrganization(int id) {
         super(id);
@@ -33,7 +33,7 @@ public abstract class BranchedOrganization extends Organization {
 
     public abstract void fetchData();
 
-    public List<Branch> getBranches() {
+    public Map<Integer, Branch> getBranches() {
         return branches;
     }
 }

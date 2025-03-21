@@ -1,9 +1,11 @@
 package home.model;
 
-class CompleteBranch extends ProjectBranch {
-    private User[] users;
+import java.util.Map;
 
-    public CompleteBranch(int id, String name) {
+class CompleteBranch extends ProjectBranch {
+    private Map<UUID, Project> users;
+
+    public CompleteBranch(int id) {
         super(id);
     }
 
