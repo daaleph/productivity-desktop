@@ -4,7 +4,7 @@ plugins {
     application
 }
 
-group = "space.aleph"
+group = "home"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -25,7 +25,7 @@ javafx {
 }
 
 application {
-    mainClass.set("space.aleph.Main")
+    mainClass.set("home.Main")
 }
 
 tasks.test {

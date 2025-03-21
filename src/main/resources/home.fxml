@@ -47,6 +47,7 @@
 
             <!-- Section 1 & 2 -->
             <HBox prefHeight="116.0" prefWidth="1180.0" spacing="10">
+
                 <VBox prefHeight="116.0" prefWidth="0.0" HBox.hgrow="ALWAYS">
                     <Label text="Profile" />
                     <!-- Profile Content (GridPane) -->
@@ -62,30 +63,28 @@
                         <Label fx:id="pref1Label" text="[Preference 1]" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <Label text="Preference 2:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                         <Label fx:id="pref2Label" text="[Preference 2]" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  <columnConstraints>
-                     <ColumnConstraints />
-                     <ColumnConstraints />
-                  </columnConstraints>
-                  <rowConstraints>
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                  </rowConstraints>
+                        <columnConstraints>
+                             <ColumnConstraints />
+                             <ColumnConstraints />
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints />
+                            <RowConstraints />
+                            <RowConstraints />
+                            <RowConstraints />
+                        </rowConstraints>
                     </GridPane>
                 </VBox>
 
                 <VBox HBox.hgrow="ALWAYS">
                     <Label text="My Organizations" />
                     <!-- Organizations and Branches (ListView and VBox of Labels/FlowPane) -->
-                    <SplitPane dividerPositions="0.4759825327510917" orientation="HORIZONTAL">
+                    <SplitPane dividerPositions="0.4759825327510917">
                         <ListView fx:id="organizationList" prefHeight="98.0" prefWidth="0.0" />
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" pannable="true" vbarPolicy="AS_NEEDED">
-                            <content>
-                                <VBox fx:id="branchContainer" spacing="5.0">
-                                    <!-- Dynamically populated with Labels or FlowPanes -->
-                                </VBox>
-                            </content>
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" pannable="true">
+                            <VBox fx:id="branchContainer" spacing="5.0">
+                                <!-- Dynamically populated with Labels or FlowPanes -->
+                            </VBox>
                         </ScrollPane>
                     </SplitPane>
                 </VBox>

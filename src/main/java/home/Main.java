@@ -1,4 +1,4 @@
-package space.aleph;
+package home;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -6,10 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
 import javafx.scene.text.Text;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -20,11 +17,10 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
 
-import space.aleph.model.Branch;
-import space.aleph.model.Organization;
-import space.aleph.model.User;
+import home.model.Branch;
+import home.model.Organization;
+import home.model.User;
 import java.net.URL;
 import java.util.stream.IntStream;
 
@@ -131,12 +127,12 @@ public class Main extends Application {
             //Initial user data
             User user = getUserData();
             nameLabel.textProperty().bind(user.nameProperty());
-            ageLabel.textProperty().bind(user.ageProperty().asString());
-            pref1Label.setText(user.getPreference1()); //Assuming getPreference1() returns a string
-            pref2Label.setText(user.getPreference2()); //Assuming getPreference2() returns a string
+            ageLabel.textProperty().bind(user.ageProperty().toString());
+            pref1Label.setText(user.getPriority(0));
+            pref2Label.setText(user.getPriority(0));
 
             //Initial motivational phrase
-            //motivationalPhraseText.setText(getMotivationalPhrase());
+            motivationalPhraseText.setText(getMotivationalPhrase());
 
             //Attach controls
             attachWindowControls();
@@ -179,8 +175,9 @@ public class Main extends Application {
             }
         }
 
-        private User getUserData(){
-            return new User("John Doe", 30, "Preference 1", "Preference 2");
+        private User getUser(){
+            String[] priorities = {"Preference 1", "Preference 2"};
+            return new User("John Doe", 30, "nicalcoca@gmail.com", priorities);
         }
 
         public String getMotivationalPhrase(){
