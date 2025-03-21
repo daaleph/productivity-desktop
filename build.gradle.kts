@@ -32,7 +32,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.named<JavaExec>("run") {
+tasks.withType<JavaExec> {
     jvmArgs = listOf(
         "--module-path", classpath.asPath,
         "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics"

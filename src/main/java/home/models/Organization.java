@@ -1,4 +1,6 @@
-package home.model;
+package home.models;
+
+import java.util.Map;
 
 public class Organization {
     protected int id;
@@ -23,7 +25,7 @@ public class Organization {
 
 }
 
-public abstract class BranchedOrganization extends Organization {
+abstract class BranchedOrganization extends Organization {
     protected Map<Integer, Branch> branches;
 
     public BranchedOrganization(int id) {

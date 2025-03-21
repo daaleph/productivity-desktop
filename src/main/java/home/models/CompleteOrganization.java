@@ -1,4 +1,8 @@
-package home.model;
+package home.models;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
 
 public class CompleteOrganization extends BranchedOrganization {
     private Map<UUID, User> users;
@@ -12,7 +16,7 @@ public class CompleteOrganization extends BranchedOrganization {
         // Fetch all branches for the organization
     }
 
-    public User getUsers(UUID[] userUuuid) {
-        return users.get(userUuuid);
+    public Collection<User> getUsers(UUID[] userUuuid) {
+        return this.users.values();
     }
 }

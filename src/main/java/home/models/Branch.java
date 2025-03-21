@@ -1,6 +1,7 @@
-package home.model;
+package home.models;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class Branch {
     private final int id;
@@ -25,7 +26,7 @@ public class Branch {
 
 }
 
-public abstract class ProjectBranch extends Branch {
+abstract class ProjectBranch extends Branch {
     private Map<UUID, Project> projects;
 
     public ProjectBranch(int id) {

@@ -1,6 +1,7 @@
-package home.model;
+package home.models;
 
 import java.util.Map;
+import java.util.UUID;
 
 class CompleteBranch extends ProjectBranch {
     private Map<UUID, Project> users;

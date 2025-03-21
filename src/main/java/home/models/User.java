@@ -1,6 +1,7 @@
-package home.model;
+package home.models;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class User {
     private static User instance;
@@ -8,9 +9,9 @@ public class User {
     protected int age;
     protected String name;
     protected String email;
-    protected int[] branches;
-    protected int[] organizations;
-    protected UUID[] coreProjects;
+    protected List<Branch> branches;
+    protected List<CoreProject> coreProjects;
+    protected List<Organization> organizations;
     protected HashMap<Integer, String> priorities;
 
     /**
@@ -30,21 +31,11 @@ public class User {
     private User(
         String name,
         int age,
-        String email,
-        HashMap<Integer, String> priorities,
-        int[] organizations,
-        int[] branches,
-        int[] organizedBranches,
-        UUID[] coreProjects
+        String email
     ) {
         this.name = name;
         this.age = age;
         this.email = email;
-        this.priorities = priorities;
-        this.organizations = organizations;
-        this.branches = branches;
-        this.organizedBranches = organizedBranches;
-        this.coreProjects = coreProjects;
     }
 
     /**
@@ -61,15 +52,10 @@ public class User {
     public static User getInstance(
         String name,
         int age,
-        String email,
-        HashMap<Integer, String> priorities,
-        int[] organizations,
-        int[] branches,
-        int[] organizedBranches,
-        UUID[] coreProjects
+        String email
     ) {
         if (instance == null) {
-            instance = new User(name, age, email, priorities, organizations, branches, organizedBranches, coreProjects);
+            instance = new User(name, age, email);
         }
         return instance;
     }
@@ -102,6 +88,10 @@ public class User {
 
     public HashMap<Integer, String> getPriorities() {
         return priorities;
+    }
+
+    private void fetchData() {
+        // to fetch necessary data
     }
 
     @Override

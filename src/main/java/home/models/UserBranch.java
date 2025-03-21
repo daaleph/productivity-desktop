@@ -1,4 +1,4 @@
-package home.model;
+package home.models;
 
 class UserBranch extends ProjectBranch {
     private User user;

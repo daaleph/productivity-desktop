@@ -1,160 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.GridPane?>
 
-<BorderPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="home.controllers.Home"
+            prefHeight="600.0" prefWidth="800.0">
+    <!-- Custom title bar with window control buttons -->
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="10" BorderPane.alignment="CENTER">
-            <padding>
-                <Insets bottom="10" left="10" right="10" top="10" />
-            </padding>
-            <Label text="My Application">
-                <font>
-                    <Font size="20" />
-                </font>
-            </Label>
+        <HBox style="-fx-background-color: #f0f0f0; -fx-padding: 5;"
+              prefHeight="40.0" minHeight="40.0">
+            <Label text="AS Productivity AS"
+                   style="-fx-font-size: 14px; -fx-padding: 0 10 0 10;"/>
             <Region HBox.hgrow="ALWAYS" />
-            <Button text="Minimize" />
-            <Button text="Maximize" />
-            <Button text="Close" />
+            <HBox spacing="5">
+                <Button fx:id="minimizeButton" text="_" prefWidth="40" prefHeight="25"
+                        style="-fx-background-color: #e0e0e0; -fx-font-size: 12px;" />
+                <Button fx:id="maximizeButton" text="□" prefWidth="40" prefHeight="25"
+                        style="-fx-background-color: #e0e0e0; -fx-font-size: 12px;" />
+                <Button fx:id="closeButton" text="X" prefWidth="40" prefHeight="25"
+                        style="-fx-background-color: #ff5555; -fx-font-size: 12px;" />
+            </HBox>
+            <Region prefWidth="10" />
         </HBox>
     </top>
 
+    <!-- Main content area -->
     <center>
-        <VBox spacing="10" BorderPane.alignment="CENTER">
-            <padding>
-                <Insets bottom="10" left="10" right="10" top="10" />
-            </padding>
+        <VBox spacing="20" style="-fx-padding: 20;">
+            <!-- First section -->
+            <GridPane fx:id="containerGrid" hgap="20" vgap="20"
+                      alignment="CENTER"
+                      VBox.vgrow="ALWAYS">
+                <Label fx:id="container1" text="How are you feeling today"
+                       GridPane.columnIndex="0" GridPane.rowIndex="0"
+                       GridPane.columnSpan="2" GridPane.halignment="CENTER"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <Label fx:id="subContainer1" text="Profile"
+                       GridPane.columnIndex="0" GridPane.rowIndex="1"
+                       style="-fx-font-size: 14px;"/>
+                <Label fx:id="subContainer2" text="My Organizations"
+                       GridPane.columnIndex="1" GridPane.rowIndex="1"
+                       style="-fx-font-size: 14px;"/>
+                <Label fx:id="subContainer3" text="Fav Projects"
+                       GridPane.columnIndex="0" GridPane.rowIndex="2"
+                       style="-fx-font-size: 14px;"/>
+                <Label fx:id="subContainer4" text="My Branches"
+                       GridPane.columnIndex="1" GridPane.rowIndex="2"
+                       style="-fx-font-size: 14px;"/>
+            </GridPane>
 
-            <!-- Section 1 & 2 -->
-            <HBox prefHeight="116.0" prefWidth="1180.0" spacing="10">
-
-                <VBox prefHeight="116.0" prefWidth="0.0" HBox.hgrow="ALWAYS">
-                    <Label text="Profile" />
-                    <!-- Profile Content (GridPane) -->
-                    <GridPane>
-                        <padding>
-                            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                        </padding>
-                        <Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <Label fx:id="nameLabel" text="[Name]" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                        <Label text="Age:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                        <Label fx:id="ageLabel" text="[Age]" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Label text="Preference 1:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                        <Label fx:id="pref1Label" text="[Preference 1]" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                        <Label text="Preference 2:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                        <Label fx:id="pref2Label" text="[Preference 2]" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                        <columnConstraints>
-                             <ColumnConstraints />
-                             <ColumnConstraints />
-                        </columnConstraints>
-                        <rowConstraints>
-                            <RowConstraints />
-                            <RowConstraints />
-                            <RowConstraints />
-                            <RowConstraints />
-                        </rowConstraints>
-                    </GridPane>
-                </VBox>
-
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label text="My Organizations" />
-                    <!-- Organizations and Branches (ListView and VBox of Labels/FlowPane) -->
-                    <SplitPane dividerPositions="0.4759825327510917">
-                        <ListView fx:id="organizationList" prefHeight="98.0" prefWidth="0.0" />
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" pannable="true">
-                            <VBox fx:id="branchContainer" spacing="5.0">
-                                <!-- Dynamically populated with Labels or FlowPanes -->
-                            </VBox>
-                        </ScrollPane>
-                    </SplitPane>
-                </VBox>
+            <!-- Second section -->
+            <HBox alignment="CENTER" spacing="20" VBox.vgrow="ALWAYS">
+                <Label text="Container 2"
+                       style="-fx-font-size: 16px; -fx-padding: 10;"
+                       HBox.hgrow="ALWAYS"
+                       alignment="CENTER"/>
             </HBox>
-
-            <!-- Section 3 & 4 -->
-            <HBox spacing="10">
-                <FlowPane hgap="10" vgap="10" HBox.hgrow="ALWAYS">
-                    <Label text="Fav Projects" />
-                    <!-- Favorite Projects (Buttons in a FlowPane) -->
-                    <Button text="Project 1" />
-                    <Button text="Project 2" />
-                    <Button text="Project 3" />
-                    <!-- More buttons -->
-                </FlowPane>
-
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label text="Motivational Phrase" />
-                    <Text fx:id="motivationalPhraseText" text="[Motivational Phrase]" wrappingWidth="300" />
-                </VBox>
-            </HBox>
-
-            <!-- Section 5 -->
-            <VBox spacing="10">
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="My Projects" />
-                    <HBox alignment="CENTER_RIGHT" spacing="10" HBox.hgrow="ALWAYS">
-                        <!-- Filters -->
-                        <TextField promptText="Search Projects" />
-                        <MenuButton text="Sort By">
-                            <items>
-                                <MenuItem text="Ascending" />
-                                <MenuItem text="Descending" />
-                            </items>
-                        </MenuButton>
-                        <MenuButton text="Date Type">
-                            <items>
-                                <MenuItem text="Creation Date" />
-                                <MenuItem text="Edition Date" />
-                            </items>
-                        </MenuButton>
-                        <MenuButton text="Sort Order">
-                            <items>
-                                <MenuItem text="Ascending" />
-                                <MenuItem text="Descending" />
-                            </items>
-                        </MenuButton>
-                    </HBox>
-                </HBox>
-
-                <!-- Project Cards (TilePane, FlowPane, etc.) -->
-                <TilePane hgap="10" prefColumns="3" vgap="10">
-                    <!-- Project Card 1 -->
-                    <VBox style="-fx-border-color: black; -fx-padding: 5;">
-                        <Label text="Project Name" />
-                        <Label text="Description" />
-                    </VBox>
-                    <!-- Project Card 2 -->
-                    <VBox style="-fx-border-color: black; -fx-padding: 5;">
-                        <Label text="Project Name" />
-                        <Label text="Description" />
-                    </VBox>
-                    <!-- Project Card 3 -->
-                    <VBox style="-fx-border-color: black; -fx-padding: 5;">
-                        <Label text="Project Name" />
-                        <Label text="Description" />
-                    </VBox>
-                    <!-- More cards -->
-                </TilePane>
-            </VBox>
         </VBox>
     </center>
 </BorderPane>

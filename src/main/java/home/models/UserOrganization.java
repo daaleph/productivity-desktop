@@ -1,4 +1,4 @@
-package home.model;
+package home.models;
 
 public class UserOrganization extends BranchedOrganization {
     private User user;
