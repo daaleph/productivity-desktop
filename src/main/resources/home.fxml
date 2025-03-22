@@ -6,48 +6,49 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="home.controllers.Home">
-    <!-- Custom title bar with window control buttons -->
+            fx:controller="home.controllers.Home" stylesheets="@/styles.css">
+    <!-- Custom title bar -->
     <top>
-        <HBox style="-fx-background-color: #f0f0f0; -fx-padding: 5;">
+        <HBox styleClass="title-bar">
             <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="minimizeButton" text="_" prefWidth="40" prefHeight="25"
-                    style="-fx-background-color: #e0e0e0;" />
-            <Button fx:id="maximizeButton" text="□" prefWidth="40" prefHeight="25"
-                    style="-fx-background-color: #e0e0e0;" />
-            <Button fx:id="closeButton" text="X" prefWidth="40" prefHeight="25"
-                    style="-fx-background-color: #ff5555;" />
+            <Button fx:id="minimizeButton" text="_" styleClass="title-button minimize" />
+            <Button fx:id="maximizeButton" text="□" styleClass="title-button maximize" />
+            <Button fx:id="closeButton" text="X" styleClass="title-button close" />
             <Region prefWidth="10" />
         </HBox>
     </top>
-    <!-- Original content in the center -->
+
+    <!-- Main content -->
     <center>
-        <VBox>
+        <VBox styleClass="main-content">
             <VBox>
                 <Region prefHeight="50" />
                 <HBox>
                     <Region prefWidth="50" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <GridPane fx:id="containerGrid" hgap="10" vgap="10">
-                        <Label fx:id="container1" text="How are you feeling today" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                               GridPane.columnSpan="2" GridPane.halignment="CENTER"/>
-                        <Label fx:id="subContainer1" text="Profile" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                        <Label fx:id="subContainer2" text="My Organizations" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                        <Label fx:id="subContainer3" text="Fav Projects" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                        <Label fx:id="subContainer4" text="My Branches" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <GridPane fx:id="containerGrid" styleClass="responsive-grid">
+                        <!-- Main Header -->
+                        <VBox fx:id="container1" styleClass="main-container" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                            <Label text="How are you feeling today" styleClass="header-label" />
+                        </VBox>
+
+                        <!-- Sub Containers -->
+                        <VBox fx:id="subContainer1" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <Label text="Profile" styleClass="sub-header" />
+                        </VBox>
+                        <VBox fx:id="subContainer2" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <Label text="My Organizations" styleClass="sub-header" />
+                        </VBox>
+                        <VBox fx:id="subContainer3" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                            <Label text="Fav Projects" styleClass="sub-header" />
+                        </VBox>
+                        <VBox fx:id="subContainer4" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                            <Label text="My Branches" styleClass="sub-header" />
+                        </VBox>
                     </GridPane>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <Region prefWidth="50" />
-                </HBox>
-            </VBox>
-            <VBox>
-                <Region prefHeight="50" />
-                <HBox>
-                    <Region prefWidth="50" />
-                    <Region HBox.hgrow="ALWAYS" />
-                    <Label text="Container 2" />
                     <Region HBox.hgrow="ALWAYS" />
                     <Region prefWidth="50" />
                 </HBox>

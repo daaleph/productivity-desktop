@@ -1,4 +1,3 @@
-// home/Home.java
 package home;
 
 import javafx.application.Application;
@@ -6,31 +5,26 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import home.controllers.Home;
 
 public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Load the FXML file
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/home.fxml"));
         Parent root = loader.load();
 
-        // Create the scene
         Scene scene = new Scene(root);
+        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
 
-        // Set the scene on the stage first
+        // Set scene FIRST before passing stage to controller
         primaryStage.setScene(scene);
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
 
-        // Get the controller and pass the stage
         Home controller = loader.getController();
-        if (controller != null) {
-            controller.setStage(primaryStage);
-        } else {
-            System.err.println("Controller not found. Check fx:controller in FXML.");
-        }
+        controller.setStage(primaryStage); // Now safe to pass stage
 
-        // Show the stage
         primaryStage.show();
     }
 
