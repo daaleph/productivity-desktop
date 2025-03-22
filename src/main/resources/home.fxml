@@ -32,7 +32,10 @@
                     <GridPane fx:id="containerGrid" styleClass="responsive-grid">
                         <!-- Main Header -->
                         <VBox fx:id="container1" styleClass="main-container" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
-                            <Label text="How are you feeling today" styleClass="header-label" />
+                            <Label fx:id="welcome" styleClass="header-label"/>
+                            <Label text="Profile" styleClass="sub-header" />
+                            <Label fx:id="userAge" styleClass="profile-text"/>
+                            <Label fx:id="userEmail" styleClass="profile-text"/>
                         </VBox>
 
                         <!-- Sub Containers -->

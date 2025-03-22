@@ -1,20 +1,30 @@
 package home.controllers;
 
+import home.models.User;
 import javafx.animation.TranslateTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class Home {
-
     @FXML private GridPane containerGrid;
+    @FXML private Label welcome, userAge, userEmail;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     private Stage stage;
     private boolean isMaximized = false;
+
+    public void setUser(User user) {
+        if (user != null) {
+            welcome.setText("How are you feeling today " + user.getName());
+            userAge.setText("Age: " + user.getAge());
+            userEmail.setText("Email: " + user.getEmail());
+        }
+    }
 
     public void setStage(Stage stage) {
         this.stage = stage;
@@ -48,7 +58,7 @@ public class Home {
         stage.getScene().widthProperty().addListener((obs, oldVal, newVal) -> {
             adjustLayout();
         });
-        adjustLayout(); // Initial layout setup
+        adjustLayout();
     }
 
     private void adjustLayout() {
@@ -82,23 +92,14 @@ public class Home {
 
     private int[] calculateTargetPosition(String id, boolean isWide) {
         int[] result = new int[4]; // col, row, colspan, rowspan
-        switch (id) {
-            case "container1":
-                result = isWide ? new int[]{0, 0, 2, 1} : new int[]{0, 0, 1, 1};
-                break;
-            case "subContainer1":
-                result = isWide ? new int[]{0, 1, 1, 1} : new int[]{0, 1, 1, 1};
-                break;
-            case "subContainer2":
-                result = isWide ? new int[]{1, 1, 1, 1} : new int[]{0, 2, 1, 1};
-                break;
-            case "subContainer3":
-                result = isWide ? new int[]{0, 2, 1, 1} : new int[]{0, 3, 1, 1};
-                break;
-            case "subContainer4":
-                result = isWide ? new int[]{1, 2, 1, 1} : new int[]{0, 4, 1, 1};
-                break;
-        }
+        result = switch (id) {
+            case "container1" -> isWide ? new int[]{0, 0, 2, 1} : new int[]{0, 0, 1, 1};
+            case "subContainer1" -> isWide ? new int[]{0, 1, 1, 1} : new int[]{0, 1, 1, 1};
+            case "subContainer2" -> isWide ? new int[]{1, 1, 1, 1} : new int[]{0, 2, 1, 1};
+            case "subContainer3" -> isWide ? new int[]{0, 2, 1, 1} : new int[]{0, 3, 1, 1};
+            case "subContainer4" -> isWide ? new int[]{1, 2, 1, 1} : new int[]{0, 4, 1, 1};
+            default -> result;
+        };
         return result;
     }
 

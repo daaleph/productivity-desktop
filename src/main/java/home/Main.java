@@ -1,6 +1,7 @@
 // home/Home.java
 package home;
 
+import home.models.User;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,25 +13,20 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Load the FXML file
+        User user = User.getInstance("DC", 26, "nicalcoca@gmail.com");
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/home.fxml"));
         Parent root = loader.load();
-
-        // Create the scene
         Scene scene = new Scene(root);
-
-        // Set the scene on the stage first
-        primaryStage.setScene(scene);
-
-        // Get the controller and pass the stage
         Home controller = loader.getController();
+
         if (controller != null) {
             controller.setStage(primaryStage);
+            controller.setUser(user);
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
         }
 
-        // Show the stage
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 

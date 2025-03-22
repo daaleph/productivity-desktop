@@ -74,12 +74,16 @@ public class User {
         return instance;
     }
 
-    public String nameProperty() {
+    public String getName() {
         return name;
     }
 
-    public int ageProperty() {
+    public int getAge() {
         return age;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public String getPriority(Integer index) {
