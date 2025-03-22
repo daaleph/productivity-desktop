@@ -65,3 +65,7 @@
     -fx-font-weight: bold;
     -fx-text-fill: #555555;
 }
+
+.resize-region {
+    -fx-background-color: transparent;
+}
