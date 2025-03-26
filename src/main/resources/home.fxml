@@ -33,14 +33,13 @@
                         <!-- Main Header -->
                         <VBox fx:id="container1" styleClass="main-container" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
                             <Label fx:id="welcome" styleClass="header-label"/>
-                            <Label text="Profile" styleClass="sub-header" />
-                            <Label fx:id="userAge" styleClass="profile-text"/>
-                            <Label fx:id="userEmail" styleClass="profile-text"/>
                         </VBox>
 
                         <!-- Sub Containers -->
                         <VBox fx:id="subContainer1" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
                             <Label text="Profile" styleClass="sub-header" />
+                            <Label fx:id="userAge" styleClass="profile-text"/>
+                            <Label fx:id="userEmail" styleClass="profile-text"/>
                         </VBox>
                         <VBox fx:id="subContainer2" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
                             <Label text="My Organizations" styleClass="sub-header" />

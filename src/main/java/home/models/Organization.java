@@ -22,7 +22,6 @@ public class Organization {
     public String toString() {
         return String.format("ID: %d, Name: %s", id, name);
     }
-
 }
 
 abstract class BranchedOrganization extends Organization {

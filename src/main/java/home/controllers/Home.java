@@ -20,7 +20,7 @@ public class Home {
 
     public void setUser(User user) {
         if (user != null) {
-            welcome.setText("How are you feeling today " + user.getName());
+            welcome.setText("How are you feeling today " + user.getPreferredName());
             userAge.setText("Age: " + user.getAge());
             userEmail.setText("Email: " + user.getEmail());
         }
@@ -29,7 +29,7 @@ public class Home {
     public void setStage(Stage stage) {
         this.stage = stage;
         initializeWindowControls();
-        initializeLayoutListener(); // Now called AFTER stage has scene
+        initializeLayoutListener();
     }
 
     private void initializeWindowControls() {
@@ -77,14 +77,11 @@ public class Home {
         tt.setFromX(node.getTranslateX());
         tt.setFromY(node.getTranslateY());
 
-        // Calculate target position based on layout
         int[] target = calculateTargetPosition(id, isWide);
         GridPane.setConstraints(node, target[0], target[1], target[2], target[3]);
 
-        // Force layout to update positions before animating
         containerGrid.layout();
 
-        // Animate to new position
         tt.setToX(node.getLayoutX() - node.getBoundsInParent().getMinX());
         tt.setToY(node.getLayoutY() - node.getBoundsInParent().getMinY());
         tt.play();

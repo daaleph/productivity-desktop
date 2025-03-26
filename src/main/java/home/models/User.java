@@ -1,41 +1,43 @@
 package home.models;
 
-import java.util.HashMap;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.List;
+import home.records.Priority;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import static data.Abbreviations.getAbbreviation;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class User {
     private static User instance;
 
     protected int age;
-    protected String name;
-    protected String email;
     protected List<Branch> branches;
+    protected List<Priority> priorities;
     protected List<CoreProject> coreProjects;
     protected List<Organization> organizations;
-    protected HashMap<Integer, String> priorities;
+    protected Map<String, String> abbreviations;
+    protected String completeName, preferredName, email;
 
     /**
      * Returns the single instance of User. On the first call, the provided
-     * parameters are used to create the instance. Subsequent calls will return
+     * parameters are used to create the instance and fetch data. Subsequent calls will return
      * the already created instance, ignoring any parameters.
      *
-     * @param age the user's age (used only during initialization)
-     * @param name the user's name (used only during initialization)
      * @param email the user's email (used only during initialization)
-     * @param branches user's branches
-     * @param priorities the map of user priorities (used only during initialization)
-     * @param organizations user's organizations
-     * @param organizedBranches how user's branches are related to user's organizations
-     * @param coreProjects the most important projects of a user
      */
     private User(
-        String name,
-        int age,
         String email
     ) {
-        this.name = name;
-        this.age = age;
         this.email = email;
+        fetchData();
     }
 
     /**
@@ -43,39 +45,24 @@ public class User {
      * parameters are used to create the instance. Subsequent calls will return
      * the already created instance, ignoring any parameters.
      *
-     * @param name the user's name (used only during initialization)
-     * @param age the user's age (used only during initialization)
      * @param email the user's email (used only during initialization)
-     * @param priorities the map of user priorities (used only during initialization)
      * @return the singleton User instance
      */
     public static User getInstance(
-        String name,
-        int age,
         String email
     ) {
         if (instance == null) {
-            instance = new User(name, age, email);
-        }
-        return instance;
-    }
-
-    /**
-     * Returns the User instance if it has been initialized.
-     * @return the singleton User instance
-     * @throws IllegalStateException if the instance has not yet been initialized.
-     */
-    public static User getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException(
-                "User has not been initialized. Call getInstance(String, int, String, HashMap<Integer, String>) first."
-            );
+            instance = new User(email);
         }
         return instance;
     }
 
     public String getName() {
-        return name;
+        return completeName;
+    }
+
+    public String getPreferredName() {
+        return preferredName;
     }
 
     public int getAge() {
@@ -86,21 +73,63 @@ public class User {
         return email;
     }
 
-    public String getPriority(Integer index) {
+    public Priority getPriority(Integer index) {
         return priorities.get(index);
     }
 
-    public HashMap<Integer, String> getPriorities() {
+    public List<Priority> getPriorities() {
         return priorities;
     }
 
     private void fetchData() {
-        // to fetch necessary data
+        String user = getAbbreviation("user");
+        String email = getAbbreviation("email");
+        HttpClient client = HttpClient.newHttpClient();
+        try {
+            String apiUrl = String.format("http://localhost:4000/api/%s/?%s=%s", user, email, this.email);
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .GET()
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.statusCode());
+            if (response.statusCode() == 200) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(response.body());
+                home.records.User userData = home.records.User.fromJson(root.get(0));
+                this.completeName = userData.completeName();
+                this.preferredName = userData.preferredName();
+                this.age = userData.age();
+                this.email = userData.email();
+                this.priorities = userData.priorities().stream()
+                        .map(p -> new Priority(p.id(), p.descriptionEn(), p.descriptionEs()))
+                        .collect(Collectors.toList());
+            } else {
+                System.err.println("Error fetching data. Status code: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String extractJsonValue(String json, String key) {
+        String keyPattern = "\"" + key + "\":";
+        int startIndex = json.indexOf(keyPattern) + keyPattern.length();
+        if (startIndex < keyPattern.length()) return "";
+        if (json.charAt(startIndex) == '"') {
+            startIndex++;
+            int endIndex = json.indexOf("\"", startIndex);
+            return json.substring(startIndex, endIndex);
+        } else {
+            int endIndex = json.indexOf(",", startIndex);
+            if (endIndex == -1) endIndex = json.indexOf("}", startIndex);
+            return json.substring(startIndex, endIndex).trim();
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("Name: %s, Email: %s", name, email);
+        return String.format("Name: %s, Email: %s", completeName, email);
     }
 
 }

@@ -1,6 +1,6 @@
 package home.models;
 
-class UserBranch extends ProjectBranch {
+class UserBranch extends ProjectedBranch {
     private User user;
 
     public UserBranch(int id) {

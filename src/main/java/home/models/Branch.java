@@ -26,10 +26,10 @@ public class Branch {
 
 }
 
-abstract class ProjectBranch extends Branch {
+abstract class ProjectedBranch extends Branch {
     private Map<UUID, Project> projects;
 
-    public ProjectBranch(int id) {
+    public ProjectedBranch(int id) {
         super(id);
         fetchData();
     }
