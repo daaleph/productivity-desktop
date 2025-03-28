@@ -3,6 +3,8 @@ package home.records;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
+import home.types.Triplet;
+
 import java.util.ArrayList;
 import java.util.List;
 import static data.Abbreviations.getAbbreviation;
@@ -56,7 +58,7 @@ public record User(
             int id = priorityNode.get("id").asInt();
             String descriptionEn = priorityNode.get(getAbbreviation("descriptionEn")).asText();
             String descriptionEs = priorityNode.get(getAbbreviation("descriptionEs")).asText();
-            priorities.add(new Priority(id, descriptionEn, descriptionEs));
+            priorities.add(new Priority(new Triplet<>(id, descriptionEn, descriptionEs)));
         }
         return priorities;
     }

@@ -1,19 +1,18 @@
 package home.models;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import home.records.Priority;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import static data.Abbreviations.getAbbreviation;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import home.types.Triplet;
 
 public class User {
     private static User instance;
@@ -102,8 +101,8 @@ public class User {
                 this.age = userData.age();
                 this.email = userData.email();
                 this.priorities = userData.priorities().stream()
-                        .map(p -> new Priority(p.id(), p.descriptionEn(), p.descriptionEs()))
-                        .collect(Collectors.toList());
+                        .map(p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs())))
+                        .toList();
             } else {
                 System.err.println("Error fetching data. Status code: " + response.statusCode());
             }

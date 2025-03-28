@@ -1,19 +1,25 @@
 package home.controllers;
 
 import home.models.User;
+import home.records.Priority;
 import javafx.animation.TranslateTransition;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.List;
+
 public class Home {
-    @FXML private GridPane containerGrid;
-    @FXML private Label welcome, userAge, userEmail;
+    @FXML private GridPane gridContainer;
+    @FXML private Label welcome, userAge, userName;
+    @FXML private ListView<Priority> userPriorities;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
+
+    public VBox profileSubcontainer, userOrganizationsSubcontainer, favoriteProjectsSubcontainer, userBranchesSubcontainer, welcomeSubcontainer;
 
     private Stage stage;
     private boolean isMaximized = false;
@@ -21,8 +27,25 @@ public class Home {
     public void setUser(User user) {
         if (user != null) {
             welcome.setText("How are you feeling today " + user.getPreferredName());
+            userName.setText("Name: " + user.getName());
             userAge.setText("Age: " + user.getAge());
-            userEmail.setText("Email: " + user.getEmail());
+            List<Priority> priorities = user.getPriorities();
+
+            userPriorities.setItems(FXCollections.observableArrayList(priorities));
+            userPriorities.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Priority item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.descriptionEs());
+                }
+            });
+
+            // Calculate preferred height
+            int numItems = priorities.size();
+            double cellHeight = 24; // Must match CSS -fx-fixed-cell-size
+            double padding = 2; // Account for any listview padding
+            userPriorities.setPrefHeight(numItems * cellHeight + padding);
+            userPriorities.setMaxHeight(Control.USE_PREF_SIZE); // Prevent expansion
         }
     }
 
@@ -64,7 +87,7 @@ public class Home {
     private void adjustLayout() {
         boolean isWide = stage.getScene().getWidth() > stage.getScene().getHeight();
 
-        containerGrid.getChildren().forEach(node -> {
+        gridContainer.getChildren().forEach(node -> {
             if (node instanceof VBox) {
                 String id = node.getId();
                 animateLayoutChange((VBox) node, id, isWide);
@@ -80,7 +103,7 @@ public class Home {
         int[] target = calculateTargetPosition(id, isWide);
         GridPane.setConstraints(node, target[0], target[1], target[2], target[3]);
 
-        containerGrid.layout();
+        gridContainer.layout();
 
         tt.setToX(node.getLayoutX() - node.getBoundsInParent().getMinX());
         tt.setToY(node.getLayoutY() - node.getBoundsInParent().getMinY());
@@ -91,7 +114,7 @@ public class Home {
         int[] result = new int[4]; // col, row, colspan, rowspan
         result = switch (id) {
             case "container1" -> isWide ? new int[]{0, 0, 2, 1} : new int[]{0, 0, 1, 1};
-            case "subContainer1" -> isWide ? new int[]{0, 1, 1, 1} : new int[]{0, 1, 1, 1};
+            case "subContainer1" -> new int[]{0, 1, 1, 1};
             case "subContainer2" -> isWide ? new int[]{1, 1, 1, 1} : new int[]{0, 2, 1, 1};
             case "subContainer3" -> isWide ? new int[]{0, 2, 1, 1} : new int[]{0, 3, 1, 1};
             case "subContainer4" -> isWide ? new int[]{1, 2, 1, 1} : new int[]{0, 4, 1, 1};

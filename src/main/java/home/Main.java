@@ -1,4 +1,4 @@
-// home/Home.java
+// java/home/Main.java
 package home;
 
 import home.models.User;

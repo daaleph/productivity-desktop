@@ -8,6 +8,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.ListView?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="home.controllers.Home" stylesheets="@/styles.css">
     <!-- Custom title bar -->
@@ -29,25 +30,26 @@
                 <HBox>
                     <Region prefWidth="50" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <GridPane fx:id="containerGrid" styleClass="responsive-grid">
+                    <GridPane fx:id="gridContainer" styleClass="responsive-grid">
                         <!-- Main Header -->
-                        <VBox fx:id="container1" styleClass="main-container" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                        <VBox fx:id="welcomeSubcontainer" styleClass="main-container" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
                             <Label fx:id="welcome" styleClass="header-label"/>
                         </VBox>
-
                         <!-- Sub Containers -->
-                        <VBox fx:id="subContainer1" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <VBox fx:id="profileSubcontainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
                             <Label text="Profile" styleClass="sub-header" />
-                            <Label fx:id="userAge" styleClass="profile-text"/>
-                            <Label fx:id="userEmail" styleClass="profile-text"/>
+                            <Label fx:id="userName"/>
+                            <Label fx:id="userAge"/>
+                            <Label text="Prioridades" styleClass="sub-header" />
+                            <ListView fx:id="userPriorities" styleClass="priority-list" />
                         </VBox>
-                        <VBox fx:id="subContainer2" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <VBox fx:id="userOrganizationsSubcontainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
                             <Label text="My Organizations" styleClass="sub-header" />
                         </VBox>
-                        <VBox fx:id="subContainer3" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                        <VBox fx:id="favoriteProjectsSubcontainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
                             <Label text="Fav Projects" styleClass="sub-header" />
                         </VBox>
-                        <VBox fx:id="subContainer4" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <VBox fx:id="userBranchesSubcontainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
                             <Label text="My Branches" styleClass="sub-header" />
                         </VBox>
                     </GridPane>

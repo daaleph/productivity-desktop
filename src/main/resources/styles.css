@@ -51,7 +51,7 @@
     -fx-padding: 15;
     -fx-spacing: 10;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 0);
-    -fx-transition: all 0.3s ease; /* Smooth transition for animations */
+    -fx-transition: all 0.3s ease;
 }
 
 .header-label {
@@ -67,5 +67,24 @@
 }
 
 .resize-region {
+    -fx-background-color: transparent;
+}
+
+/* Priorities */
+.priority-list {
+    -fx-background-color: transparent;
+    -fx-fixed-cell-size: 24px; /* Set fixed cell height */
+    -fx-padding: 0; /* Remove default list padding */
+}
+
+.priority-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #666666;
+    -fx-font-size: 13px;
+    -fx-padding: 2px 5px; /* Adjust vertical padding */
+}
+
+.priority-list .list-cell:empty {
+    -fx-padding: 0;
     -fx-background-color: transparent;
 }
