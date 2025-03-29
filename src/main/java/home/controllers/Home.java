@@ -40,7 +40,6 @@ public class Home {
                 }
             });
 
-            // Calculate preferred height
             int numItems = priorities.size();
             double cellHeight = 24;
             double padding = 2;
@@ -85,12 +84,12 @@ public class Home {
     }
 
     private void adjustLayout() {
-        boolean isWide = stage.getScene().getWidth() > stage.getScene().getHeight();
+        boolean isPortrait = stage.getScene().getHeight() > stage.getScene().getWidth();
 
         gridContainer.getChildren().forEach(node -> {
             if (node instanceof VBox) {
                 String id = node.getId();
-                animateLayoutChange((VBox) node, id, isWide);
+                animateLayoutChange((VBox) node, id, isPortrait);
             }
         });
     }
@@ -110,17 +109,23 @@ public class Home {
         tt.play();
     }
 
-    private int[] calculateTargetPosition(String id, boolean isWide) {
-        int[] result = new int[4]; // col, row, colspan, rowspan
-        result = switch (id) {
-            case "container1" -> isWide ? new int[]{0, 0, 2, 1} : new int[]{0, 0, 1, 1};
-            case "subContainer1" -> new int[]{0, 1, 1, 1};
-            case "subContainer2" -> isWide ? new int[]{1, 1, 1, 1} : new int[]{0, 2, 1, 1};
-            case "subContainer3" -> isWide ? new int[]{0, 2, 1, 1} : new int[]{0, 3, 1, 1};
-            case "subContainer4" -> isWide ? new int[]{1, 2, 1, 1} : new int[]{0, 4, 1, 1};
-            default -> result;
+    private int[] calculateTargetPosition(String id, boolean isPortrait) {
+        return switch (id) {
+            case "welcomeSubContainer" -> new int[]{0, 0, 2, 1};
+            case "profileSubContainer" -> isPortrait ?
+                    new int[]{0, 1, 2, 1} :
+                    new int[]{0, 1, 1, 1};
+            case "userOrganizationsSubContainer" -> isPortrait ?
+                    new int[]{0, 2, 2, 1} :
+                    new int[]{1, 1, 1, 1};
+            case "favoriteProjectsSubContainer" -> isPortrait ?
+                    new int[]{0, 3, 2, 1} :
+                    new int[]{0, 2, 1, 1};
+            case "userBranchesSubContainer" -> isPortrait ?
+                    new int[]{0, 4, 2, 1} :
+                    new int[]{1, 2, 1, 1};
+            default -> new int[]{0, 0, 1, 1};
         };
-        return result;
     }
 
 }

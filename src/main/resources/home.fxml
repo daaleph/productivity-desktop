@@ -22,40 +22,40 @@
     </top>
 
     <center>
-            <GridPane fx:id="gridContainer" styleClass="responsive-grid">
-                <columnConstraints>
-                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                </columnConstraints>
-                <!-- Main Header -->
-                <VBox fx:id="welcomeSubContainer" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
-                    <Label fx:id="welcome" styleClass="header-label"/>
-                </VBox>
-                <!-- Sub Containers -->
-                <VBox fx:id="profileSubContainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                    <Label text="Profile" styleClass="sub-header" />
-                    <HBox styleClass="nested-container">
-                        <VBox fx:id="leftColumn" styleClass="nested-vbox">
-                            <Label fx:id="userName" maxWidth="${leftColumn.width}"/>
-                            <Label fx:id="userAge"/>
-                            <Label text="Prioridades" styleClass="sub-header" />
-                            <ListView fx:id="userPriorities" styleClass="priority-list" />
-                        </VBox>
-                        <VBox styleClass="nested-vbox">
-                            <Label text="Core projects" styleClass="sub-header" />
-                        </VBox>
-                    </HBox>
-                </VBox>
-                <VBox fx:id="userOrganizationsSubContainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <Label text="My Organizations" styleClass="sub-header" />
-                </VBox>
-                <VBox fx:id="favoriteProjectsSubContainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                    <Label text="Fav Projects" styleClass="sub-header" />
-                </VBox>
-                <VBox fx:id="userBranchesSubContainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                    <Label text="My Branches" styleClass="sub-header" />
-                </VBox>
-            </GridPane>
+        <GridPane fx:id="gridContainer" styleClass="responsive-grid">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+            </columnConstraints>
+            <!-- Main Header -->
+            <VBox fx:id="welcomeSubContainer" maxWidth="Infinity" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                <Label fx:id="welcome" styleClass="header-label"/>
+            </VBox>
+            <!-- Sub Containers -->
+            <VBox fx:id="profileSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                <Label text="Profile" styleClass="sub-header" />
+                <HBox styleClass="nested-container">
+                    <VBox fx:id="leftColumn" styleClass="nested-vbox">
+                        <Label fx:id="userName" maxWidth="${leftColumn.width}"/>
+                        <Label fx:id="userAge"/>
+                        <Label text="Prioridades" styleClass="sub-header" />
+                        <ListView fx:id="userPriorities" styleClass="priority-list" />
+                    </VBox>
+                    <VBox styleClass="nested-vbox">
+                        <Label text="Core projects" styleClass="sub-header" />
+                    </VBox>
+                </HBox>
+            </VBox>
+            <VBox fx:id="userOrganizationsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                <Label text="My Organizations" styleClass="sub-header" />
+            </VBox>
+            <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                <Label text="Fav Projects" styleClass="sub-header" />
+            </VBox>
+            <VBox fx:id="userBranchesSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                <Label text="My Branches" styleClass="sub-header" />
+            </VBox>
+        </GridPane>
     </center>
 
 </BorderPane>
