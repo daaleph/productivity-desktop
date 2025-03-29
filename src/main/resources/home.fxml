@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.VBox?>
-
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="home.controllers.Home" stylesheets="@/styles.css">
-    <!-- Custom title bar -->
     <top>
         <HBox styleClass="title-bar">
             <Region HBox.hgrow="ALWAYS" />
@@ -22,42 +21,41 @@
         </HBox>
     </top>
 
-    <!-- Main content -->
     <center>
-        <VBox styleClass="main-content">
-            <VBox>
-                <Region prefHeight="50" />
-                <HBox>
-                    <Region prefWidth="50" />
-                    <Region HBox.hgrow="ALWAYS" />
-                    <GridPane fx:id="gridContainer" styleClass="responsive-grid">
-                        <!-- Main Header -->
-                        <VBox fx:id="welcomeSubcontainer" styleClass="main-container" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
-                            <Label fx:id="welcome" styleClass="header-label"/>
-                        </VBox>
-                        <!-- Sub Containers -->
-                        <VBox fx:id="profileSubcontainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                            <Label text="Profile" styleClass="sub-header" />
-                            <Label fx:id="userName"/>
+            <GridPane fx:id="gridContainer" styleClass="responsive-grid">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                </columnConstraints>
+                <!-- Main Header -->
+                <VBox fx:id="welcomeSubContainer" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                    <Label fx:id="welcome" styleClass="header-label"/>
+                </VBox>
+                <!-- Sub Containers -->
+                <VBox fx:id="profileSubContainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Profile" styleClass="sub-header" />
+                    <HBox styleClass="nested-container">
+                        <VBox fx:id="leftColumn" styleClass="nested-vbox">
+                            <Label fx:id="userName" maxWidth="${leftColumn.width}"/>
                             <Label fx:id="userAge"/>
                             <Label text="Prioridades" styleClass="sub-header" />
                             <ListView fx:id="userPriorities" styleClass="priority-list" />
                         </VBox>
-                        <VBox fx:id="userOrganizationsSubcontainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                            <Label text="My Organizations" styleClass="sub-header" />
+                        <VBox styleClass="nested-vbox">
+                            <Label text="Core projects" styleClass="sub-header" />
                         </VBox>
-                        <VBox fx:id="favoriteProjectsSubcontainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                            <Label text="Fav Projects" styleClass="sub-header" />
-                        </VBox>
-                        <VBox fx:id="userBranchesSubcontainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                            <Label text="My Branches" styleClass="sub-header" />
-                        </VBox>
-                    </GridPane>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <Region prefWidth="50" />
-                </HBox>
-            </VBox>
-        </VBox>
+                    </HBox>
+                </VBox>
+                <VBox fx:id="userOrganizationsSubContainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="My Organizations" styleClass="sub-header" />
+                </VBox>
+                <VBox fx:id="favoriteProjectsSubContainer" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                    <Label text="Fav Projects" styleClass="sub-header" />
+                </VBox>
+                <VBox fx:id="userBranchesSubContainer" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                    <Label text="My Branches" styleClass="sub-header" />
+                </VBox>
+            </GridPane>
     </center>
 
 </BorderPane>

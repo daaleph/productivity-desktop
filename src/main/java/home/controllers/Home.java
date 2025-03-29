@@ -15,11 +15,11 @@ import java.util.List;
 
 public class Home {
     @FXML private GridPane gridContainer;
-    @FXML private Label welcome, userAge, userName;
+    @FXML private Label welcome, userAge, userName, coreProjects;
     @FXML private ListView<Priority> userPriorities;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
-    public VBox profileSubcontainer, userOrganizationsSubcontainer, favoriteProjectsSubcontainer, userBranchesSubcontainer, welcomeSubcontainer;
+    public VBox profileSubContainer, userOrganizationsSubContainer, favoriteProjectsSubContainer, userBranchesSubContainer, welcomeSubContainer;
 
     private Stage stage;
     private boolean isMaximized = false;
@@ -42,10 +42,10 @@ public class Home {
 
             // Calculate preferred height
             int numItems = priorities.size();
-            double cellHeight = 24; // Must match CSS -fx-fixed-cell-size
-            double padding = 2; // Account for any listview padding
+            double cellHeight = 24;
+            double padding = 2;
             userPriorities.setPrefHeight(numItems * cellHeight + padding);
-            userPriorities.setMaxHeight(Control.USE_PREF_SIZE); // Prevent expansion
+            userPriorities.setMaxHeight(Control.USE_PREF_SIZE);
         }
     }
 
