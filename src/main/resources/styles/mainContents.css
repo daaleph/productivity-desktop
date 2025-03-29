@@ -1,0 +1,50 @@
+/* Main Content Styling */
+
+.main-content {
+    -fx-max-width: infinity;
+    -fx-background-color: #ffffff;
+}
+
+.responsive-grid {
+    -fx-hgap: 10;
+    -fx-vgap: 10;
+    -fx-padding: 20;
+    -fx-max-width: infinity;
+    -fx-max-height: infinity;
+}
+
+.main-subcontainer {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 5;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 0);
+}
+
+.sub-container {
+    -fx-background-color: #f8f8f8;
+    -fx-border-color: #dddddd;
+    -fx-border-radius: 3;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 0);
+    -fx-transition: all 0.3s ease;
+    -fx-max-width: infinity;
+    -fx-max-height: infinity;
+}
+
+.header-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.sub-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555;
+}
+
+.resize-region {
+    -fx-background-color: transparent;
+}

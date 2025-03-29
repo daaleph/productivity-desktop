@@ -2,7 +2,6 @@ package home.models;
 
 import home.records.Priority;
 import home.types.Triplet;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;

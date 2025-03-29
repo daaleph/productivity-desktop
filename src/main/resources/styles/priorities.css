@@ -1,0 +1,32 @@
+/* Priorities */
+
+.priority-list {
+    -fx-background-color: transparent;
+    -fx-fixed-cell-size: 24px;
+    -fx-padding: 0;
+}
+
+.priority-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #666666;
+    -fx-font-size: 13px;
+    -fx-padding: 2px 5px;
+}
+
+.priority-list .list-cell:empty {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.nested-container {
+    -fx-spacing: 20;
+}
+
+.nested-vbox {
+    -fx-spacing: 8;
+    -fx-padding: 10;
+    -fx-max-width: infinity;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-background-color: #f8f8f8;
+}
