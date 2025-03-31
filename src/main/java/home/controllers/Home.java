@@ -1,5 +1,6 @@
 package home.controllers;
 
+import home.models.CoreProject;
 import home.models.User;
 import home.records.Priority;
 import javafx.animation.TranslateTransition;
@@ -15,8 +16,9 @@ import java.util.List;
 
 public class Home {
     @FXML private GridPane gridContainer;
-    @FXML private Label welcome, userAge, userName, coreProjects;
+    @FXML private Label welcome, userAge, userName;
     @FXML private ListView<Priority> userPriorities;
+    @FXML private ListView<CoreProject> userCoreProjects;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     public VBox profileSubContainer, userOrganizationsSubContainer, favoriteProjectsSubContainer, userBranchesSubContainer, welcomeSubContainer;
@@ -25,26 +27,35 @@ public class Home {
     private boolean isMaximized = false;
 
     public void setUser(User user) {
+        double cellHeight = 24;
+        double padding = 2;
         if (user != null) {
             welcome.setText("How are you feeling today " + user.getPreferredName());
             userName.setText("Name: " + user.getName());
             userAge.setText("Age: " + user.getAge());
             List<Priority> priorities = user.getPriorities();
-
             userPriorities.setItems(FXCollections.observableArrayList(priorities));
-            userPriorities.setCellFactory(lv -> new ListCell<>() {
+            userPriorities.setCellFactory(lvp -> new ListCell<>() {
                 @Override
                 protected void updateItem(Priority item, boolean empty) {
                     super.updateItem(item, empty);
                     setText(empty || item == null ? "" : item.descriptionEs());
                 }
             });
-
-            int numItems = priorities.size();
-            double cellHeight = 24;
-            double padding = 2;
-            userPriorities.setPrefHeight(numItems * cellHeight + padding);
+            userPriorities.setPrefHeight(priorities.size() * cellHeight + padding);
             userPriorities.setMaxHeight(Control.USE_PREF_SIZE);
+
+            List<CoreProject> coreProjects = user.getCoreProjects();
+            userCoreProjects.setItems(FXCollections.observableArrayList(coreProjects));
+            userCoreProjects.setCellFactory(lvcp -> new ListCell<>() {
+                @Override
+                protected void updateItem(CoreProject item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.getName());
+                }
+            });
+            userCoreProjects.setPrefHeight(coreProjects.size() * cellHeight + padding);
+            userCoreProjects.setMaxHeight(Control.USE_PREF_SIZE);
         }
     }
 

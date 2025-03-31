@@ -1,12 +1,18 @@
 package home.models;
 
 import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
+
+import home.records.Failure;
+import home.records.MeasuredGoal;
 import home.records.Priority;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -80,16 +86,25 @@ public class User {
         return priorities;
     }
 
+    public List<CoreProject> getCoreProjects() {
+        return coreProjects;
+    }
+
     private void fetchData() {
+        this.fetchPersonalData();
+        this.fetchCoreProjects();
+    }
+
+    private void fetchPersonalData() {
         String user = getAbbreviation("user");
         String email = getAbbreviation("email");
         HttpClient client = HttpClient.newHttpClient();
         try {
             String apiUrl = String.format("http://localhost:4000/api/%s/?%s=%s", user, email, this.email);
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .GET()
-                .build();
+                    .uri(URI.create(apiUrl))
+                    .GET()
+                    .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
             if (response.statusCode() == 200) {
@@ -104,7 +119,94 @@ public class User {
                         .map(p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs())))
                         .toList();
             } else {
-                System.err.println("Error fetching data. Status code: " + response.statusCode());
+                System.err.println("Error fetching personal data. Status code: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void fetchCoreProjects() {
+        String core = getAbbreviation("core");
+        String user = getAbbreviation("user");
+        String email = getAbbreviation("email");
+        String projects = getAbbreviation("projects");
+
+        HttpClient client = HttpClient.newHttpClient();
+        try {
+            String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s", user, projects, core, email, this.email);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode projectsArray = mapper.readTree(response.body());
+                List<CoreProject> coreProjectsList = new ArrayList<>();
+                for (JsonNode projectNode : projectsArray) {
+                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
+                    CoreProject coreProject = new CoreProject(uuid);
+                    String name = projectNode.get("name").asText();
+                    int type = projectNode.get("type").asInt();
+                    boolean favorite = projectNode.get("favorite").asBoolean();
+                    ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
+                    JsonNode completionNode = projectNode.get("completion");
+                    Map<String, Integer> completionMap = Map.of(
+                            "days", completionNode.get("days").asInt(),
+                            "weeks", completionNode.get("weeks").asInt(),
+                            "months", completionNode.get("months").asInt(),
+                            "years", completionNode.get("years").asInt()
+                    );
+                    MeasuredSet<Integer> necessaryTime = MeasuredSet.create(Integer.class, completionMap);
+                    List<Priority> projectPriorities = new ArrayList<>();
+                    JsonNode prioritiesNode = projectNode.get("priorities");
+                    if (prioritiesNode.isArray()) {
+                        for (JsonNode pNode : prioritiesNode) {
+                            int index = pNode.asInt();
+                            projectPriorities.add(this.getPriority(index));
+                        }
+                    }
+                    List<MeasuredGoal> measuredGoals = new ArrayList<>();
+                    JsonNode goalsNode = projectNode.get("measuredGoals");
+                    for (JsonNode goalNode : goalsNode) {
+                        int order = goalNode.get("order").asInt();
+                        String item = goalNode.get("item").asText();
+                        double weight = goalNode.get("weight").asDouble();
+                        double realGoal = goalNode.get("realGoal").asDouble();
+                        double realAdvance = goalNode.get("realAdvance").asDouble();
+                        MeasuredSet<Double> real = MeasuredSet.create(Double.class,
+                                Map.of("goal", realGoal, "advance", realAdvance));
+                        int discreteGoal = goalNode.get("discreteGoal").asInt();
+                        int discreteAdvance = goalNode.get("discreteAdvance").asInt();
+                        MeasuredSet<Integer> discrete = MeasuredSet.create(Integer.class,
+                                Map.of("goal", discreteGoal, "advance", discreteAdvance));
+                        List<Failure> failures = new ArrayList<>();
+                        JsonNode failuresNode = goalNode.get("failures");
+                        for (JsonNode failureNode : failuresNode) {
+                            System.out.print("Failure:");
+                            System.out.println(failureNode);
+                            failures.add(Failure.fromJson(failureNode));
+                        }
+                        boolean finished = goalNode.get("finished").asBoolean();
+                        measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
+                    }
+                    List<Triplet<Integer, String, Double>> underlyingCategories = List.of();
+                    coreProject.setData(
+                            name,
+                            type,
+                            favorite,
+                            dateToStart,
+                            projectPriorities,
+                            measuredGoals,
+                            necessaryTime,
+                            underlyingCategories
+                    );
+                    coreProjectsList.add(coreProject);
+                }
+                this.coreProjects = coreProjectsList;
+            } else {
+                System.err.println("Error fetching core projects. Status code: " + response.statusCode());
             }
         } catch (Exception e) {
             e.printStackTrace();

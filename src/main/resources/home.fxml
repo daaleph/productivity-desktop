@@ -45,6 +45,7 @@
                     </VBox>
                     <VBox styleClass="nested-vbox">
                         <Label text="Core projects" styleClass="sub-header" />
+                        <ListView fx:id="userCoreProjects" styleClass="priority-list" />
                     </VBox>
                 </HBox>
             </VBox>
