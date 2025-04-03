@@ -1,13 +1,15 @@
 // java/home/Main.java
 package home;
 
+import java.util.Map;
 import home.models.User;
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
 import home.controllers.Home;
+import javafx.fxml.FXMLLoader;
+import javafx.application.Application;
+import home.models.organizations.UserOrganization;
 
 public class Main extends Application {
 
@@ -24,8 +26,8 @@ public class Main extends Application {
             controller.setStage(primaryStage);
             controller.setUser(user);
             controller.setUserOrganizations(user);
-            System.out.print("USER ORGANIZATIONS: ");
-            System.out.println(controller.getUserOrganizations());
+            Map<Integer, UserOrganization> orgsMap = controller.getUserOrganizations();
+            orgsMap.forEach((id, org) -> System.out.print(org.getBranches() + " "));
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
         }

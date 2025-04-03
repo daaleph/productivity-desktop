@@ -1,9 +1,8 @@
 package home.models.organizations;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import home.models.branchs.Branch;
-
 import java.util.Map;
+import home.models.branchs.Branch;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Organization {
     protected int id;

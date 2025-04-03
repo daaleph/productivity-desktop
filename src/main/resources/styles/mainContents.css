@@ -5,12 +5,26 @@
     -fx-background-color: #ffffff;
 }
 
+/* ScrollPane styling */
+.responsive-scroll {
+    -fx-fit-to-width: true;
+    -fx-hbar-policy: never; /* Never show horizontal scroll */
+    -fx-vbar-policy: as-needed; /* Show vertical scroll when needed */
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+/* GridPane modifications */
 .responsive-grid {
     -fx-hgap: 10;
     -fx-vgap: 10;
     -fx-padding: 20;
     -fx-max-width: infinity;
     -fx-max-height: infinity;
+
+    /* Ensure minimum size for scrolling */
+    -fx-min-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
 }
 
 .main-subcontainer {
@@ -22,15 +36,20 @@
 }
 
 .sub-container {
+    /* Remove fixed height constraints */
     -fx-background-color: #f8f8f8;
     -fx-border-color: #dddddd;
     -fx-border-radius: 3;
     -fx-padding: 15;
     -fx-spacing: 10;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 0);
-    -fx-transition: all 0.3s ease;
-    -fx-max-width: infinity;
+
+    /* Automatic height adjustment */
+    -fx-min-height: -fx-pref-height;
+    -fx-pref-height: -fx-use-computed-size;
     -fx-max-height: infinity;
+
+    /* Remove unsupported transition (JavaFX CSS doesn't support transitions) */
 }
 
 .header-label {
@@ -47,4 +66,69 @@
 
 .resize-region {
     -fx-background-color: transparent;
+}
+
+
+/* organizations */
+
+/* Organization Scroll Container */
+.organization-scroll {
+    -fx-padding: 5 5 5 5;
+}
+
+/* Organization List */
+.organizations-list {
+    -fx-spacing: 12;
+}
+
+/* Organization Container */
+.org-container {
+    -fx-alignment: center-left;
+    -fx-padding: 8 12;
+    -fx-background-color: #f8f9fa;
+    -fx-background-radius: 4;
+    -fx-border-color: #dee2e6;
+    -fx-border-radius: 4;
+}
+
+/* Email Label */
+.org-name {
+    -fx-font-weight: 600;
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 14px;
+    -fx-padding: 0 5 0 0;
+
+    /* Base sizing */
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+
+    /* Special computed size accounting for padding */
+    -fx-pref-width: -fx-label-padding;
+}
+
+/* Special pseudoclass for exact measurement */
+.org-name:measured {
+    -fx-pref-width: -fx-text-width;
+}
+
+/* Branches Flow Pane */
+.branches-flow {
+    -fx-alignment: center-left;
+}
+
+/* Branch Labels */
+.branch-label {
+    -fx-background-color: #e9ecef;
+    -fx-padding: 3 8 3 5;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-font-size: 13px;
+    -fx-text-fill: #495057;
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.05), 2, 0, 1, 1);
+    -fx-content-display: left;
+}
+
+.branch-label .font-awesome-icon {
+    -fx-fill: #6c757d;
+    -fx-font-size: 11px;
 }

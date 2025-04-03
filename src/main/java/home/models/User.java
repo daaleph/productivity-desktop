@@ -197,7 +197,6 @@ public class User {
         try {
             String apiUrl = String.format("http://localhost:4000/api/%s/%s?%s=%s",
                     userAbbr, organizationsAbbr, emailAbbr, this.email);
-            System.out.println("API URL: " + apiUrl);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(apiUrl))
@@ -217,9 +216,8 @@ public class User {
                     String email = orgNode.get("email").asText();
 
                     UserOrganization userOrg = new UserOrganization(orgId, email);
-                    userOrg.setName(name); // Set organization name
+                    userOrg.setName(name);
 
-                    // Parse branches
                     Map<Integer, Branch> branches = new HashMap<>();
                     JsonNode branchesNode = orgNode.get("branches");
                     if (branchesNode != null) {
@@ -229,16 +227,16 @@ public class User {
                             String branchName = branchData.get("name").asText();
 
                             Branch branch = new Branch(branchId);
-                            branch.setName(branchName); // Set branch name
+                            branch.setName(branchName);
                             branches.put(branchId, branch);
                         });
                     }
-                    userOrg.setBranches(branches); // Populate branches
+                    userOrg.setBranches(branches);
 
                     orgsMap.put(orgId, userOrg);
                 });
 
-                this.organizations = orgsMap; // Store in User's map
+                this.organizations = orgsMap;
             } else {
                 System.err.println("Error fetching organizations: " + response.statusCode());
             }

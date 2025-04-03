@@ -1,16 +1,16 @@
 package home.models.organizations;
 
+import java.util.Map;
+import home.models.User;
+import java.util.HashMap;
+import home.models.branchs.Branch;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import home.models.User;
-import home.models.branchs.Branch;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class UserOrganization extends BranchedOrganization {
     private User user;
-    private String email;
+    private final String email;
     private Map<Integer, Branch> branches = new HashMap<>();
 
     @JsonCreator
@@ -22,10 +22,6 @@ public class UserOrganization extends BranchedOrganization {
         this.email = email;
     }
 
-    public Map<Integer, Branch> getBranches() {
-        return branches;
-    }
-
     public void setBranches(Map<Integer, Branch> branches) {
         this.branches = branches;
     }
@@ -35,7 +31,15 @@ public class UserOrganization extends BranchedOrganization {
         System.out.println(id);
     }
 
+    public Map<Integer, Branch> getBranches() {
+        return branches;
+    }
+
     public User getUser() {
         return user;
+    }
+
+    public String getEmail() {
+        return this.email;
     }
 }

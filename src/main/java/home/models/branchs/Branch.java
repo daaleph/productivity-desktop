@@ -1,8 +1,8 @@
 package home.models.branchs;
 
-import home.models.projects.Project;
 import java.util.Map;
 import java.util.UUID;
+import home.models.projects.Project;
 
 public class Branch {
     private final int id;

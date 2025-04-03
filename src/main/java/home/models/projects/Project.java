@@ -9,13 +9,11 @@ public class Project extends CoreProject {
 
     @Override
     public void fetchData() {
-        super.fetchData(); // Optional: Use parent's logic
-        // Additional Project-specific logic
+        super.fetchData();
     }
 
     @Override
     public void updateData() {
-        super.updateData(); // Optional
-        // Additional logic
+        super.updateData();
     }
 }
