@@ -128,6 +128,12 @@ public class Home {
         return container;
     }
 
+    private double getTextWidth(String text, Label label) {
+        Text textNode = new Text(text);
+        textNode.setFont(label.getFont());
+        return textNode.getLayoutBounds().getWidth();
+    }
+
     private Label createBranchLabel(Branch branch) {
         Label label = new Label(branch.getName());
         label.getStyleClass().add("branch-label");
