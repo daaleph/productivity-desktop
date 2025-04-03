@@ -26,11 +26,11 @@
 }
 
 .priority-list .scroll-bar:horizontal .thumb {
-    -fx-background-color: #b3b3b3;  /* Grey color for horizontal */
+    -fx-background-color: #b3b3b3;
 }
 
-.priority-list .scroll-bar:vertical .thumb {
-    -fx-background-color: #b3b3b3;  /* Same grey for consistency */
+.priority-list  .thumb {
+    -fx-background-color: #b3b3b3;
 }
 
 .priority-list .scroll-bar .increment-button,
