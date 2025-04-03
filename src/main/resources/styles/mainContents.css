@@ -71,12 +71,47 @@
 
 /* organizations */
 
-/* Organization Scroll Container */
+/* For Organization ScrollPane */
 .organization-scroll {
-    -fx-padding: 5 5 5 5;
+    -fx-padding: 10;
+    -fx-vbar-policy: as-needed;
+    -fx-hbar-policy: as-needed;
 }
 
-/* Organization List */
+/* Vertical Scrollbar Width */
+.organization-scroll .scroll-bar:vertical {
+    -fx-pref-width: 5px;  /* Controls vertical scrollbar thickness */
+}
+
+/* Horizontal Scrollbar Height */
+.organization-scroll .scroll-bar:horizontal {
+    -fx-margin: 0 0 100px 0;
+    -fx-pref-height: 5px; /* Controls horizontal scrollbar thickness */
+}
+
+/* Rest of your existing styles */
+.organization-scroll .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.organization-scroll .scroll-bar .increment-button,
+.organization-scroll .scroll-bar .decrement-button {
+    -fx-padding: 5;
+    -fx-background-color: transparent;
+}
+
+.organization-scroll .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.organization-scroll .scroll-bar:vertical .thumb,
+.organization-scroll .scroll-bar:horizontal .thumb {
+    -fx-background-color: #b3b3b3;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2em; /* Changed from 0 to match priority-list */
+}
+
+/* Existing organizations list styling remains unchanged */
 .organizations-list {
     -fx-spacing: 12;
 }

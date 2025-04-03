@@ -26,8 +26,6 @@ public class Main extends Application {
             controller.setStage(primaryStage);
             controller.setUser(user);
             controller.setUserOrganizations(user);
-            Map<Integer, UserOrganization> orgsMap = controller.getUserOrganizations();
-            orgsMap.forEach((id, org) -> System.out.print(org.getBranches() + " "));
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
         }
