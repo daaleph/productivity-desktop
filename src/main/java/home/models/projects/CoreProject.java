@@ -1,6 +1,7 @@
-package home.models;
+package home.models.projects;
 
 import home.records.MeasuredGoal;
+import home.records.MeasuredSet;
 import home.records.Priority;
 import home.types.Triplet;
 import java.time.ZonedDateTime;
@@ -41,7 +42,6 @@ public class CoreProject {
         this.necessaryTime = necessaryTime;
         this.underlyingCategories = underlyingCategories;
     }
-
     public String getName() {
         return this.name;
     }

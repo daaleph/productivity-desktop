@@ -1,13 +1,15 @@
 // java/home/Main.java
 package home;
 
+import java.util.Map;
 import home.models.User;
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
 import home.controllers.Home;
+import javafx.fxml.FXMLLoader;
+import javafx.application.Application;
+import home.models.organizations.UserOrganization;
 
 public class Main extends Application {
 
@@ -23,6 +25,7 @@ public class Main extends Application {
         if (controller != null) {
             controller.setStage(primaryStage);
             controller.setUser(user);
+            controller.setUserOrganizations(user);
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
         }

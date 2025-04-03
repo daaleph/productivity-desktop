@@ -1,4 +1,6 @@
-package home.models;
+package home.models.organizations;
+
+import home.models.User;
 
 import java.util.Collection;
 import java.util.Map;

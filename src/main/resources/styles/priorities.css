@@ -3,19 +3,59 @@
 .priority-list {
     -fx-background-color: transparent;
     -fx-fixed-cell-size: 24px;
-    -fx-padding: 0;
+    -fx-padding: 0 2px 0 0;
+    /* Disable vertical scrollbar completely */
+    -fx-vbar-policy: never;
 }
 
 .priority-list .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #666666;
     -fx-font-size: 13px;
-    -fx-padding: 2px 5px;
+    -fx-padding: 2px 5px 2px 10px;
 }
 
 .priority-list .list-cell:empty {
     -fx-padding: 0;
     -fx-background-color: transparent;
+}
+
+/* Unified Scrollbar Styling - Only affects horizontal now */
+.priority-list .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.priority-list .scroll-bar:horizontal .thumb {
+    -fx-background-color: #b3b3b3;  /* Grey color for horizontal */
+}
+
+.priority-list .scroll-bar:vertical .thumb {
+    -fx-background-color: #b3b3b3;  /* Same grey for consistency */
+}
+
+.priority-list .scroll-bar .increment-button,
+.priority-list .scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-margin: 1;
+    -fx-background-color: transparent;
+}
+
+/* Track Styling */
+.priority-list .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+/* Explicitly hide vertical scrollbar components */
+.priority-list .scroll-bar:vertical,
+.priority-list .scroll-bar:vertical .track,
+.priority-list .scroll-bar:vertical .thumb,
+.priority-list .scroll-bar:vertical .increment-button,
+.priority-list .scroll-bar:vertical .decrement-button {
+    -fx-opacity: 0;
+    -fx-pref-width: 0;
+    -fx-min-width: 0;
+    -fx-max-width: 0;
+    -fx-padding: 0;
 }
 
 .nested-container {

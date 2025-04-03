@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 
+<?import javafx.scene.control.ScrollPane?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="home.controllers.Home" stylesheets="@/styles/windowControls.css,
             @/styles/mainContents.css,
@@ -24,41 +25,47 @@
     </top>
 
     <center>
-        <GridPane fx:id="gridContainer" styleClass="responsive-grid">
-            <columnConstraints>
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-            </columnConstraints>
-            <!-- Main Header -->
-            <VBox fx:id="welcomeSubContainer" maxWidth="Infinity" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
-                <Label fx:id="welcome" styleClass="header-label"/>
-            </VBox>
-            <!-- Sub Containers -->
-            <VBox fx:id="profileSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                <Label text="Profile" styleClass="sub-header" />
-                <HBox styleClass="nested-container">
-                    <VBox fx:id="leftColumn" styleClass="nested-vbox">
-                        <Label fx:id="userName" maxWidth="${leftColumn.width}"/>
-                        <Label fx:id="userAge"/>
-                        <Label text="Prioridades" styleClass="sub-header" />
-                        <ListView fx:id="userPriorities" styleClass="priority-list" />
-                    </VBox>
-                    <VBox styleClass="nested-vbox">
-                        <Label text="Core projects" styleClass="sub-header" />
-                        <ListView fx:id="userCoreProjects" styleClass="priority-list" />
-                    </VBox>
-                </HBox>
-            </VBox>
-            <VBox fx:id="userOrganizationsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                <Label text="My Organizations" styleClass="sub-header" />
-            </VBox>
-            <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                <Label text="Fav Projects" styleClass="sub-header" />
-            </VBox>
-            <VBox fx:id="userBranchesSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                <Label text="My Branches" styleClass="sub-header" />
-            </VBox>
-        </GridPane>
+        <ScrollPane fitToWidth="true" styleClass="responsive-scroll">
+            <GridPane fx:id="gridContainer" styleClass="responsive-grid">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                </columnConstraints>
+                <!-- Main Header -->
+                <VBox fx:id="welcomeSubContainer" maxWidth="Infinity" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
+                    <Label fx:id="welcome" styleClass="header-label"/>
+                </VBox>
+                <!-- Sub Containers -->
+                <VBox fx:id="profileSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Profile" styleClass="sub-header" />
+                    <HBox styleClass="nested-container">
+                        <VBox fx:id="leftColumn" styleClass="nested-vbox">
+                            <Label fx:id="userName" maxWidth="${leftColumn.width}"/>
+                            <Label fx:id="userAge"/>
+                            <Label text="Prioridades" styleClass="sub-header" />
+                            <ListView fx:id="userPriorities" styleClass="priority-list" />
+                        </VBox>
+                        <VBox styleClass="nested-vbox">
+                            <Label text="Core Projects" styleClass="sub-header" />
+                            <ListView fx:id="userCoreProjects" styleClass="priority-list" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+                <VBox fx:id="userOrganizationsSubContainer" maxWidth="Infinity" styleClass="sub-container"
+                      GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="My Organizations" styleClass="sub-header" />
+                    <ScrollPane fitToWidth="true" styleClass="organization-scroll">
+                        <VBox fx:id="organizationsContainer" styleClass="organizations-list" />
+                    </ScrollPane>
+                </VBox>
+                <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                    <Label text="Fav Projects" styleClass="sub-header" />
+                </VBox>
+                <VBox fx:id="userBranchesSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                    <Label text="My Branches" styleClass="sub-header" />
+                </VBox>
+            </GridPane>
+        </ScrollPane>
     </center>
 
 </BorderPane>

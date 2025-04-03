@@ -1,4 +1,6 @@
-package home.models;
+package home.models.branchs;
+
+import home.models.User;
 
 class UserBranch extends ProjectedBranch {
     private User user;
