@@ -2,17 +2,18 @@ package home.models;
 
 import java.net.URI;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
+import home.models.branchs.Branch;
+import home.models.organizations.UserOrganization;
+import home.models.projects.CoreProject;
 import home.records.Failure;
 import home.records.MeasuredGoal;
+import home.records.MeasuredSet;
 import home.records.Priority;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -27,8 +28,7 @@ public class User {
     protected List<Branch> branches;
     protected List<Priority> priorities;
     protected List<CoreProject> coreProjects;
-    protected List<Organization> organizations;
-    protected Map<String, String> abbreviations;
+    protected Map<Integer, UserOrganization> organizations;
     protected String completeName, preferredName, email;
 
     /**
@@ -62,37 +62,10 @@ public class User {
         return instance;
     }
 
-    public String getName() {
-        return completeName;
-    }
-
-    public String getPreferredName() {
-        return preferredName;
-    }
-
-    public int getAge() {
-        return age;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public Priority getPriority(Integer index) {
-        return priorities.get(index);
-    }
-
-    public List<Priority> getPriorities() {
-        return priorities;
-    }
-
-    public List<CoreProject> getCoreProjects() {
-        return coreProjects;
-    }
-
     private void fetchData() {
         this.fetchPersonalData();
         this.fetchCoreProjects();
+        this.fetchUserOrganizations();
     }
 
     private void fetchPersonalData() {
@@ -106,7 +79,6 @@ public class User {
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response.statusCode());
             if (response.statusCode() == 200) {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.body());
@@ -153,12 +125,12 @@ public class User {
                     ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
                     JsonNode completionNode = projectNode.get("completion");
                     Map<String, Integer> completionMap = Map.of(
-                            "days", completionNode.get("days").asInt(),
-                            "weeks", completionNode.get("weeks").asInt(),
-                            "months", completionNode.get("months").asInt(),
-                            "years", completionNode.get("years").asInt()
+                    "days", completionNode.get("days").asInt(),
+                    "weeks", completionNode.get("weeks").asInt(),
+                    "months", completionNode.get("months").asInt(),
+                    "years", completionNode.get("years").asInt()
                     );
-                    MeasuredSet<Integer> necessaryTime = MeasuredSet.create(Integer.class, completionMap);
+                    MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
                     List<Priority> projectPriorities = new ArrayList<>();
                     JsonNode prioritiesNode = projectNode.get("priorities");
                     if (prioritiesNode.isArray()) {
@@ -175,17 +147,21 @@ public class User {
                         double weight = goalNode.get("weight").asDouble();
                         double realGoal = goalNode.get("realGoal").asDouble();
                         double realAdvance = goalNode.get("realAdvance").asDouble();
-                        MeasuredSet<Double> real = MeasuredSet.create(Double.class,
-                                Map.of("goal", realGoal, "advance", realAdvance));
                         int discreteGoal = goalNode.get("discreteGoal").asInt();
                         int discreteAdvance = goalNode.get("discreteAdvance").asInt();
-                        MeasuredSet<Integer> discrete = MeasuredSet.create(Integer.class,
-                                Map.of("goal", discreteGoal, "advance", discreteAdvance));
+
+                        MeasuredSet<Double> real = new MeasuredSet<>(
+                            Map.of("goal", realGoal, "advance", realAdvance),
+                            Double.class
+                        );
+                        MeasuredSet<Integer> discrete = new MeasuredSet<>(
+                            Map.of("goal", discreteGoal, "advance", discreteAdvance),
+                            Integer.class
+                        );
+
                         List<Failure> failures = new ArrayList<>();
                         JsonNode failuresNode = goalNode.get("failures");
                         for (JsonNode failureNode : failuresNode) {
-                            System.out.print("Failure:");
-                            System.out.println(failureNode);
                             failures.add(Failure.fromJson(failureNode));
                         }
                         boolean finished = goalNode.get("finished").asBoolean();
@@ -213,19 +189,98 @@ public class User {
         }
     }
 
-    private String extractJsonValue(String json, String key) {
-        String keyPattern = "\"" + key + "\":";
-        int startIndex = json.indexOf(keyPattern) + keyPattern.length();
-        if (startIndex < keyPattern.length()) return "";
-        if (json.charAt(startIndex) == '"') {
-            startIndex++;
-            int endIndex = json.indexOf("\"", startIndex);
-            return json.substring(startIndex, endIndex);
-        } else {
-            int endIndex = json.indexOf(",", startIndex);
-            if (endIndex == -1) endIndex = json.indexOf("}", startIndex);
-            return json.substring(startIndex, endIndex).trim();
+    private void fetchUserOrganizations() {
+        String userAbbr = getAbbreviation("user");
+        String emailAbbr = getAbbreviation("email");
+        String organizationsAbbr = getAbbreviation("organizations");
+        HttpClient client = HttpClient.newHttpClient();
+        try {
+            String apiUrl = String.format("http://localhost:4000/api/%s/%s?%s=%s",
+                    userAbbr, organizationsAbbr, emailAbbr, this.email);
+            System.out.println("API URL: " + apiUrl);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(response.body());
+                Map<Integer, UserOrganization> orgsMap = new HashMap<>();
+
+                rootNode.fields().forEachRemaining(orgEntry -> {
+                    JsonNode orgNode = orgEntry.getValue();
+                    int orgId = orgNode.get("id").asInt();
+                    String name = orgNode.get("name").asText();
+                    String email = orgNode.get("email").asText();
+
+                    UserOrganization userOrg = new UserOrganization(orgId, email);
+                    userOrg.setName(name); // Set organization name
+
+                    // Parse branches
+                    Map<Integer, Branch> branches = new HashMap<>();
+                    JsonNode branchesNode = orgNode.get("branches");
+                    if (branchesNode != null) {
+                        branchesNode.fields().forEachRemaining(branchEntry -> {
+                            JsonNode branchData = branchEntry.getValue();
+                            int branchId = branchData.get("id").asInt();
+                            String branchName = branchData.get("name").asText();
+
+                            Branch branch = new Branch(branchId);
+                            branch.setName(branchName); // Set branch name
+                            branches.put(branchId, branch);
+                        });
+                    }
+                    userOrg.setBranches(branches); // Populate branches
+
+                    orgsMap.put(orgId, userOrg);
+                });
+
+                this.organizations = orgsMap; // Store in User's map
+            } else {
+                System.err.println("Error fetching organizations: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    public String getName() {
+        return completeName;
+    }
+
+    public String getPreferredName() {
+        return preferredName;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Priority getPriority(Integer index) {
+        return priorities.get(index);
+    }
+
+    public List<Priority> getPriorities() {
+        return priorities;
+    }
+
+    public List<CoreProject> getCoreProjects() {
+        return coreProjects;
+    }
+
+    public Map<Integer, UserOrganization> getOrganizations() {
+        return organizations;
+    }
+
+    public UserOrganization getOrganization(Integer org) {
+        return organizations.get(org);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package home.controllers;
 
-import home.models.CoreProject;
+import home.models.organizations.UserOrganization;
+import home.models.projects.CoreProject;
 import home.models.User;
 import home.records.Priority;
 import javafx.animation.TranslateTransition;
@@ -13,6 +14,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.util.List;
+import java.util.Map;
 
 public class Home {
     @FXML private GridPane gridContainer;
@@ -20,6 +22,7 @@ public class Home {
     @FXML private ListView<Priority> userPriorities;
     @FXML private ListView<CoreProject> userCoreProjects;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
+    @FXML private Map<Integer, UserOrganization> userOrganizations;
 
     public VBox profileSubContainer, userOrganizationsSubContainer, favoriteProjectsSubContainer, userBranchesSubContainer, welcomeSubContainer;
 
@@ -57,6 +60,14 @@ public class Home {
             userCoreProjects.setPrefHeight(coreProjects.size() * cellHeight + padding);
             userCoreProjects.setMaxHeight(Control.USE_PREF_SIZE);
         }
+    }
+
+    public void setUserOrganizations(User user) {
+        this.userOrganizations = user.getOrganizations();
+    }
+
+    public Map<Integer, UserOrganization> getUserOrganizations() {
+        return this.userOrganizations;
     }
 
     public void setStage(Stage stage) {

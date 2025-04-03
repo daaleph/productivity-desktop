@@ -1,4 +1,4 @@
-package home.models;
+package home.models.projects;
 
 import java.util.UUID;
 

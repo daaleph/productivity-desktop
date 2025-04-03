@@ -23,6 +23,9 @@ public class Main extends Application {
         if (controller != null) {
             controller.setStage(primaryStage);
             controller.setUser(user);
+            controller.setUserOrganizations(user);
+            System.out.print("USER ORGANIZATIONS: ");
+            System.out.println(controller.getUserOrganizations());
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
         }

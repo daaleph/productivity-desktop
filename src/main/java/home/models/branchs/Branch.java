@@ -1,5 +1,6 @@
-package home.models;
+package home.models.branchs;
 
+import home.models.projects.Project;
 import java.util.Map;
 import java.util.UUID;
 
@@ -9,6 +10,10 @@ public class Branch {
 
     public Branch(int id) {
         this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getId() {

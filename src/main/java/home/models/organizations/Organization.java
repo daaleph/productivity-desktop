@@ -1,4 +1,7 @@
-package home.models;
+package home.models.organizations;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import home.models.branchs.Branch;
 
 import java.util.Map;
 
@@ -8,6 +11,10 @@ public class Organization {
 
     public Organization(int id) {
         this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getId() {
@@ -29,10 +36,14 @@ abstract class BranchedOrganization extends Organization {
 
     public BranchedOrganization(int id) {
         super(id);
-        fetchData();
     }
 
     public abstract void fetchData();
+
+    @JsonProperty("branches")
+    public void setBranches(Map<Integer, Branch> branches) {
+        this.branches = branches;
+    }
 
     public Map<Integer, Branch> getBranches() {
         return branches;
