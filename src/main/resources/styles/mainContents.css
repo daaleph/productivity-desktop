@@ -8,8 +8,8 @@
 /* ScrollPane styling */
 .responsive-scroll {
     -fx-fit-to-width: true;
-    -fx-hbar-policy: never; /* Never show horizontal scroll */
-    -fx-vbar-policy: as-needed; /* Show vertical scroll when needed */
+    -fx-hbar-policy: never;
+    -fx-vbar-policy: as-needed;
     -fx-padding: 0;
     -fx-background-color: transparent;
 }
@@ -44,8 +44,6 @@
     -fx-min-height: -1;
     -fx-pref-height: -1;
     -fx-max-height: infinity;
-
-    /* Remove unsupported transition (JavaFX CSS doesn't support transitions) */
 }
 
 .header-label {
@@ -62,114 +60,4 @@
 
 .resize-region {
     -fx-background-color: transparent;
-}
-
-
-/* organizations */
-
-/* For Organization ScrollPane */
-.organization-scroll {
-    -fx-vbar-policy: as-needed;
-    -fx-hbar-policy: as-needed;
-}
-
-/* Vertical Scrollbar Width */
-.organization-scroll .scroll-bar:vertical {
-    -fx-pref-width: 5px;
-}
-
-/* Horizontal Scrollbar Height */
-.organization-scroll .scroll-bar:horizontal {
-    -fx-margin: 0 0 100px 0;
-    -fx-pref-height: 5px;
-}
-
-/* Rest of your existing styles */
-.organization-scroll .scroll-bar {
-    -fx-background-color: transparent;
-}
-
-.organization-scroll .scroll-bar .increment-button,
-.organization-scroll .scroll-bar .decrement-button {
-    -fx-padding: 5;
-    -fx-background-color: transparent;
-}
-
-.organization-scroll .scroll-bar .track {
-    -fx-background-color: transparent;
-}
-
-.organization-scroll .scroll-bar:vertical .thumb,
-.organization-scroll .scroll-bar:horizontal .thumb {
-    -fx-background-color: #b3b3b3;
-    -fx-background-insets: 0;
-    -fx-background-radius: 2em;
-}
-
-/* Existing organizations list styling remains unchanged */
-.organizations-list {
-    -fx-spacing: 12;
-}
-
-/* Organization Container */
-.org-container {
-    -fx-alignment: center-left;
-    -fx-padding: 8 12;
-    -fx-background-color: #f8f9fa;
-    -fx-background-radius: 4;
-    -fx-border-color: #dee2e6;
-    -fx-border-radius: 4;
-}
-
-/* Email Label */
-.org-name {
-    -fx-font-weight: 600;
-    -fx-text-fill: #2c3e50;
-    -fx-font-size: 14px;
-    -fx-padding: 0 5 0 0;
-}
-
-/* Special pseudoclass for exact measurement */
-.org-name:measured {
-    -fx-pref-width: -fx-text-width;
-}
-
-/* Branches Flow Pane */
-.branches-flow {
-    -fx-alignment: center-left;
-}
-
-/* Branch Labels */
-.branch-label {
-    -fx-background-color: #e9ecef;
-    -fx-padding: 3 8 3 5;
-    -fx-border-radius: 3;
-    -fx-background-radius: 3;
-    -fx-font-size: 13px;
-    -fx-text-fill: #495057;
-    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.05), 2, 0, 1, 1);
-    -fx-content-display: left;
-}
-
-.branch-label .font-awesome-icon {
-    -fx-fill: #6c757d;
-    -fx-font-size: 11px;
-}
-
-/* Favorite Projects FlowPane */
-.favorite-projects-flow {
-    -fx-hgap: 10;
-    -fx-vgap: 10;
-    -fx-padding: 5;
-}
-
-/* Project Labels */
-.favorite-project-label {
-    -fx-background-color: #e9ecef;
-    -fx-padding: 5 10;
-    -fx-border-radius: 3;
-    -fx-background-radius: 3;
-    -fx-font-size: 13px;
-    -fx-text-fill: #495057;
-    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.05), 2, 0, 1, 1);
 }

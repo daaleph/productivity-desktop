@@ -193,9 +193,9 @@ public class Home {
 
     private HBox createOrganizationRow(UserOrganization org) {
         HBox container = new HBox(15);
-        container.getStyleClass().add("org-container");
+        container.getStyleClass().add("organization-container");
         Label emailLabel = new Label(org.getName());
-        emailLabel.getStyleClass().add("org-name");
+        emailLabel.getStyleClass().add("organization-name");
         emailLabel.setWrapText(false);
         emailLabel.setEllipsisString("");
         Text textMeasure = new Text(org.getName());

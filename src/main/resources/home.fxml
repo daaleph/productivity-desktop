@@ -14,6 +14,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="home.controllers.Home" stylesheets="@/styles/windowControls.css,
             @/styles/mainContents.css,
+            @/styles/favoriteProjects.css,
+            @/styles/organizations.css,
             @/styles/priorities.css">
     <top>
         <HBox styleClass="title-bar">
