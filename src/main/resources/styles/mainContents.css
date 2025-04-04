@@ -1,10 +1,3 @@
-/* Main Content Styling */
-
-.main-content {
-    -fx-max-width: infinity;
-    -fx-background-color: #ffffff;
-}
-
 /* ScrollPane styling */
 .responsive-scroll {
     -fx-fit-to-width: true;
@@ -32,18 +25,12 @@
 }
 
 .sub-container {
-    /* Remove fixed height constraints */
     -fx-background-color: #f8f8f8;
     -fx-border-color: #dddddd;
     -fx-border-radius: 3;
     -fx-padding: 15;
     -fx-spacing: 10;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 0);
-
-    /* Automatic height adjustment */
-    -fx-min-height: -1;
-    -fx-pref-height: -1;
-    -fx-max-height: infinity;
 }
 
 .header-label {
@@ -56,8 +43,4 @@
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: #555555;
-}
-
-.resize-region {
-    -fx-background-color: transparent;
 }

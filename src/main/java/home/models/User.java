@@ -16,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -176,7 +177,7 @@ public class User {
                         measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
                     }
                     List<Triplet<Integer, String, Double>> underlyingCategories = List.of();
-                    coreProject.setData(
+                    CoreProject.CoreProjectData data = new CoreProject.CoreProjectData(
                             name,
                             type,
                             favorite,
@@ -186,6 +187,7 @@ public class User {
                             necessaryTime,
                             underlyingCategories
                     );
+                    coreProject.setData(data);
                     coreProjectsMap.put(uuid, coreProject);
                 }
                 this.coreProjects = coreProjectsMap;
@@ -216,11 +218,18 @@ public class User {
                 JsonNode projectsArray = mapper.readTree(response.body());
                 Map<UUID, Project> favoriteProjectsMap = new HashMap<>();
                 for (JsonNode projectNode : projectsArray) {
-                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
-                    Project project = new Project(uuid);
-                    String name = projectNode.get("name").asText();
                     int type = projectNode.get("type").asInt();
+                    String name = projectNode.get("name").asText();
                     boolean favorite = projectNode.get("favorite").asBoolean();
+                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
+                    List<UUID> parentProjects = projectNode.has("parentProjects") && !projectNode.get("parentProjects").isNull()
+                            ? StreamSupport.stream(
+                                    projectNode.get("parentProjects").spliterator(), false)
+                            .map(JsonNode::asText)
+                            .map(UUID::fromString)
+                            .collect(Collectors.toList())
+                            : Collections.emptyList();
+                    Project project = new Project(uuid);
                     ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
                     JsonNode completionNode = projectNode.get("completion");
                     Map<String, Integer> completionMap = Map.of(
@@ -267,7 +276,7 @@ public class User {
                         measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
                     }
                     List<Triplet<Integer, String, Double>> underlyingCategories = List.of();
-                    project.setData(
+                    Project.ProjectData data = new Project.ProjectData(
                             name,
                             type,
                             favorite,
@@ -275,8 +284,10 @@ public class User {
                             projectPriorities,
                             measuredGoals,
                             necessaryTime,
-                            underlyingCategories
+                            underlyingCategories,
+                            parentProjects
                     );
+                    project.setData(data);
                     favoriteProjectsMap.put(uuid, project);
                 }
                 this.favoriteProjects = favoriteProjectsMap;
