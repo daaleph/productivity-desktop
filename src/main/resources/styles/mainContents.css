@@ -155,3 +155,21 @@
     -fx-fill: #6c757d;
     -fx-font-size: 11px;
 }
+
+/* Favorite Projects FlowPane */
+.favorite-projects-flow {
+    -fx-hgap: 10;
+    -fx-vgap: 10;
+    -fx-padding: 5;
+}
+
+/* Project Labels */
+.favorite-project-label {
+    -fx-background-color: #e9ecef;
+    -fx-padding: 5 10;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-font-size: 13px;
+    -fx-text-fill: #495057;
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.05), 2, 0, 1, 1);
+}

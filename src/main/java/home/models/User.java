@@ -7,6 +7,7 @@ import java.util.*;
 import home.models.branchs.Branch;
 import home.models.organizations.UserOrganization;
 import home.models.projects.CoreProject;
+import home.models.projects.Project;
 import home.records.Failure;
 import home.records.MeasuredGoal;
 import home.records.MeasuredSet;
@@ -14,6 +15,7 @@ import home.records.Priority;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -25,11 +27,12 @@ public class User {
     private static User instance;
 
     protected int age;
-    protected List<Branch> branches;
-    protected List<Priority> priorities;
-    protected List<CoreProject> coreProjects;
-    protected Map<Integer, UserOrganization> organizations;
+    protected Map<Integer, Branch> branches;
+    protected Map<Integer, Priority> priorities;
+    protected Map<UUID, CoreProject> coreProjects;
+    protected Map<UUID, Project> favoriteProjects;
     protected String completeName, preferredName, email;
+    protected Map<Integer, UserOrganization> organizations;
 
     /**
      * Returns the single instance of User. On the first call, the provided
@@ -66,6 +69,7 @@ public class User {
         this.fetchPersonalData();
         this.fetchCoreProjects();
         this.fetchUserOrganizations();
+        this.fetchFavoriteProjects();
     }
 
     private void fetchPersonalData() {
@@ -87,9 +91,13 @@ public class User {
                 this.preferredName = userData.preferredName();
                 this.age = userData.age();
                 this.email = userData.email();
-                this.priorities = userData.priorities().stream()
-                        .map(p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs())))
-                        .toList();
+                this.priorities = userData
+                        .priorities()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                Priority::id,
+                                p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()))
+                        ));
             } else {
                 System.err.println("Error fetching personal data. Status code: " + response.statusCode());
             }
@@ -115,7 +123,7 @@ public class User {
             if (response.statusCode() == 200) {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode projectsArray = mapper.readTree(response.body());
-                List<CoreProject> coreProjectsList = new ArrayList<>();
+                Map<UUID, CoreProject> coreProjectsMap = new HashMap<>();
                 for (JsonNode projectNode : projectsArray) {
                     UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
                     CoreProject coreProject = new CoreProject(uuid);
@@ -178,9 +186,100 @@ public class User {
                             necessaryTime,
                             underlyingCategories
                     );
-                    coreProjectsList.add(coreProject);
+                    coreProjectsMap.put(uuid, coreProject);
                 }
-                this.coreProjects = coreProjectsList;
+                this.coreProjects = coreProjectsMap;
+            } else {
+                System.err.println("Error fetching core projects. Status code: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void fetchFavoriteProjects() {
+        String favoriteS = getAbbreviation("favorite");
+        String user = getAbbreviation("user");
+        String email = getAbbreviation("email");
+        String projects = getAbbreviation("projects");
+
+        HttpClient client = HttpClient.newHttpClient();
+        try {
+            String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s", user, projects, favoriteS, email, this.email);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode projectsArray = mapper.readTree(response.body());
+                Map<UUID, Project> favoriteProjectsMap = new HashMap<>();
+                for (JsonNode projectNode : projectsArray) {
+                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
+                    Project project = new Project(uuid);
+                    String name = projectNode.get("name").asText();
+                    int type = projectNode.get("type").asInt();
+                    boolean favorite = projectNode.get("favorite").asBoolean();
+                    ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
+                    JsonNode completionNode = projectNode.get("completion");
+                    Map<String, Integer> completionMap = Map.of(
+                            "days", completionNode.get("days").asInt(),
+                            "weeks", completionNode.get("weeks").asInt(),
+                            "months", completionNode.get("months").asInt(),
+                            "years", completionNode.get("years").asInt()
+                    );
+                    MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
+                    List<Priority> projectPriorities = new ArrayList<>();
+                    JsonNode prioritiesNode = projectNode.get("priorities");
+                    if (prioritiesNode.isArray()) {
+                        for (JsonNode pNode : prioritiesNode) {
+                            int index = pNode.asInt();
+                            projectPriorities.add(this.getPriority(index));
+                        }
+                    }
+                    List<MeasuredGoal> measuredGoals = new ArrayList<>();
+                    JsonNode goalsNode = projectNode.get("measuredGoals");
+                    for (JsonNode goalNode : goalsNode) {
+                        int order = goalNode.get("order").asInt();
+                        String item = goalNode.get("item").asText();
+                        double weight = goalNode.get("weight").asDouble();
+                        double realGoal = goalNode.get("realGoal").asDouble();
+                        double realAdvance = goalNode.get("realAdvance").asDouble();
+                        int discreteGoal = goalNode.get("discreteGoal").asInt();
+                        int discreteAdvance = goalNode.get("discreteAdvance").asInt();
+
+                        MeasuredSet<Double> real = new MeasuredSet<>(
+                                Map.of("goal", realGoal, "advance", realAdvance),
+                                Double.class
+                        );
+                        MeasuredSet<Integer> discrete = new MeasuredSet<>(
+                                Map.of("goal", discreteGoal, "advance", discreteAdvance),
+                                Integer.class
+                        );
+
+                        List<Failure> failures = new ArrayList<>();
+                        JsonNode failuresNode = goalNode.get("failures");
+                        for (JsonNode failureNode : failuresNode) {
+                            failures.add(Failure.fromJson(failureNode));
+                        }
+                        boolean finished = goalNode.get("finished").asBoolean();
+                        measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
+                    }
+                    List<Triplet<Integer, String, Double>> underlyingCategories = List.of();
+                    project.setData(
+                            name,
+                            type,
+                            favorite,
+                            dateToStart,
+                            projectPriorities,
+                            measuredGoals,
+                            necessaryTime,
+                            underlyingCategories
+                    );
+                    favoriteProjectsMap.put(uuid, project);
+                }
+                this.favoriteProjects = favoriteProjectsMap;
             } else {
                 System.err.println("Error fetching core projects. Status code: " + response.statusCode());
             }
@@ -265,12 +364,16 @@ public class User {
         return priorities.get(index);
     }
 
-    public List<Priority> getPriorities() {
+    public Map<Integer, Priority> getPriorities() {
         return priorities;
     }
 
-    public List<CoreProject> getCoreProjects() {
+    public Map<UUID, CoreProject> getCoreProjects() {
         return coreProjects;
+    }
+
+    public Map<UUID, Project> getFavoriteProjects() {
+        return favoriteProjects;
     }
 
     public Map<Integer, UserOrganization> getOrganizations() {

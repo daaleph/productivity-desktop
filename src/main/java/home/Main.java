@@ -23,9 +23,12 @@ public class Main extends Application {
         Home controller = loader.getController();
 
         if (controller != null) {
-            controller.setStage(primaryStage);
             controller.setUser(user);
-            controller.setUserOrganizations(user);
+            controller.setUserPriorities();
+            controller.setUserCoreProjects();
+            controller.setUserFavoriteProjects();
+            controller.setUserOrganizations();
+            controller.setStage(primaryStage);
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
         }

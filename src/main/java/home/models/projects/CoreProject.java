@@ -13,7 +13,6 @@ public class CoreProject {
     private int type;
     private String name;
     private boolean favorite;
-    private ZonedDateTime dateToStart;
     private List<Priority> priorities;
     private List<MeasuredGoal> measuredGoals;
     private MeasuredSet<Integer> necessaryTime;
@@ -36,7 +35,6 @@ public class CoreProject {
         this.name = name;
         this.type = type;
         this.favorite = favorite;
-        this.dateToStart = dateToStart;
         this.priorities = priorities;
         this.measuredGoals = measuredGoals;
         this.necessaryTime = necessaryTime;
@@ -60,5 +58,33 @@ public class CoreProject {
 
     public void sortUnderlyingCategories() {
         // sorts underlying categories
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public List<Priority> getPriorities() {
+        return priorities;
+    }
+
+    public List<MeasuredGoal> getMeasuredGoals() {
+        return measuredGoals;
+    }
+
+    public MeasuredSet<Integer> getNecessaryTime() {
+        return necessaryTime;
+    }
+
+    public List<Triplet<Integer, String, Double>> getUnderlyingCategories() {
+        return underlyingCategories;
+    }
+
+    public void setUnderlyingCategories(List<Triplet<Integer, String, Double>> underlyingCategories) {
+        this.underlyingCategories = underlyingCategories;
     }
 }
