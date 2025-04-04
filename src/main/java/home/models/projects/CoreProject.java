@@ -23,42 +23,51 @@ public class CoreProject {
         this.uuid = uuid;
     }
 
-    public void setData(
-            String name,
-            int type,
-            boolean favorite,
-            ZonedDateTime dateToStart,
-            List<Priority> priorities,
-            List<MeasuredGoal> measuredGoals,
-            MeasuredSet<Integer> necessaryTime,
-            List<Triplet<Integer, String, Double>> underlyingCategories
-    ) {
-        this.name = name;
-        this.type = type;
-        this.favorite = favorite;
-        this.dateToStart = dateToStart;
-        this.priorities = priorities;
-        this.measuredGoals = measuredGoals;
-        this.necessaryTime = necessaryTime;
-        this.underlyingCategories = underlyingCategories;
-    }
-    public String getName() {
-        return this.name;
+    public void setData(CoreProjectData data) {
+        this.name = data.name;
+        this.type = data.type;
+        this.favorite = data.favorite;
+        this.dateToStart = data.dateToStart;
+        this.priorities = data.priorities;
+        this.measuredGoals = data.measuredGoals;
+        this.necessaryTime = data.necessaryTime;
+        this.underlyingCategories = data.underlyingCategories;
     }
 
-    public void fetchData() {
-        // to fetch complete using this.uuid
-    }
+    // Getters and other methods remain the same
+    public UUID getUuid() { return uuid; }
+    public String getName() { return name; }
+    public int getType() { return type; }
+    public boolean isFavorite() { return favorite; }
+    public ZonedDateTime getDateToStart() { return dateToStart; }
+    public List<Priority> getPriorities() { return priorities; }
+    public List<MeasuredGoal> getMeasuredGoals() { return measuredGoals; }
+    public MeasuredSet<Integer> getNecessaryTime() { return necessaryTime; }
+    public List<Triplet<Integer, String, Double>> getUnderlyingCategories() { return underlyingCategories; }
+    public void setUnderlyingCategories(List<Triplet<Integer, String, Double>> uc) { underlyingCategories = uc; }
 
-    public void updateData() {
-        // to update project
-    }
+    public static class CoreProjectData {
+        protected String name;
+        protected int type;
+        protected boolean favorite;
+        protected ZonedDateTime dateToStart;
+        protected List<Priority> priorities;
+        protected List<MeasuredGoal> measuredGoals;
+        protected MeasuredSet<Integer> necessaryTime;
+        protected List<Triplet<Integer, String, Double>> underlyingCategories;
 
-    public UUID getUuid() {
-        return this.uuid;
-    }
-
-    public void sortUnderlyingCategories() {
-        // sorts underlying categories
+        public CoreProjectData(String name, int type, boolean favorite, ZonedDateTime dateToStart,
+                               List<Priority> priorities, List<MeasuredGoal> measuredGoals,
+                               MeasuredSet<Integer> necessaryTime,
+                               List<Triplet<Integer, String, Double>> underlyingCategories) {
+            this.name = name;
+            this.type = type;
+            this.favorite = favorite;
+            this.dateToStart = dateToStart;
+            this.priorities = priorities;
+            this.measuredGoals = measuredGoals;
+            this.necessaryTime = necessaryTime;
+            this.underlyingCategories = underlyingCategories;
+        }
     }
 }

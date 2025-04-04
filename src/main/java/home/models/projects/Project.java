@@ -1,19 +1,55 @@
 package home.models.projects;
 
+import home.records.MeasuredGoal;
+import home.records.MeasuredSet;
+import home.records.Priority;
+import home.types.Triplet;
+
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class Project extends CoreProject {
+    private List<UUID> parentProjects;
+
     public Project(UUID uuid) {
         super(uuid);
     }
 
-    @Override
-    public void fetchData() {
-        super.fetchData();
+    public void setData(ProjectData data) {
+        super.setData(data);
+        this.parentProjects = data.parentProjects;
     }
 
-    @Override
-    public void updateData() {
-        super.updateData();
+    public List<UUID> getParentProjects() {
+        return parentProjects;
+    }
+
+    public static class ProjectData extends CoreProjectData {
+        private final List<UUID> parentProjects;
+
+        public ProjectData(
+                String name,
+                int type,
+                boolean favorite,
+                ZonedDateTime dateToStart,
+                List<Priority> priorities,
+                List<MeasuredGoal> measuredGoals,
+                MeasuredSet<Integer> necessaryTime,
+                List<Triplet<Integer, String, Double>> underlyingCategories,
+                List<UUID> parentProjects
+        ) {
+            super(
+                    name,
+                    type,
+                    favorite,
+                    dateToStart,
+                    priorities,
+                    measuredGoals,
+                    necessaryTime,
+                    underlyingCategories
+            );
+            this.parentProjects = parentProjects;
+        }
     }
 }
