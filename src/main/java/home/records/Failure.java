@@ -2,7 +2,6 @@ package home.records;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
-import home.types.Triplet;
 
 import static data.Abbreviations.getAbbreviation;
 

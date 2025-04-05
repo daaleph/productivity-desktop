@@ -3,7 +3,7 @@ package home.models.projects;
 import home.records.MeasuredGoal;
 import home.records.MeasuredSet;
 import home.records.Priority;
-import home.types.Triplet;
+import home.records.Triplet;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;

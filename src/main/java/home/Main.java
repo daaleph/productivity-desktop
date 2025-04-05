@@ -1,7 +1,6 @@
 // java/home/Main.java
 package home;
 
-import java.util.Map;
 import home.models.User;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -9,7 +8,6 @@ import javafx.scene.Parent;
 import home.controllers.Home;
 import javafx.fxml.FXMLLoader;
 import javafx.application.Application;
-import home.models.organizations.UserOrganization;
 
 public class Main extends Application {
 

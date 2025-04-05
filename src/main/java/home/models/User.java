@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import static data.Abbreviations.getAbbreviation;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import home.types.Triplet;
+import home.records.Triplet;
 
 public class User {
     private static User instance;
@@ -336,8 +336,7 @@ public class User {
                             int branchId = branchData.get("id").asInt();
                             String branchName = branchData.get("name").asText();
 
-                            Branch branch = new Branch(branchId);
-                            branch.setName(branchName);
+                            Branch branch = new Branch(branchId, branchName);
                             branches.put(branchId, branch);
                         });
                     }
