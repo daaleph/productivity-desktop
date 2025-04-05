@@ -3,7 +3,6 @@ package home.records;
 import static data.Abbreviations.getAbbreviation;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
-import home.types.Triplet;
 
 public record Priority(Triplet<Integer, String, String> triplet) {
 

@@ -1,8 +1,11 @@
 package home.models.organizations;
 
+import java.util.List;
 import java.util.Map;
 import home.models.User;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+
 import home.models.branchs.Branch;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +36,16 @@ public class UserOrganization extends BranchedOrganization {
 
     public Map<Integer, Branch> getBranches() {
         return branches;
+    }
+    public Map<Integer, Branch> getBranches(List<Integer> ids) {
+        return ids.stream()
+                .distinct()
+                .filter(this.branches::containsKey)
+                .collect(Collectors.toMap(key -> key, this.branches::get));
+    }
+
+    public Branch getBranch(Integer id) {
+        return branches.get(id);
     }
 
     public User getUser() {

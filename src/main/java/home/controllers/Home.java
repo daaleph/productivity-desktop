@@ -194,11 +194,11 @@ public class Home {
     private HBox createOrganizationRow(UserOrganization org) {
         HBox container = new HBox(15);
         container.getStyleClass().add("organization-container");
-        Label emailLabel = new Label(org.getName());
+        Label emailLabel = new Label(org.getName() + org.getBranches());
         emailLabel.getStyleClass().add("organization-name");
         emailLabel.setWrapText(false);
         emailLabel.setEllipsisString("");
-        Text textMeasure = new Text(org.getName());
+        Text textMeasure = new Text(org.getName() + org.getBranches());
         textMeasure.setFont(emailLabel.getFont());
         textMeasure.applyCss();
         double textWidth = textMeasure.getLayoutBounds().getWidth();

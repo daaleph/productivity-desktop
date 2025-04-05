@@ -3,7 +3,6 @@ package home.records;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
-import home.types.Triplet;
 
 import java.util.ArrayList;
 import java.util.List;
