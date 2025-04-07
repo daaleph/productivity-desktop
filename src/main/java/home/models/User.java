@@ -4,14 +4,14 @@ import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import home.models.branchs.Branch;
+import home.models.branchs.UserBranch;
 import home.models.organizations.UserOrganization;
 import home.models.projects.CoreProject;
 import home.models.projects.Project;
-import home.records.Failure;
-import home.records.MeasuredGoal;
-import home.records.MeasuredSet;
-import home.records.Priority;
+import home.records.*;
+
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -22,13 +22,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import static data.Abbreviations.getAbbreviation;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import home.records.Triplet;
 
 public class User {
     private static User instance;
 
     protected int age;
-    protected Map<Integer, Branch> branches;
+    protected Map<Integer, UserBranch> branches;
     protected Map<Integer, Priority> priorities;
     protected Map<UUID, CoreProject> coreProjects;
     protected Map<UUID, Project> favoriteProjects;
@@ -46,6 +45,11 @@ public class User {
         String email
     ) {
         this.email = email;
+        this.branches = new HashMap<>();
+        this.priorities = new HashMap<>();
+        this.coreProjects = new HashMap<>();
+        this.favoriteProjects = new HashMap<>();
+        this.organizations = new HashMap<>();
         fetchData();
     }
 
@@ -71,6 +75,7 @@ public class User {
         this.fetchCoreProjects();
         this.fetchUserOrganizations();
         this.fetchFavoriteProjects();
+        this.fetchUserBranches();
     }
 
     private void fetchPersonalData() {
@@ -134,10 +139,10 @@ public class User {
                     ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
                     JsonNode completionNode = projectNode.get("completion");
                     Map<String, Integer> completionMap = Map.of(
-                    "days", completionNode.get("days").asInt(),
-                    "weeks", completionNode.get("weeks").asInt(),
-                    "months", completionNode.get("months").asInt(),
-                    "years", completionNode.get("years").asInt()
+                        "days", completionNode.get("days").asInt(),
+                        "weeks", completionNode.get("weeks").asInt(),
+                        "months", completionNode.get("months").asInt(),
+                        "years", completionNode.get("years").asInt()
                     );
                     MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
                     List<Priority> projectPriorities = new ArrayList<>();
@@ -176,7 +181,7 @@ public class User {
                         boolean finished = goalNode.get("finished").asBoolean();
                         measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
                     }
-                    List<Triplet<Integer, String, Double>> underlyingCategories = List.of();
+                    List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories = List.of();
                     CoreProject.CoreProjectData data = new CoreProject.CoreProjectData(
                             name,
                             type,
@@ -275,7 +280,7 @@ public class User {
                         boolean finished = goalNode.get("finished").asBoolean();
                         measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
                     }
-                    List<Triplet<Integer, String, Double>> underlyingCategories = List.of();
+                    List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories = List.of();
                     Project.ProjectData data = new Project.ProjectData(
                             name,
                             type,
@@ -354,6 +359,187 @@ public class User {
         }
     }
 
+    private void fetchUserBranches() {
+        String user = getAbbreviation("user");
+        String email = getAbbreviation("email");
+        String branchesS = getAbbreviation("branches");
+
+        HttpClient client = HttpClient.newHttpClient();
+        try {
+            String apiUrl = String.format("http://localhost:4000/api/%s/%s/?%s=%s", user, branchesS, email, this.email);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(response.body());
+
+                // Iterate over each branch in the JSON
+                rootNode.fields().forEachRemaining(entry -> {
+                    int branchId = Integer.parseInt(entry.getKey());
+                    JsonNode branchNode = entry.getValue();
+
+                    // Extract branch name
+                    String branchName = branchNode.get("name").asText();
+
+                    // Extract projects (if they exist)
+                    JsonNode projectsNode = branchNode.get("projects");
+                    List<Project> projects = new ArrayList<>();
+
+                    if (projectsNode != null && !projectsNode.isEmpty()) {
+                        projectsNode.fields().forEachRemaining(projectEntry -> {
+                            String projectUuidStr = projectEntry.getKey();
+                            JsonNode projectNode = projectEntry.getValue();
+
+                            // Parse project details
+                            Project project = parseProject(projectNode, projectUuidStr);
+                            projects.add(project);
+                        });
+                    }
+
+                    // Create UserBranch and store projects
+                    UserBranch userBranch = new UserBranch(branchId, this.email);
+                    userBranch.setName(branchName);
+                    userBranch.setProjects(projects);
+                    branches.put(branchId, userBranch);
+                });
+            } else {
+                System.err.println("Error fetching projected branch data. Status code: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Project parseProject(JsonNode projectNode, String projectUuidStr) {
+        UUID projectUuid = UUID.fromString(projectUuidStr);
+        List<Priority> priorities = parsePriorities(projectNode.get("priorities"));
+        List<MeasuredGoal> measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
+        MeasuredSet<Integer> completion = parseMeasuredSet(projectNode.get("completion"));
+        List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories =
+                parseUnderlyingCategories(projectNode.get("underlyingCategories"));
+        List<UUID> parentProjects = parseParentProjects(projectNode.get("parentProjects"));
+        Project.ProjectData projectData = new Project.ProjectData(
+                projectNode.get("name").asText(),
+                projectNode.get("type").asInt(),
+                projectNode.get("favorite").asBoolean(),
+                ZonedDateTime.parse(projectNode.get("dateToStart").asText()),
+                priorities,
+                measuredGoals,
+                completion,
+                underlyingCategories,
+                parentProjects
+        );
+        Project project = new Project(projectUuid);
+        project.setData(projectData);
+        return project;
+    }
+
+    private List<Priority> parsePriorities(JsonNode prioritiesNode) {
+        boolean isConvertibleToIntegerList = this.isConvertibleToIntegerList(prioritiesNode);
+        List<Priority> priorities = new ArrayList<>();
+        if (prioritiesNode.isArray()) {
+            if (isConvertibleToIntegerList) {
+                prioritiesNode.forEach(priorityNode -> {
+                    priorities.add(Priority.fromInt(priorityNode));
+                });
+            } else {
+                prioritiesNode.forEach(priorityNode -> {
+                    priorities.add(Priority.fromJson(priorityNode));
+                });
+            }
+        }
+        return priorities;
+    }
+
+    private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
+        List<MeasuredGoal> goals = new ArrayList<>();
+        if (goalsNode != null && goalsNode.isArray()) {
+            goalsNode.forEach(goalNode -> {
+                MeasuredSet<Double> real = new MeasuredSet<>(
+                        Map.of(
+                                "goal", goalNode.get("realGoal").asDouble(),
+                                "advance", goalNode.get("realAdvance").asDouble()
+                        ),
+                        Double.class
+                );
+                MeasuredSet<Integer> discrete = new MeasuredSet<>(
+                        Map.of(
+                                "goal", goalNode.get("discreteGoal").asInt(),
+                                "advance", goalNode.get("discreteAdvance").asInt()
+                        ),
+                        Integer.class
+                );
+                List<Failure> failures = parseFailures(goalNode.get("failures"));
+                goals.add(new MeasuredGoal(
+                        goalNode.get("order").asInt(),
+                        goalNode.get("item").asText(),
+                        goalNode.get("weight").asDouble(),
+                        real,
+                        discrete,
+                        goalNode.get("finished").asBoolean(),
+                        failures
+                ));
+            });
+        }
+        return goals;
+    }
+
+    private MeasuredSet<Integer> parseMeasuredSet(JsonNode completionNode) {
+        if (completionNode == null) return null;
+        Map<String, Integer> quantities = new HashMap<>();
+        completionNode.fields().forEachRemaining(entry -> {
+            quantities.put(entry.getKey(), entry.getValue().asInt());
+        });
+        return new MeasuredSet<>(quantities, Integer.class);
+    }
+
+    private List<Tuple<UUID, Triplet<Integer, String, Double>>> parseUnderlyingCategories(JsonNode categoriesNode) {
+        List<Tuple<UUID, Triplet<Integer, String, Double>>> categories = new ArrayList<>();
+        if (categoriesNode == null || !categoriesNode.has("priorities")) {
+            return categories;
+        }
+        UUID categoryUuid = UUID.fromString(categoriesNode.get("uuid").asText());
+        JsonNode prioritiesNode = categoriesNode.get("priorities");
+        if (prioritiesNode.isArray()) {
+            for (JsonNode priorityNode : prioritiesNode) {
+                // Skip empty priorities (like [{}])
+                if (priorityNode.isEmpty()) continue;
+                // Extract priority fields
+                int id = priorityNode.get("id").asInt(); // Assuming 'id' is an Integer (adjust if UUID)
+                String table = priorityNode.get("tble").asText();
+                double weight = priorityNode.get("wght").asDouble();
+                // Create Triplet and Tuple
+                Triplet<Integer, String, Double> triplet = new Triplet<>(id, table, weight);
+                Tuple<UUID, Triplet<Integer, String, Double>> tuple = new Tuple<>(categoryUuid, triplet);
+                categories.add(tuple);
+            }
+        }
+
+        return categories;
+    }
+
+    private List<UUID> parseParentProjects(JsonNode parentProjectsNode) {
+        if (parentProjectsNode == null || !parentProjectsNode.isArray()) return null;
+        List<UUID> parentProjects = new ArrayList<>();
+        parentProjectsNode.forEach(uuidNode -> {
+            parentProjects.add(UUID.fromString(uuidNode.asText()));
+        });
+        return parentProjects;
+    }
+
+    private List<Failure> parseFailures(JsonNode failuresNode) {
+        List<Failure> failures = new ArrayList<>();
+        if (failuresNode != null && failuresNode.isArray()) {
+            failuresNode.forEach(failureNode -> {
+                failures.add(Failure.fromJson(failureNode));
+            });
+        }
+        return failures;
+    }
+
     public String getName() {
         return completeName;
     }
@@ -390,8 +576,21 @@ public class User {
         return organizations;
     }
 
+    public Map<Integer, UserBranch> getBranches() {
+        return branches;
+    }
+
     public UserOrganization getOrganization(Integer org) {
         return organizations.get(org);
+    }
+
+    public boolean isConvertibleToIntegerList(JsonNode arrayNode) {
+        for (JsonNode element : arrayNode) {
+            if (!element.isInt() && !element.isLong() && !element.canConvertToInt()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

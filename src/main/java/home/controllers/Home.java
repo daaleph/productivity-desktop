@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.List;
 import home.models.User;
 import home.models.branchs.Branch;
+import home.models.branchs.UserBranch;
 import home.models.projects.Project;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -29,11 +30,13 @@ public class Home {
     @FXML private FlowPane userFavoriteProjects;
     @FXML private Label welcome, userAge, userName;
     @FXML private ListView<Priority> userPriorities;
+    @FXML private Map<Integer, UserBranch> userBranches;
     @FXML private ListView<CoreProject> userCoreProjects;
     @FXML private Map<Integer, UserOrganization> userOrganizations;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     public VBox leftColumn,
+            branchesContainer,
             organizationsContainer,
             profileSubContainer,
             userOrganizationsSubContainer,
@@ -56,6 +59,11 @@ public class Home {
     public void setUserOrganizations() {
         this.userOrganizations = user.getOrganizations();
         populateOrganizations();
+    }
+
+    public void setUserBranches() {
+        this.userBranches = user.getBranches();
+        populateBranches();
     }
 
     public void setUserPriorities() {
@@ -191,14 +199,26 @@ public class Home {
                 });
     }
 
+    private void populateBranches() {
+        branchesContainer.getChildren().clear();
+        userBranches
+                .values()
+                .stream()
+                .sorted(Comparator.comparingInt(UserBranch::getId))
+                .forEach(branch -> {
+                    HBox branchRow = createBranchRow(branch);
+                    branchesContainer.getChildren().add(branchRow);
+                });
+    }
+
     private HBox createOrganizationRow(UserOrganization org) {
         HBox container = new HBox(15);
         container.getStyleClass().add("organization-container");
-        Label emailLabel = new Label(org.getName() + org.getBranches());
+        Label emailLabel = new Label(org.getName());
         emailLabel.getStyleClass().add("organization-name");
         emailLabel.setWrapText(false);
         emailLabel.setEllipsisString("");
-        Text textMeasure = new Text(org.getName() + org.getBranches());
+        Text textMeasure = new Text(org.getName());
         textMeasure.setFont(emailLabel.getFont());
         textMeasure.applyCss();
         double textWidth = textMeasure.getLayoutBounds().getWidth();
@@ -225,9 +245,61 @@ public class Home {
         return container;
     }
 
+    private HBox createBranchRow(UserBranch branch) {
+        HBox container = new HBox(15);
+        container.getStyleClass().add("branch-container");
+        Label branchLabel = new Label(branch.getName());
+        branchLabel.getStyleClass().add("branch-name");
+        FlowPane projectsPane = new FlowPane(8, 5);
+        projectsPane.getStyleClass().add("projects-flow");
+
+        projectsPane.prefWrapLengthProperty().bind( // Dynamic binding for responsive wrapping
+                organizationsContainer.widthProperty()
+                        .subtract(0.75) // Use fixed min width
+        );
+
+        branch.getUserBelonging().projects().stream() // 3. Add projects
+                .sorted(Comparator.comparing(Project::getDateToStart))
+                .forEach(project -> {
+                    Label projectLabel = createProjectLabel(project);
+                    projectsPane.getChildren().add(projectLabel);
+                });
+
+        container.getChildren().addAll(branchLabel, projectsPane);
+        return container;
+    }
+
     private Label createBranchLabel(Branch branch) {
         Label label = new Label(branch.getName());
         label.getStyleClass().add("branch-label");
+        Path branchIcon = new Path(
+                new MoveTo(4, 0),
+                new LineTo(4, 8),
+                new MoveTo(4, 4),
+                new LineTo(8, 6),
+                new LineTo(4, 8),
+                new MoveTo(4, 4),
+                new LineTo(0, 6),
+                new LineTo(4, 8)
+        );
+        branchIcon.setStroke(Color.web("#6c757d"));
+        branchIcon.setStrokeWidth(1.5);
+        branchIcon.setStrokeLineCap(StrokeLineCap.ROUND);
+        branchIcon.setStrokeLineJoin(StrokeLineJoin.ROUND);
+
+        StackPane iconContainer = new StackPane(branchIcon); // Wrap in StackPane for proper sizing
+        iconContainer.setPadding(new Insets(0, 3, 0, 0));
+
+        label.setGraphic(iconContainer);
+        label.setContentDisplay(ContentDisplay.LEFT);
+        label.setGraphicTextGap(5);
+
+        return label;
+    }
+
+    private Label createProjectLabel(Project project) {
+        Label label = new Label(project.getName());
+        label.getStyleClass().add("project-label");
         Path branchIcon = new Path(
                 new MoveTo(4, 0),
                 new LineTo(4, 8),

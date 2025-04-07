@@ -26,6 +26,7 @@ public class Main extends Application {
             controller.setUserCoreProjects();
             controller.setUserFavoriteProjects();
             controller.setUserOrganizations();
+            controller.setUserBranches();
             controller.setStage(primaryStage);
         } else {
             System.err.println("Controller not found. Check fx:controller in FXML.");
