@@ -29,4 +29,14 @@ public record Priority(Triplet<Integer, String, String> triplet) {
         );
     }
 
+    public static Priority fromInt(JsonNode node) {
+        return new Priority(
+                new Triplet<>(
+                        node.asInt(),
+                        "A",
+                        "B"
+                )
+        );
+    }
+
 }

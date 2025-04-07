@@ -1,9 +1,7 @@
 package home.models.projects;
 
-import home.records.MeasuredGoal;
-import home.records.MeasuredSet;
-import home.records.Priority;
-import home.records.Triplet;
+import home.records.*;
+
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +15,7 @@ public class CoreProject {
     private List<Priority> priorities;
     private List<MeasuredGoal> measuredGoals;
     private MeasuredSet<Integer> necessaryTime;
-    private List<Triplet<Integer, String, Double>> underlyingCategories;
+    private List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories;
 
     public CoreProject(UUID uuid) {
         this.uuid = uuid;
@@ -43,8 +41,8 @@ public class CoreProject {
     public List<Priority> getPriorities() { return priorities; }
     public List<MeasuredGoal> getMeasuredGoals() { return measuredGoals; }
     public MeasuredSet<Integer> getNecessaryTime() { return necessaryTime; }
-    public List<Triplet<Integer, String, Double>> getUnderlyingCategories() { return underlyingCategories; }
-    public void setUnderlyingCategories(List<Triplet<Integer, String, Double>> uc) { underlyingCategories = uc; }
+    public List<Tuple<UUID,Triplet<Integer, String, Double>>> getUnderlyingCategories() { return underlyingCategories; }
+    public void setUnderlyingCategories(List<Tuple<UUID,Triplet<Integer, String, Double>>> uc) { underlyingCategories = uc; }
 
     public static class CoreProjectData {
         protected String name;
@@ -54,12 +52,16 @@ public class CoreProject {
         protected List<Priority> priorities;
         protected List<MeasuredGoal> measuredGoals;
         protected MeasuredSet<Integer> necessaryTime;
-        protected List<Triplet<Integer, String, Double>> underlyingCategories;
+        protected List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories;
 
-        public CoreProjectData(String name, int type, boolean favorite, ZonedDateTime dateToStart,
-                               List<Priority> priorities, List<MeasuredGoal> measuredGoals,
+        public CoreProjectData(String name,
+                               int type,
+                               boolean favorite,
+                               ZonedDateTime dateToStart,
+                               List<Priority> priorities,
+                               List<MeasuredGoal> measuredGoals,
                                MeasuredSet<Integer> necessaryTime,
-                               List<Triplet<Integer, String, Double>> underlyingCategories) {
+                               List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories) {
             this.name = name;
             this.type = type;
             this.favorite = favorite;

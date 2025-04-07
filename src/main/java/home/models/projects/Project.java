@@ -1,9 +1,6 @@
 package home.models.projects;
 
-import home.records.MeasuredGoal;
-import home.records.MeasuredSet;
-import home.records.Priority;
-import home.records.Triplet;
+import home.records.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -36,7 +33,7 @@ public class Project extends CoreProject {
                 List<Priority> priorities,
                 List<MeasuredGoal> measuredGoals,
                 MeasuredSet<Integer> necessaryTime,
-                List<Triplet<Integer, String, Double>> underlyingCategories,
+                List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories,
                 List<UUID> parentProjects
         ) {
             super(

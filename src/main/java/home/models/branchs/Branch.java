@@ -1,14 +1,12 @@
 package home.models.branchs;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
 import home.models.projects.Project;
 import home.records.ProjectedBranchData;
 
 public class Branch {
-    private final int id;
+    protected final Integer id;
     private String name;
 
     public Branch(int id) {
@@ -39,7 +37,7 @@ public class Branch {
 }
 
 abstract class ProjectedBranch extends Branch {
-    private Map<String, ProjectedBranchData> projects;
+    protected ProjectedBranchData projects;
 
     public ProjectedBranch(int id, Object value) {
         super(id);
@@ -47,17 +45,14 @@ abstract class ProjectedBranch extends Branch {
     }
 
     public void addBelonging(Object value) {
-        if (!(value instanceof UUID || value instanceof Integer)) {
-            throw new IllegalArgumentException("Value must be UUID or Integer");
+        if (!(value instanceof String || value instanceof Integer)) {
+            throw new IllegalArgumentException("Value must be String or Integer");
         }
-        fetchData(value);
     }
 
-    private void fetchData(Object value) {
-        if (value instanceof UUID) fetchUserBranchedProjects((UUID) value);
-        assert value instanceof Integer;
-        fetchOrganizedBranchedProjects((Integer) value);
-    }
+    public abstract void setProjects(List<Project> projects);
+
+    public abstract void fetchData();
 
     public List<ProjectedBranchData> getBelongings(String entity) {
         return switch (entity) {
@@ -68,25 +63,7 @@ abstract class ProjectedBranch extends Branch {
         };
     }
 
-    public ProjectedBranchData getUserBelonging() {
-        ProjectedBranchData belonging = this.projects.get("user");
-        if (belonging == null) return null;
-        if (belonging.identification() instanceof UUID) return belonging;
-        throw new ClassCastException("Identification of '" + belonging + "' is not a UUID");
-    }
-
-    public ProjectedBranchData getOrganizationBelonging() {
-        ProjectedBranchData belonging = this.projects.get("organization");
-        if (belonging == null) return null;
-        if (belonging.identification() instanceof Integer) return belonging;
-        throw new ClassCastException("Identification of '" + belonging + "' is not an Integer");
-    }
-
-    private void fetchUserBranchedProjects(UUID uuid) {
-
-    }
-
-    private void fetchOrganizedBranchedProjects(Integer id) {
-
-    }
+    public abstract ProjectedBranchData getUserBelonging();
+    public abstract ProjectedBranchData getOrganizationBelonging();
+    private void fetchOrganizedBranchedProjects() {}
 }
