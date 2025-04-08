@@ -64,7 +64,8 @@
                         <VBox fx:id="organizationsContainer" styleClass="organizations-list" />
                     </ScrollPane>
                 </VBox>
-                <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container"
+                      GridPane.columnIndex="0" GridPane.rowIndex="2">
                     <Label text="Fav Projects" styleClass="sub-header" />
                     <ScrollPane fitToWidth="true" styleClass="responsive-scroll">
                         <FlowPane fx:id="userFavoriteProjects" styleClass="favorite-projects-flow" />
@@ -74,7 +75,7 @@
                       GridPane.columnIndex="1" GridPane.rowIndex="2">
                     <Label text="My Branches" styleClass="sub-header" />
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll">
-                        <VBox fx:id="branchesContainer" styleClass="branches-list" />
+                        <FlowPane fx:id="branchesContainer" styleClass="branches-list" />
                     </ScrollPane>
                 </VBox>
             </GridPane>

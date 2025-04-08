@@ -1,73 +1,41 @@
-/* For Organization ScrollPane */
-.branch-scroll {
-    -fx-vbar-policy: as-needed;
-    -fx-hbar-policy: as-needed;
-}
+/* Branches List Container */
 
-/* Vertical Scrollbar Width */
-.branch-scroll .scroll-bar:vertical {
-    -fx-pref-width: 5px;
-}
 
-/* Horizontal Scrollbar Height */
-.branch-scroll .scroll-bar:horizontal {
-    -fx-margin: 0 0 100 0;
-}
-
-/* Rest of your existing styles */
-.branch-scroll .scroll-bar {
-    -fx-background-color: transparent;
-}
-
-.branch-scroll .scroll-bar .increment-button,
-.branch-scroll .scroll-bar .decrement-button {
-    -fx-padding: 5;
-    -fx-background-color: transparent;
-}
-
-.branch-scroll .scroll-bar .track {
-    -fx-background-color: transparent;
-}
-
-.branch-scroll .scroll-bar:vertical .thumb,
-.branch-scroll .scroll-bar:horizontal .thumb {
-    -fx-background-color: #b3b3b3;
-    -fx-background-insets: 0;
-    -fx-background-radius: 2em;
-}
-
-/* Existing organizations list styling remains unchanged */
+/* Branch Tile Container */
 .branches-list {
     -fx-spacing: 12;
 }
 
-/* Branch Container */
-.branch-container {
-    -fx-alignment: center-left;
-    -fx-padding: 8 12;
+.branch-tile {
     -fx-background-color: #f8f9fa;
     -fx-background-radius: 4;
     -fx-border-color: #dee2e6;
     -fx-border-radius: 4;
+    -fx-padding: 12px;
+    -fx-spacing: 8px;
+    -fx-alignment: top-left;
+    -fx-pref-width: -1;
+    -fx-max-width: -1;
+    -fx-min-width: -1;
 }
 
-/* Name Label */
+/* Branch Name Label */
 .branch-name {
     -fx-font-weight: 600;
     -fx-text-fill: #2c3e50;
     -fx-font-size: 14px;
-    -fx-padding: 0 5 0 0;
-    -fx-wrap-text: true;
-    -fx-alignment: center-left;
-    -fx-min-width: 150px; /* Prevent collapse */
-}
-
-/* Branches Flow Pane */
-.projects-flow {
+    -fx-padding: 0 0 0 0;
     -fx-alignment: center-left;
 }
 
-/* Branch Labels */
+/* Projects Flow Pane Inside Tile */
+.branch-projects-flow {
+    -fx-hgap: 0px;
+    -fx-vgap: 0px;
+    -fx-max-width: -1;
+}
+
+/* Project Labels */
 .project-label {
     -fx-background-color: #e9ecef;
     -fx-padding: 3 8 3 5;
@@ -77,9 +45,29 @@
     -fx-text-fill: #495057;
     -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.05), 2, 0, 1, 1);
     -fx-content-display: left;
+    -fx-graphic-text-gap: 5;
 }
 
-.project-label .font-awesome-icon {
-    -fx-fill: #6c757d;
-    -fx-font-size: 11px;
+/* ScrollPane styling (simplified) */
+.branch-scroll {
+    -fx-vbar-policy: as-needed;
+    -fx-hbar-policy: as-needed;
+    -fx-background-color: transparent;
+}
+
+.branch-scroll .scroll-bar:vertical .thumb,
+.branch-scroll .scroll-bar:horizontal .thumb {
+    -fx-background-color: #b3b3b3;
+    -fx-background-insets: 1;
+    -fx-background-radius: 2em;
+}
+
+/* Vertical Scrollbar Width */
+.branch-scroll .scroll-bar:vertical {
+    -fx-pref-width: 5px;
+}
+
+/* Horizontal Scrollbar Height */
+.branch-scroll .scroll-bar:horizontal {
+    -fx-pref-height: 5px;
 }

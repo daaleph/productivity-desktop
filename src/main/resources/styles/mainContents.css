@@ -28,6 +28,7 @@
     -fx-background-color: #f8f8f8;
     -fx-border-color: #dddddd;
     -fx-border-radius: 3;
+    -fx-pref-width: -1;
     -fx-padding: 15;
     -fx-spacing: 10;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 0);
