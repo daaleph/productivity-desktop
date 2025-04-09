@@ -73,7 +73,7 @@
                 <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="0" GridPane.rowIndex="2">
                     <Label text="Fav Projects" styleClass="sub-header" />
-                    <ScrollPane fitToWidth="true" styleClass="responsive-scroll" VBox.vgrow="ALWAYS">
+                    <ScrollPane fitToWidth="true" styleClass="favorite-project-scroll">
                         <FlowPane fx:id="userFavoriteProjects" styleClass="favorite-projects-flow" />
                     </ScrollPane>
                 </VBox>

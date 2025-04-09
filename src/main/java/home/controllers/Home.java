@@ -105,10 +105,6 @@ public class Home {
         });
     }
 
-    public Map<Integer, UserOrganization> getUserOrganizations() {
-        return this.userOrganizations;
-    }
-
     public void setStage(Stage stage) {
         this.stage = stage;
         initializeWindowControls();
@@ -349,4 +345,7 @@ public class Home {
         return label;
     }
 
+    public Map<Integer, UserOrganization> getUserOrganizations() {
+        return this.userOrganizations;
+    }
 }

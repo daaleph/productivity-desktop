@@ -3,6 +3,10 @@
     -fx-hgap: 10;
     -fx-vgap: 10;
     -fx-padding: 5;
+    -fx-spacing: 15;
+    -fx-min-width: -1; /* Allow shrinking */
+    -fx-pref-width: -1; /* Allow dynamic sizing */
+    -fx-max-width: Infinity; /* Allow expansion */
 }
 
 /* Project Labels */
@@ -14,4 +18,27 @@
     -fx-font-size: 13px;
     -fx-text-fill: #495057;
     -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.05), 2, 0, 1, 1);
+}
+
+/* Vertical Scrollbar Width */
+.organization-scroll .scroll-bar:vertical {
+    -fx-pref-width: 50px;
+}
+
+/* ScrollPane styling (simplified) */
+.favorite-project-scroll {
+    -fx-vbar-policy: as-needed;
+    -fx-hbar-policy: never;
+    -fx-background-color: transparent;
+}
+
+.favorite-project-scroll .scroll-bar:vertical .thumb
+    -fx-background-color: #b3b3b3;
+    -fx-background-insets: 1;
+    -fx-background-radius: 2em;
+}
+
+/* Vertical Scrollbar Width */
+.favorite-project-scroll .scroll-bar:vertical {
+    -fx-pref-width: 5px;
 }
