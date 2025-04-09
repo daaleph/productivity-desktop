@@ -33,7 +33,7 @@
 .organization-scroll .scroll-bar:vertical .thumb,
 .organization-scroll .scroll-bar:horizontal .thumb {
     -fx-background-color: #b3b3b3;
-    -fx-background-insets: 0;
+    -fx-background-insets: 1;
     -fx-background-radius: 2em;
 }
 

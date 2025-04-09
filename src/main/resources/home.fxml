@@ -11,6 +11,7 @@
 
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.RowConstraints?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="home.controllers.Home"
@@ -37,6 +38,11 @@
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                 </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints vgrow="NEVER"/>
+                    <RowConstraints vgrow="ALWAYS"/>
+                    <RowConstraints vgrow="ALWAYS"/>
+                </rowConstraints>
                 <!-- Main Header -->
                 <VBox fx:id="welcomeSubContainer" maxWidth="Infinity" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
                     <Label fx:id="welcome" styleClass="header-label"/>
@@ -64,9 +70,10 @@
                         <VBox fx:id="organizationsContainer" styleClass="organizations-list" />
                     </ScrollPane>
                 </VBox>
-                <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container"
+                      GridPane.columnIndex="0" GridPane.rowIndex="2">
                     <Label text="Fav Projects" styleClass="sub-header" />
-                    <ScrollPane fitToWidth="true" styleClass="responsive-scroll">
+                    <ScrollPane fitToWidth="true" styleClass="responsive-scroll" VBox.vgrow="ALWAYS">
                         <FlowPane fx:id="userFavoriteProjects" styleClass="favorite-projects-flow" />
                     </ScrollPane>
                 </VBox>
@@ -74,7 +81,7 @@
                       GridPane.columnIndex="1" GridPane.rowIndex="2">
                     <Label text="My Branches" styleClass="sub-header" />
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll">
-                        <VBox fx:id="branchesContainer" styleClass="branches-list" />
+                        <FlowPane fx:id="branchesContainer" styleClass="branches-list" />
                     </ScrollPane>
                 </VBox>
             </GridPane>

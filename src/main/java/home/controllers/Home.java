@@ -1,5 +1,6 @@
 package home.controllers;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
@@ -36,13 +37,13 @@ public class Home {
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     public VBox leftColumn,
-            branchesContainer,
             organizationsContainer,
             profileSubContainer,
             userOrganizationsSubContainer,
             favoriteProjectsSubContainer,
             userBranchesSubContainer,
             welcomeSubContainer;
+    public FlowPane branchesContainer;
 
     private Stage stage;
     private boolean isMaximized = false;
@@ -201,71 +202,94 @@ public class Home {
 
     private void populateBranches() {
         branchesContainer.getChildren().clear();
-        userBranches
-                .values()
-                .stream()
+        userBranches.values().stream()
                 .sorted(Comparator.comparingInt(UserBranch::getId))
                 .forEach(branch -> {
-                    HBox branchRow = createBranchRow(branch);
-                    branchesContainer.getChildren().add(branchRow);
+                    VBox branchTile = createBranchTile(branch);
+                    branchesContainer.getChildren().add(branchTile);
                 });
     }
 
-    private HBox createOrganizationRow(UserOrganization org) {
+    private VBox createBranchTile(UserBranch branch) {
+        VBox container = new VBox(15);
+        container.getStyleClass().add("branch-tile");
+        Label branchLabel = new Label(branch.getName());
+        branchLabel.getStyleClass().add("branch-name");
+
+        double labelWidth = branchLabel.prefWidth(-1);
+        double wrapWidth = labelWidth; // initial wrap width
+
+        List<HBox> projectRows = new ArrayList<>();
+        HBox currentRow = new HBox(5); // assuming hgap is 5
+        double currentWidth = 0;
+
+        for (Project project : branch.getUserBelonging().projects().stream()
+                .sorted(Comparator.comparing(Project::getDateToStart))
+                .toList()) {
+            Label projectLabel = createProjectLabel(project);
+            double projectWidth = projectLabel.prefWidth(-1);
+            if (currentWidth + projectWidth > wrapWidth && !currentRow.getChildren().isEmpty()) {
+                projectRows.add(currentRow);
+                currentRow = new HBox(5);
+                currentWidth = 0;
+            }
+            currentRow.getChildren().add(projectLabel);
+            currentWidth += projectWidth + 5; // hgap
+        }
+        if (!currentRow.getChildren().isEmpty()) {
+            projectRows.add(currentRow);
+        }
+
+        // Calculate max row width
+        double maxRowWidth = projectRows.stream()
+                .mapToDouble(row -> row.getChildren().stream()
+                        .mapToDouble(node -> node.prefWidth(-1))
+                        .sum() + (row.getChildren().size() - 1) * 5)
+                .max()
+                .orElse(0);
+
+        // Set container prefWidth
+        double padding = container.getPadding().getLeft() + container.getPadding().getRight();
+        container.setPrefWidth(Math.max(labelWidth, maxRowWidth) + padding);
+
+        // Add branchLabel and projectRows to container
+        container.getChildren().add(branchLabel);
+        container.getChildren().addAll(projectRows);
+
+        return container;
+    }
+
+    private HBox createOrganizationRow(UserOrganization userOrg) {
         HBox container = new HBox(15);
         container.getStyleClass().add("organization-container");
-        Label emailLabel = new Label(org.getName());
-        emailLabel.getStyleClass().add("organization-name");
-        emailLabel.setWrapText(false);
-        emailLabel.setEllipsisString("");
-        Text textMeasure = new Text(org.getName());
-        textMeasure.setFont(emailLabel.getFont());
+        Label orgLabel = new Label(userOrg.getName());
+        orgLabel.getStyleClass().add("organization-name");
+        orgLabel.setWrapText(false);
+        orgLabel.setEllipsisString("");
+        Text textMeasure = new Text(userOrg.getName());
+        textMeasure.setFont(orgLabel.getFont());
         textMeasure.applyCss();
         double textWidth = textMeasure.getLayoutBounds().getWidth();
-        emailLabel.setMinWidth(textWidth * 3 / 2);
-        emailLabel.setPrefWidth(textWidth * 3 / 2);
-        emailLabel.setMaxWidth(Double.MAX_VALUE);
+        orgLabel.setMinWidth(textWidth * 3 / 2);
+        orgLabel.setPrefWidth(textWidth * 3 / 2);
+        orgLabel.setMaxWidth(Double.MAX_VALUE);
         FlowPane branchesPane = new FlowPane(8, 5);
         branchesPane.getStyleClass().add("branches-flow");
 
         branchesPane.prefWrapLengthProperty().bind( // Dynamic binding for responsive wrapping
                 organizationsContainer.widthProperty()
-                        .subtract(emailLabel.getMinWidth()) // Use fixed min width
+                        .subtract(orgLabel.getMinWidth()) // Use fixed min width
                         .subtract(30) // Account for container padding
         );
 
-        org.getBranches().values().stream() // 3. Add Branches
+        userOrg.getBranches().values().stream() // 3. Add Branches
                 .sorted(Comparator.comparingInt(Branch::getId))
                 .forEach(branch -> {
                     Label branchLabel = createBranchLabel(branch);
                     branchesPane.getChildren().add(branchLabel);
                 });
 
-        container.getChildren().addAll(emailLabel, branchesPane);
-        return container;
-    }
-
-    private HBox createBranchRow(UserBranch branch) {
-        HBox container = new HBox(15);
-        container.getStyleClass().add("branch-container");
-        Label branchLabel = new Label(branch.getName());
-        branchLabel.getStyleClass().add("branch-name");
-        FlowPane projectsPane = new FlowPane(8, 5);
-        projectsPane.getStyleClass().add("projects-flow");
-
-        projectsPane.prefWrapLengthProperty().bind( // Dynamic binding for responsive wrapping
-                organizationsContainer.widthProperty()
-                        .subtract(0.75) // Use fixed min width
-        );
-
-        branch.getUserBelonging().projects().stream() // 3. Add projects
-                .sorted(Comparator.comparing(Project::getDateToStart))
-                .forEach(project -> {
-                    Label projectLabel = createProjectLabel(project);
-                    projectsPane.getChildren().add(projectLabel);
-                });
-
-        container.getChildren().addAll(branchLabel, projectsPane);
+        container.getChildren().addAll(orgLabel, branchesPane);
         return container;
     }
 
