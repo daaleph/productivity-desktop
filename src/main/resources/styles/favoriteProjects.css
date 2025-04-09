@@ -3,6 +3,7 @@
     -fx-hgap: 10;
     -fx-vgap: 10;
     -fx-padding: 5;
+    -fx-min-height: 90px;
 }
 
 /* Project Labels */
