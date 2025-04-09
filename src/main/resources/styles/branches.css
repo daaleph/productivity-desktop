@@ -51,6 +51,7 @@
 
 /* ScrollPane styling (simplified) */
 .branch-scroll {
+    -fx-min-height: 100px;
     -fx-vbar-policy: as-needed;
     -fx-hbar-policy: as-needed;
     -fx-background-color: transparent;
