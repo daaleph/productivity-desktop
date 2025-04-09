@@ -14,9 +14,9 @@
     -fx-padding: 12px;
     -fx-spacing: 8px;
     -fx-alignment: top-left;
-    -fx-pref-width: -1;
-    -fx-max-width: -1;
-    -fx-min-width: -1;
+    -fx-min-width: -1; /* Allow shrinking */
+    -fx-pref-width: -1; /* Allow dynamic sizing */
+    -fx-max-width: Infinity; /* Allow expansion */
 }
 
 /* Branch Name Label */
@@ -24,15 +24,16 @@
     -fx-font-weight: 600;
     -fx-text-fill: #2c3e50;
     -fx-font-size: 14px;
-    -fx-padding: 0 0 0 0;
     -fx-alignment: center-left;
+    -fx-min-width: -1; /* Allow shrinking */
+    -fx-pref-width: -1; /* Use text width */
+    -fx-text-overrun: clip; /* Or use 'ellipsis' if you want ... for overflow */
 }
 
 /* Projects Flow Pane Inside Tile */
 .branch-projects-flow {
-    -fx-hgap: 0px;
+    -fx-hgap: 5px; /* Spacing between projects */
     -fx-vgap: 0px;
-    -fx-max-width: -1;
 }
 
 /* Project Labels */

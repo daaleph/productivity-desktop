@@ -1,5 +1,6 @@
 package home.controllers;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
@@ -9,7 +10,6 @@ import home.models.branchs.UserBranch;
 import home.models.projects.Project;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
@@ -215,15 +215,47 @@ public class Home {
         container.getStyleClass().add("branch-tile");
         Label branchLabel = new Label(branch.getName());
         branchLabel.getStyleClass().add("branch-name");
-        FlowPane projectsFlow = new FlowPane();
-        projectsFlow.getStyleClass().add("branch-projects-flow");
-        branch.getUserBelonging().projects().stream()
+
+        double labelWidth = branchLabel.prefWidth(-1);
+        double wrapWidth = labelWidth; // initial wrap width
+
+        List<HBox> projectRows = new ArrayList<>();
+        HBox currentRow = new HBox(5); // assuming hgap is 5
+        double currentWidth = 0;
+
+        for (Project project : branch.getUserBelonging().projects().stream()
                 .sorted(Comparator.comparing(Project::getDateToStart))
-                .forEach(project -> {
-                    Label projectLabel = createProjectLabel(project);
-                    projectsFlow.getChildren().add(projectLabel);
-                });
-        container.getChildren().addAll(branchLabel, projectsFlow);
+                .toList()) {
+            Label projectLabel = createProjectLabel(project);
+            double projectWidth = projectLabel.prefWidth(-1);
+            if (currentWidth + projectWidth > wrapWidth && !currentRow.getChildren().isEmpty()) {
+                projectRows.add(currentRow);
+                currentRow = new HBox(5);
+                currentWidth = 0;
+            }
+            currentRow.getChildren().add(projectLabel);
+            currentWidth += projectWidth + 5; // hgap
+        }
+        if (!currentRow.getChildren().isEmpty()) {
+            projectRows.add(currentRow);
+        }
+
+        // Calculate max row width
+        double maxRowWidth = projectRows.stream()
+                .mapToDouble(row -> row.getChildren().stream()
+                        .mapToDouble(node -> node.prefWidth(-1))
+                        .sum() + (row.getChildren().size() - 1) * 5)
+                .max()
+                .orElse(0);
+
+        // Set container prefWidth
+        double padding = container.getPadding().getLeft() + container.getPadding().getRight();
+        container.setPrefWidth(Math.max(labelWidth, maxRowWidth) + padding);
+
+        // Add branchLabel and projectRows to container
+        container.getChildren().add(branchLabel);
+        container.getChildren().addAll(projectRows);
+
         return container;
     }
 
