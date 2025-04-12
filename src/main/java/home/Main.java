@@ -1,7 +1,7 @@
 // java/home/Main.java
 package home;
 
-import home.models.User;
+import home.models.MainUser;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
@@ -13,7 +13,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        User user = User.getInstance("nicalcoca@gmail.com");
+        MainUser mainUser = MainUser.getInstance("nicalcoca@gmail.com");
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/home.fxml"));
         Parent root = loader.load();
@@ -21,7 +21,7 @@ public class Main extends Application {
         Home controller = loader.getController();
 
         if (controller != null) {
-            controller.setUser(user);
+            controller.setMainUser(mainUser);
             controller.setUserPriorities();
             controller.setUserCoreProjects();
             controller.setUserFavoriteProjects();

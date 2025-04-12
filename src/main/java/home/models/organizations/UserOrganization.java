@@ -2,7 +2,7 @@ package home.models.organizations;
 
 import java.util.Map;
 import java.util.List;
-import home.models.User;
+import home.models.MainUser;
 import java.util.HashMap;
 import home.models.branchs.Branch;
 import java.util.stream.Collectors;
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 public class UserOrganization extends BranchedOrganization {
-    private User user;
+    private MainUser user;
     private final String email;
     private Map<Integer, Branch> branches = new HashMap<>();
 
@@ -36,6 +36,7 @@ public class UserOrganization extends BranchedOrganization {
     public Map<Integer, Branch> getBranches() {
         return branches;
     }
+
     public Map<Integer, Branch> getBranches(List<Integer> ids) {
         return ids.stream()
                 .distinct()
@@ -47,7 +48,7 @@ public class UserOrganization extends BranchedOrganization {
         return branches.get(id);
     }
 
-    public User getUser() {
+    public MainUser getUser() {
         return user;
     }
 

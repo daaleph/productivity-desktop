@@ -1,6 +1,6 @@
 package home.models.branchs;
 
-import home.models.User;
+import home.models.MainUser;
 import home.records.Tuple;
 import home.models.projects.Project;
 import home.records.ProjectedBranchData;

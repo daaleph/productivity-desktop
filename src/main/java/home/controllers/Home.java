@@ -1,32 +1,35 @@
 package home.controllers;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
-import home.models.User;
+import java.util.ArrayList;
+import java.util.Comparator;
+
+import home.records.Priority;
+
+import home.models.MainUser;
 import home.models.branchs.Branch;
-import home.models.branchs.UserBranch;
 import home.models.projects.Project;
+import home.models.branchs.UserBranch;
+import home.models.projects.CoreProject;
+import home.models.organizations.UserOrganization;
+
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Text;
+import javafx.scene.control.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import home.records.Priority;
-import javafx.scene.control.*;
-import home.models.projects.CoreProject;
 import javafx.collections.FXCollections;
 import javafx.animation.TranslateTransition;
-import home.models.organizations.UserOrganization;
 
 public class Home {
-    private User user;
     double padding = 5;
     double cellHeight = 24;
+    private MainUser mainUser;
     @FXML private GridPane gridContainer;
     @FXML private FlowPane userFavoriteProjects;
     @FXML private Label welcome, userAge, userName;
@@ -48,27 +51,27 @@ public class Home {
     private Stage stage;
     private boolean isMaximized = false;
 
-    public void setUser(User user) {
-        this.user = user;
-        if (user != null) {
-            welcome.setText("How are you feeling today " + user.getPreferredName());
-            userName.setText("Name: " + user.getName());
-            userAge.setText("Age: " + user.getAge());
+    public void setMainUser(MainUser mainUser) {
+        this.mainUser = mainUser;
+        if (mainUser != null) {
+            welcome.setText("How are you feeling today " + mainUser.getPreferredName());
+            userName.setText("Name: " + mainUser.getName());
+            userAge.setText("Age: " + mainUser.getAge());
         }
     }
 
     public void setUserOrganizations() {
-        this.userOrganizations = user.getOrganizations();
+        this.userOrganizations = mainUser.getOrganizations();
         populateOrganizations();
     }
 
     public void setUserBranches() {
-        this.userBranches = user.getBranches();
+        this.userBranches = mainUser.getBranches();
         populateBranches();
     }
 
     public void setUserPriorities() {
-        List<Priority> priorities = user.getPriorities().values().stream().toList();
+        List<Priority> priorities = mainUser.getPriorities().values().stream().toList();
         userPriorities.setItems(FXCollections.observableArrayList(priorities));
         userPriorities.setCellFactory(lvp -> new ListCell<>() {
             @Override
@@ -82,7 +85,7 @@ public class Home {
     }
 
     public void setUserCoreProjects() {
-        List<CoreProject> coreProjects = user.getCoreProjects().values().stream().toList();
+        List<CoreProject> coreProjects = mainUser.getCoreProjects().values().stream().toList();
         userCoreProjects.setItems(FXCollections.observableArrayList(coreProjects));
         userCoreProjects.setCellFactory(lvcp -> new ListCell<>() {
             @Override
@@ -96,7 +99,7 @@ public class Home {
     }
 
     public void setUserFavoriteProjects() {
-        List<Project> favoriteProjects = user.getFavoriteProjects().values().stream().toList();
+        List<Project> favoriteProjects = mainUser.getFavoriteProjects().values().stream().toList();
         userFavoriteProjects.getChildren().clear();
         favoriteProjects.forEach(project -> {
             Label projectLabel = new Label(project.getName());
@@ -213,7 +216,7 @@ public class Home {
         branchLabel.getStyleClass().add("branch-name");
 
         double labelWidth = branchLabel.prefWidth(-1);
-        double wrapWidth = labelWidth; // initial wrap width
+        // initial wrap width
 
         List<HBox> projectRows = new ArrayList<>();
         HBox currentRow = new HBox(5); // assuming hgap is 5
@@ -224,7 +227,7 @@ public class Home {
                 .toList()) {
             Label projectLabel = createProjectLabel(project);
             double projectWidth = projectLabel.prefWidth(-1);
-            if (currentWidth + projectWidth > wrapWidth && !currentRow.getChildren().isEmpty()) {
+            if (currentWidth + projectWidth > labelWidth && !currentRow.getChildren().isEmpty()) {
                 projectRows.add(currentRow);
                 currentRow = new HBox(5);
                 currentWidth = 0;
