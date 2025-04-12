@@ -8,26 +8,36 @@ import home.models.Entities;
 import home.models.MainUser;
 import home.records.*;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static data.Abbreviations.getAbbreviation;
 
 public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
-    private static volatile ProjectsFetcher instance;
-    private volatile boolean isDataLoaded = false;
-    private Map<String, List<CoreProject>> usersCoreProjects = new HashMap<String, List<CoreProject>>();
-    private Map<String, List<Project>> usersFavoriteProjects = new HashMap<String, List<Project>>();
-    private Map<String, List<Project>> usersProjects = new HashMap<String, List<Project>>();
     private static Config config;
+    private volatile boolean isDataLoaded = false;
+    private static volatile ProjectsFetcher instance;
 
-    private MainUser mainUser;
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    private final Map<String, List<CoreProject>> usersCoreProjects = new ConcurrentHashMap<>();
+    private final Map<String, List<Project>> usersProjects = new ConcurrentHashMap<>();
+    private final Map<String, List<Project>> usersFavoriteProjects = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<Void>> pendingFetches = new ConcurrentHashMap<>();
+
     String core = getAbbreviation("core");
     String userS = getAbbreviation("user");
     String emailS = getAbbreviation("email");
@@ -93,162 +103,243 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     }
 
     public void fetch(Set<Enumerations> projectTypes, Set<Entities> filterEntities) {
-        // Validate inputs
         Objects.requireNonNull(projectTypes, "Project types cannot be null");
         Objects.requireNonNull(filterEntities, "Filter types cannot be null");
         if (projectTypes.isEmpty() || filterEntities.isEmpty()) {
             throw new IllegalArgumentException("Project and filter types must not be empty");
         }
 
-        // Use the config values from the singleton
-        List<String> emails = config.emails;
-        List<Integer> branches = config.branches;
-        List<Integer> organizations = config.organizations;
-
         if (projectTypes.contains(Enumerations.CORE) && filterEntities.contains(Entities.MAIN_USER)) {
-            fetchAllCoreProjectsByMainUser();
+            fetchAllCoresMainUser();
             return;
         }
 
-        // Apply filters
+        // Existing filtering logic remains unchanged
         if (filterEntities.contains(Entities.EMAILS)) {
-            System.out.println("Filtering by emails: " + emails);
-            // Add email-based filtering logic
+            System.out.println("Filtering by emails: " + config.emails);
         }
         if (filterEntities.contains(Entities.ORGANIZATIONS)) {
-            System.out.println("Filtering by organizations: " + organizations);
-            // Add organization-based filtering logic
+            System.out.println("Filtering by organizations: " + config.organizations);
         }
         if (filterEntities.contains(Entities.BRANCHES)) {
-            System.out.println("Filtering by branches: " + branches);
-            // Add branch-based filtering logic
+            System.out.println("Filtering by branches: " + config.branches);
         }
 
-        // Fetch projects based on type
-        if (projectTypes.contains(Enumerations.CORE)) {
-            System.out.println("Fetching core projects");
-            // Logic for core projects
-        }
         if (projectTypes.contains(Enumerations.ALL)) {
             System.out.println("Fetching all projects");
-            // Logic for all projects
         }
         if (projectTypes.contains(Enumerations.FAVORITE)) {
             System.out.println("Fetching favorite projects");
-            // Logic for favorite projects
         }
     }
 
-    private void fetchCoreByUsers() {
-        List<String> emails = config.emails;
+    private void fetchAllCoresMainUser() {
+        String email = config.mainEmail;
+        pendingFetches.computeIfAbsent(email, this::fetchAllCoresByUser);
     }
 
-    private synchronized void fetchAllCoreProjectsByUser(String email) {
-        HttpClient client = HttpClient.newHttpClient();
+    private CompletableFuture<Void> fetchAllCoresByUser(String email) {
+        String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s",
+                userS, projects, core, emailS, email);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .GET()
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(this::processCoreProjectsResponse)
+                .thenAccept(projects -> usersCoreProjects.put(email, projects))
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
+                    }
+                    pendingFetches.remove(email);
+                });
+    }
+
+    private List<CoreProject> processCoreProjectsResponse(HttpResponse<String> response) {
+        if (response.statusCode() != 200) {
+            System.err.println("HTTP error: " + response.statusCode());
+            return Collections.emptyList();
+        }
+
         try {
-            isDataLoaded = false;
-            String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s", userS, projects, core, emailS, email);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode projectsArray = mapper.readTree(response.body());
-                for (JsonNode projectNode : projectsArray) {
-                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
-                    CoreProject coreProject = new CoreProject(uuid);
-                    String name = projectNode.get("name").asText();
-                    int type = projectNode.get("type").asInt();
-                    boolean favorite = projectNode.get("favorite").asBoolean();
-                    ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
-                    JsonNode completionNode = projectNode.get("completion");
-                    Map<String, Integer> completionMap = Map.of(
-                            "days", completionNode.get("days").asInt(),
-                            "weeks", completionNode.get("weeks").asInt(),
-                            "months", completionNode.get("months").asInt(),
-                            "years", completionNode.get("years").asInt()
-                    );
-                    MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
-                    List<Priority> projectPriorities = new ArrayList<>();
-                    JsonNode prioritiesNode = projectNode.get("priorities");
-                    if (prioritiesNode.isArray()) {
-                        for (JsonNode pNode : prioritiesNode) {
-                            int index = pNode.asInt();
-                            projectPriorities.add(MainUser.getInstance(config.mainEmail).getPriority(index));
-                        }
-                    }
-                    List<MeasuredGoal> measuredGoals = new ArrayList<>();
-                    JsonNode goalsNode = projectNode.get("measuredGoals");
-                    for (JsonNode goalNode : goalsNode) {
-                        int order = goalNode.get("order").asInt();
-                        String item = goalNode.get("item").asText();
-                        double weight = goalNode.get("weight").asDouble();
-                        double realGoal = goalNode.get("realGoal").asDouble();
-                        double realAdvance = goalNode.get("realAdvance").asDouble();
-                        int discreteGoal = goalNode.get("discreteGoal").asInt();
-                        int discreteAdvance = goalNode.get("discreteAdvance").asInt();
+            JsonNode projectsArray = mapper.readTree(response.body());
+            List<CoreProject> projects = new ArrayList<>();
+            for (JsonNode projectNode : projectsArray) {
+                CoreProject project = parseCoreProject(projectNode);
+                projects.add(project);
+            }
+            return projects;
+        } catch (Exception e) {
+            throw new CompletionException("Failed to parse core projects", e);
+        }
+    }
 
-                        MeasuredSet<Double> real = new MeasuredSet<>(
-                                Map.of("goal", realGoal, "advance", realAdvance),
-                                Double.class
-                        );
-                        MeasuredSet<Integer> discrete = new MeasuredSet<>(
-                                Map.of("goal", discreteGoal, "advance", discreteAdvance),
-                                Integer.class
-                        );
+    private static final Logger logger = Logger.getLogger(ProjectsFetcher.class.getName());
 
-                        List<Failure> failures = new ArrayList<>();
-                        JsonNode failuresNode = goalNode.get("failures");
-                        for (JsonNode failureNode : failuresNode) {
-                            failures.add(Failure.fromJson(failureNode));
+    private CoreProject parseCoreProject(JsonNode projectNode) {
+        try {
+            logger.log(Level.FINE, "Starting to parse core project");
+
+            // Parse UUID
+            UUID uuid;
+            try {
+                uuid = UUID.fromString(projectNode.get("uuid").asText());
+                logger.log(Level.FINE, "Successfully parsed UUID: " + uuid);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Failed to parse UUID from: " + projectNode.get("uuid"), e);
+                throw e;
+            }
+            CoreProject coreProject = new CoreProject(uuid);
+
+            // Parse basic project data
+            String name = projectNode.get("name").asText();
+            int type = projectNode.get("type").asInt();
+            boolean favorite = projectNode.get("favorite").asBoolean();
+            ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
+            logger.log(Level.FINE, "Parsed basic project data - Name: {0}, Type: {1}, Favorite: {2}, Start: {3}",
+                    new Object[]{name, type, favorite, dateToStart});
+
+            // Parse completion data
+            JsonNode completionNode = projectNode.get("completion");
+            try {
+                Map<String, Integer> completionMap = Map.of(
+                        "days", completionNode.get("days").asInt(),
+                        "weeks", completionNode.get("weeks").asInt(),
+                        "months", completionNode.get("months").asInt(),
+                        "years", completionNode.get("years").asInt()
+                );
+                MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
+                logger.log(Level.FINE, "Successfully parsed completion data");
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Failed to parse completion data", e);
+                throw e;
+            }
+
+            // Parse priorities
+            List<Priority> projectPriorities = new ArrayList<>();
+            JsonNode prioritiesNode = projectNode.get("priorities");
+            if (prioritiesNode != null && prioritiesNode.isArray()) {
+                logger.log(Level.FINE, "Found {0} priorities", prioritiesNode.size());
+                for (JsonNode pNode : prioritiesNode) {
+                    try {
+                        int index = pNode.asInt();
+                        Priority priority = MainUser.getInstance(config.mainEmail).getPriority(index);
+                        if (priority == null) {
+                            logger.log(Level.WARNING, "Priority not found for index: " + index);
+                        } else {
+                            projectPriorities.add(priority);
                         }
-                        boolean finished = goalNode.get("finished").asBoolean();
-                        measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Failed to parse priority node: " + pNode, e);
                     }
-                    List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories = List.of();
-                    CoreProject.CoreProjectData data = new CoreProject.CoreProjectData(
-                            name,
-                            type,
-                            favorite,
-                            dateToStart,
-                            projectPriorities,
-                            measuredGoals,
-                            necessaryTime,
-                            underlyingCategories
-                    );
-                    coreProject.setData(data);
-                    System.out.print("CORE PROJECT: ");
-                    System.out.println(coreProject);
-                    List<CoreProject> coreProjects = this.usersCoreProjects.get(email);
-                    List<CoreProject> newCoreProjects = new ArrayList<>(coreProjects);
-                    newCoreProjects.add(coreProject);
-                    this.usersCoreProjects.put(email, newCoreProjects);
-                    isDataLoaded = true;
                 }
             } else {
-                System.err.println("Error fetching core projects for user. Status code: " + response.statusCode());
+                logger.log(Level.FINE, "No priorities found or priorities node is not an array");
             }
+
+            // Parse measured goals
+            List<MeasuredGoal> measuredGoals;
+            try {
+                measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
+                logger.log(Level.FINE, "Parsed {0} measured goals", measuredGoals.size());
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Failed to parse measured goals", e);
+                throw e;
+            }
+
+            // Create and set project data
+            try {
+                Map<String, Integer> completionMap = Map.of(
+                        "days", completionNode.get("days").asInt(),
+                        "weeks", completionNode.get("weeks").asInt(),
+                        "months", completionNode.get("months").asInt(),
+                        "years", completionNode.get("years").asInt()
+                );
+                MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
+                CoreProject.CoreProjectData data = new CoreProject.CoreProjectData(
+                        name, type, favorite, dateToStart,
+                        projectPriorities, measuredGoals, necessaryTime, List.of()
+                );
+                coreProject.setData(data);
+                logger.log(Level.FINE, "Successfully created and set project data");
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Failed to create project data", e);
+                throw e;
+            }
+
+            return coreProject;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Critical error parsing core project", e);
+            throw e;
         }
     }
 
-    private void fetchAllCoreProjectsByMainUser() {
-        String mainEmail = config.mainEmail;
-        this.fetchAllCoreProjectsByUser(mainEmail);
+    private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
+        List<MeasuredGoal> goals = new ArrayList<>();
+        if (goalsNode == null || !goalsNode.isArray()) {
+            return goals;
+        }
+
+        for (JsonNode goalNode : goalsNode) {
+            int order = goalNode.get("order").asInt();
+            String item = goalNode.get("item").asText();
+            double weight = goalNode.get("weight").asDouble();
+
+            MeasuredSet<Double> real = new MeasuredSet<>(
+                    Map.of(
+                            "goal", goalNode.get("realGoal").asDouble(),
+                            "advance", goalNode.get("realAdvance").asDouble()
+                    ),
+                    Double.class
+            );
+
+            MeasuredSet<Integer> discrete = new MeasuredSet<>(
+                    Map.of(
+                            "goal", goalNode.get("discreteGoal").asInt(),
+                            "advance", goalNode.get("discreteAdvance").asInt()
+                    ),
+                    Integer.class
+            );
+
+            List<Failure> failures = parseFailures(goalNode.get("failures"));
+            boolean finished = goalNode.get("finished").asBoolean();
+
+            goals.add(new MeasuredGoal(
+                    order, item, weight, real, discrete, finished, failures
+            ));
+        }
+        return goals;
     }
 
-    public Map<UUID, CoreProject> getAllCoreProjectsByMainUser() {
-        Map<UUID, CoreProject> coreProjects = this.usersCoreProjects.get(config.mainEmail)
+    private List<Failure> parseFailures(JsonNode failuresNode) {
+        List<Failure> failures = new ArrayList<>();
+        if (failuresNode == null || !failuresNode.isArray()) {
+            return failures;
+        }
+
+        for (JsonNode failureNode : failuresNode) {
+            failures.add(Failure.fromJson(failureNode));
+        }
+        return failures;
+    }
+
+    public Map<UUID, CoreProject> getAllCoresOfMainUser() {
+        String email = config.mainEmail;
+        CompletableFuture<Void> fetchOperation = pendingFetches.get(email);
+
+        // Wait for completion if fetch is in progress
+        if (fetchOperation != null) {
+            fetchOperation.join();
+        }
+
+        return usersCoreProjects.getOrDefault(email, Collections.emptyList())
                 .stream()
                 .collect(Collectors.toMap(
                         CoreProject::getUuid,
                         Function.identity()
                 ));
-        System.out.print("CORE PROJECTS: ");
-        System.out.println(coreProjects);
-        return coreProjects;
     }
 }

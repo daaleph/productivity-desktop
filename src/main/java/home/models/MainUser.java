@@ -121,7 +121,7 @@ public class MainUser {
         Set<Entities> entities = EnumSet.of(Entities.MAIN_USER);
         Set<Enumerations> projectsFilter = EnumSet.of(Enumerations.CORE);
         fetcher.fetch(projectsFilter, entities);
-        this.coreProjects = fetcher.getAllCoreProjectsByMainUser();
+        this.coreProjects = fetcher.getAllCoresOfMainUser();
     }
 
     private void fetchFavoriteProjects() {
