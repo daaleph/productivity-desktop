@@ -27,7 +27,6 @@ import static data.Abbreviations.getAbbreviation;
 
 public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     private static Config config;
-    private volatile boolean isDataLoaded = false;
     private static volatile ProjectsFetcher instance;
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -180,101 +179,78 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     private static final Logger logger = Logger.getLogger(ProjectsFetcher.class.getName());
 
     private CoreProject parseCoreProject(JsonNode projectNode) {
+
+        UUID uuid;
         try {
-            logger.log(Level.FINE, "Starting to parse core project");
-
-            // Parse UUID
-            UUID uuid;
-            try {
-                uuid = UUID.fromString(projectNode.get("uuid").asText());
-                logger.log(Level.FINE, "Successfully parsed UUID: " + uuid);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Failed to parse UUID from: " + projectNode.get("uuid"), e);
-                throw e;
-            }
-            CoreProject coreProject = new CoreProject(uuid);
-
-            // Parse basic project data
-            String name = projectNode.get("name").asText();
-            int type = projectNode.get("type").asInt();
-            boolean favorite = projectNode.get("favorite").asBoolean();
-            ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
-            logger.log(Level.FINE, "Parsed basic project data - Name: {0}, Type: {1}, Favorite: {2}, Start: {3}",
-                    new Object[]{name, type, favorite, dateToStart});
-
-            // Parse completion data
-            JsonNode completionNode = projectNode.get("completion");
-            try {
-                Map<String, Integer> completionMap = Map.of(
-                        "days", completionNode.get("days").asInt(),
-                        "weeks", completionNode.get("weeks").asInt(),
-                        "months", completionNode.get("months").asInt(),
-                        "years", completionNode.get("years").asInt()
-                );
-                MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
-                logger.log(Level.FINE, "Successfully parsed completion data");
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Failed to parse completion data", e);
-                throw e;
-            }
-
-            // Parse priorities
-            List<Priority> projectPriorities = new ArrayList<>();
-            JsonNode prioritiesNode = projectNode.get("priorities");
-            if (prioritiesNode != null && prioritiesNode.isArray()) {
-                logger.log(Level.FINE, "Found {0} priorities", prioritiesNode.size());
-                for (JsonNode pNode : prioritiesNode) {
-                    try {
-                        int index = pNode.asInt();
-                        Priority priority = MainUser.getInstance(config.mainEmail).getPriority(index);
-                        if (priority == null) {
-                            logger.log(Level.WARNING, "Priority not found for index: " + index);
-                        } else {
-                            projectPriorities.add(priority);
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "Failed to parse priority node: " + pNode, e);
-                    }
-                }
-            } else {
-                logger.log(Level.FINE, "No priorities found or priorities node is not an array");
-            }
-
-            // Parse measured goals
-            List<MeasuredGoal> measuredGoals;
-            try {
-                measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
-                logger.log(Level.FINE, "Parsed {0} measured goals", measuredGoals.size());
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Failed to parse measured goals", e);
-                throw e;
-            }
-
-            // Create and set project data
-            try {
-                Map<String, Integer> completionMap = Map.of(
-                        "days", completionNode.get("days").asInt(),
-                        "weeks", completionNode.get("weeks").asInt(),
-                        "months", completionNode.get("months").asInt(),
-                        "years", completionNode.get("years").asInt()
-                );
-                MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
-                CoreProject.CoreProjectData data = new CoreProject.CoreProjectData(
-                        name, type, favorite, dateToStart,
-                        projectPriorities, measuredGoals, necessaryTime, List.of()
-                );
-                coreProject.setData(data);
-                logger.log(Level.FINE, "Successfully created and set project data");
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Failed to create project data", e);
-                throw e;
-            }
-
-            return coreProject;
+            uuid = UUID.fromString(projectNode.get("uuid").asText());
+            logger.log(Level.FINE, "Successfully parsed UUID: " + uuid);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Critical error parsing core project", e);
+            logger.log(Level.SEVERE, "Failed to parse UUID from: " + projectNode.get("uuid"), e);
             throw e;
         }
+        CoreProject coreProject = new CoreProject(uuid);
+
+        // Parse basic project data
+        EssentialInfo essential = this.parseEssentialData(projectNode);
+
+        // Parse priorities
+        List<Priority> projectPriorities = new ArrayList<>();
+        JsonNode prioritiesNode = projectNode.get("priorities");
+        if (prioritiesNode != null && prioritiesNode.isArray()) {
+            logger.log(Level.FINE, "Found {0} priorities", prioritiesNode.size());
+            for (JsonNode pNode : prioritiesNode) {
+                try {
+                    int index = pNode.asInt();
+                    Priority priority = MainUser.getInstance(config.mainEmail).getPriority(index);
+                    if (priority == null) {
+                        logger.log(Level.WARNING, "Priority not found for index: " + index);
+                    } else {
+                        projectPriorities.add(priority);
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Failed to parse priority node: " + pNode, e);
+                }
+            }
+        } else {
+            logger.log(Level.FINE, "No priorities found or priorities node is not an array");
+        }
+
+        // Parse measured goals
+        List<MeasuredGoal> measuredGoals;
+        try {
+            measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
+            logger.log(Level.FINE, "Parsed {0} measured goals", measuredGoals.size());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to parse measured goals", e);
+            throw e;
+        }
+
+        // Create and set project data
+        JsonNode completionNode = projectNode.get("completion");
+        try {
+            // Parse completion data
+            MeasuredSet<Integer> necessaryTime = this.parseCompletition(completionNode);
+            CoreProject.CoreProjectInfo info = new CoreProject.CoreProjectInfo(
+                    essential,
+                    projectPriorities, measuredGoals, necessaryTime, List.of()
+            );
+            coreProject.setInfo(info);
+            logger.log(Level.FINE, "Successfully created and set project data");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to create project data", e);
+            throw e;
+        }
+
+        return coreProject;
+    }
+
+    private EssentialInfo parseEssentialData(JsonNode project) {
+        String name = project.get("name").asText();
+        int type = project.get("type").asInt();
+        boolean favorite = project.get("favorite").asBoolean();
+        ZonedDateTime dateToStart = ZonedDateTime.parse(project.get("dateToStart").asText());
+
+        return new EssentialInfo(name, type, favorite, dateToStart);
     }
 
     private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
@@ -324,6 +300,23 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             failures.add(Failure.fromJson(failureNode));
         }
         return failures;
+    }
+
+    private MeasuredSet<Integer> parseCompletition(JsonNode completionNode) {
+        try {
+            Map<String, Integer> completionMap = Map.of(
+                    "days", completionNode.get("days").asInt(),
+                    "weeks", completionNode.get("weeks").asInt(),
+                    "months", completionNode.get("months").asInt(),
+                    "years", completionNode.get("years").asInt()
+            );
+            MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
+            logger.log(Level.FINE, "Successfully parsed completion data");
+            return necessaryTime;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to create project data", e);
+            throw e;
+        }
     }
 
     public Map<UUID, CoreProject> getAllCoresOfMainUser() {

@@ -46,7 +46,7 @@ public class MainUser {
             String email
     ) {
         this.email = email;
-        fetchData();
+        fetchInfo();
     }
 
     /**
@@ -66,15 +66,15 @@ public class MainUser {
         return instance;
     }
 
-    private void fetchData() {
-        this.fetchPersonalData();
+    private void fetchInfo() {
+        this.fetchPersonalInfo();
         this.fetchCoreProjects();
         this.fetchOrganizations();
         this.fetchFavoriteProjects();
         this.fetchBranches();
     }
 
-    private void fetchPersonalData() {
+    private void fetchPersonalInfo() {
         String user = getAbbreviation("user");
         String email = getAbbreviation("email");
         HttpClient client = HttpClient.newHttpClient();
@@ -88,12 +88,12 @@ public class MainUser {
             if (response.statusCode() == 200) {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.body());
-                home.records.User userData = home.records.User.fromJson(root.get(0));
-                this.completeName = userData.completeName();
-                this.preferredName = userData.preferredName();
-                this.age = userData.age();
-                this.email = userData.email();
-                this.priorities = userData
+                home.records.User userInfo = home.records.User.fromJson(root.get(0));
+                this.completeName = userInfo.completeName();
+                this.preferredName = userInfo.preferredName();
+                this.age = userInfo.age();
+                this.email = userInfo.email();
+                this.priorities = userInfo
                         .priorities()
                         .stream()
                         .collect(Collectors.toMap(
@@ -201,7 +201,7 @@ public class MainUser {
                         measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
                     }
                     List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories = List.of();
-                    Project.ProjectData data = new Project.ProjectData(
+                    Project.ProjectInfo data = new Project.ProjectInfo(
                             name,
                             type,
                             favorite,
@@ -212,7 +212,7 @@ public class MainUser {
                             underlyingCategories,
                             parentProjects
                     );
-                    project.setData(data);
+                    project.setInfo(data);
                     favoriteProjectsMap.put(uuid, project);
                 }
                 this.favoriteProjects = favoriteProjectsMap;
@@ -257,9 +257,9 @@ public class MainUser {
                     JsonNode branchesNode = orgNode.get("branches");
                     if (branchesNode != null) {
                         branchesNode.fields().forEachRemaining(branchEntry -> {
-                            JsonNode branchData = branchEntry.getValue();
-                            int branchId = branchData.get("id").asInt();
-                            String branchName = branchData.get("name").asText();
+                            JsonNode branchInfo = branchEntry.getValue();
+                            int branchId = branchInfo.get("id").asInt();
+                            String branchName = branchInfo.get("name").asText();
 
                             Branch branch = new Branch(branchId, branchName);
                             branches.put(branchId, branch);
@@ -341,7 +341,7 @@ public class MainUser {
         List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories =
                 parseUnderlyingCategories(projectNode.get("underlyingCategories"));
         List<UUID> parentProjects = parseParentProjects(projectNode.get("parentProjects"));
-        Project.ProjectData projectData = new Project.ProjectData(
+        Project.ProjectInfo projectInfo = new Project.ProjectInfo(
                 projectNode.get("name").asText(),
                 projectNode.get("type").asInt(),
                 projectNode.get("favorite").asBoolean(),
@@ -353,7 +353,7 @@ public class MainUser {
                 parentProjects
         );
         Project project = new Project(projectUuid);
-        project.setData(projectData);
+        project.setInfo(projectInfo);
         return project;
     }
 
