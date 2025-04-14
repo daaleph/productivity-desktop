@@ -8,10 +8,7 @@ import java.util.UUID;
 
 public class CoreProject {
     private final UUID uuid;
-    private int type;
-    private String name;
-    private boolean favorite;
-    private ZonedDateTime dateToStart;
+    private EssentialInfo essential;
     private List<Priority> priorities;
     private List<MeasuredGoal> measuredGoals;
     private MeasuredSet<Integer> necessaryTime;
@@ -21,51 +18,39 @@ public class CoreProject {
         this.uuid = uuid;
     }
 
-    public void setData(CoreProjectData data) {
-        this.name = data.name;
-        this.type = data.type;
-        this.favorite = data.favorite;
-        this.dateToStart = data.dateToStart;
-        this.priorities = data.priorities;
-        this.measuredGoals = data.measuredGoals;
-        this.necessaryTime = data.necessaryTime;
-        this.underlyingCategories = data.underlyingCategories;
+    public void setInfo(CoreProjectInfo info) {
+        this.essential = info.essential;
+        this.priorities = info.priorities;
+        this.measuredGoals = info.measuredGoals;
+        this.necessaryTime = info.necessaryTime;
+        this.underlyingCategories = info.underlyingCategories;
     }
 
     // Getters and other methods remain the same
     public UUID getUuid() { return uuid; }
-    public String getName() { return name; }
-    public int getType() { return type; }
-    public boolean isFavorite() { return favorite; }
-    public ZonedDateTime getDateToStart() { return dateToStart; }
+    public String getName() { return this.essential.name(); }
+    public int getType() { return this.essential.type(); }
+    public boolean isFavorite() { return this.essential.favorite(); }
+    public ZonedDateTime getDateToStart() { return this.essential.dateToStart(); }
     public List<Priority> getPriorities() { return priorities; }
     public List<MeasuredGoal> getMeasuredGoals() { return measuredGoals; }
     public MeasuredSet<Integer> getNecessaryTime() { return necessaryTime; }
     public List<Tuple<UUID,Triplet<Integer, String, Double>>> getUnderlyingCategories() { return underlyingCategories; }
     public void setUnderlyingCategories(List<Tuple<UUID,Triplet<Integer, String, Double>>> uc) { underlyingCategories = uc; }
 
-    public static class CoreProjectData {
-        protected String name;
-        protected int type;
-        protected boolean favorite;
-        protected ZonedDateTime dateToStart;
+    public static class CoreProjectInfo {
+        protected EssentialInfo essential;
         protected List<Priority> priorities;
         protected List<MeasuredGoal> measuredGoals;
         protected MeasuredSet<Integer> necessaryTime;
         protected List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories;
 
-        public CoreProjectData(String name,
-                               int type,
-                               boolean favorite,
-                               ZonedDateTime dateToStart,
+        public CoreProjectInfo(EssentialInfo essential,
                                List<Priority> priorities,
                                List<MeasuredGoal> measuredGoals,
                                MeasuredSet<Integer> necessaryTime,
                                List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories) {
-            this.name = name;
-            this.type = type;
-            this.favorite = favorite;
-            this.dateToStart = dateToStart;
+            this.essential = essential;
             this.priorities = priorities;
             this.measuredGoals = measuredGoals;
             this.necessaryTime = necessaryTime;

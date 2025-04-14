@@ -4,35 +4,33 @@ import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.*;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import home.models.branchs.Branch;
 import home.models.branchs.UserBranch;
 import home.models.organizations.UserOrganization;
-import home.models.projects.CoreProject;
-import home.models.projects.Project;
+import home.models.projects.*;
 import home.records.*;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
-import static data.Abbreviations.getAbbreviation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class User {
-    private static User instance;
+import static data.Abbreviations.getAbbreviation;
+
+public class MainUser {
+    private static MainUser instance;
+    private static volatile boolean initialized = false;
 
     protected int age;
-    protected Map<Integer, UserBranch> branches;
-    protected Map<Integer, Priority> priorities;
-    protected Map<UUID, CoreProject> coreProjects;
-    protected Map<UUID, Project> favoriteProjects;
     protected String completeName, preferredName, email;
-    protected Map<Integer, UserOrganization> organizations;
+    protected Map<Integer, UserBranch> branches = new HashMap<>();
+    protected Map<Integer, Priority> priorities = new HashMap<>();
+    protected Map<UUID, CoreProject> coreProjects = new HashMap<>();
+    protected Map<UUID, Project> favoriteProjects = new HashMap<>();
+    protected Map<Integer, UserOrganization> organizations = new HashMap<>();
 
     /**
      * Returns the single instance of User. On the first call, the provided
@@ -41,16 +39,11 @@ public class User {
      *
      * @param email the user's email (used only during initialization)
      */
-    private User(
-        String email
+    private MainUser(
+            String email
     ) {
         this.email = email;
-        this.branches = new HashMap<>();
-        this.priorities = new HashMap<>();
-        this.coreProjects = new HashMap<>();
-        this.favoriteProjects = new HashMap<>();
-        this.organizations = new HashMap<>();
-        fetchData();
+        fetchInfo();
     }
 
     /**
@@ -61,24 +54,29 @@ public class User {
      * @param email the user's email (used only during initialization)
      * @return the singleton User instance
      */
-    public static User getInstance(
-        String email
+    public static MainUser getInstance(
+            String email
     ) {
         if (instance == null) {
-            instance = new User(email);
+            instance = new MainUser(email);
+            instance.fetchAsyncInfo();
+            initialized = true;
         }
         return instance;
     }
 
-    private void fetchData() {
-        this.fetchPersonalData();
-        this.fetchCoreProjects();
-        this.fetchUserOrganizations();
-        this.fetchFavoriteProjects();
-        this.fetchUserBranches();
+    private void fetchInfo() {
+        this.fetchPersonalInfo();
+        this.fetchOrganizations();
+        this.fetchBranches();
     }
 
-    private void fetchPersonalData() {
+    private void fetchAsyncInfo() {
+        this.fetchCoreProjects();
+        this.fetchFavoriteProjects();
+    }
+
+    private void fetchPersonalInfo() {
         String user = getAbbreviation("user");
         String email = getAbbreviation("email");
         HttpClient client = HttpClient.newHttpClient();
@@ -92,12 +90,12 @@ public class User {
             if (response.statusCode() == 200) {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.body());
-                home.records.User userData = home.records.User.fromJson(root.get(0));
-                this.completeName = userData.completeName();
-                this.preferredName = userData.preferredName();
-                this.age = userData.age();
-                this.email = userData.email();
-                this.priorities = userData
+                home.records.User userInfo = home.records.User.fromJson(root.get(0));
+                this.completeName = userInfo.completeName();
+                this.preferredName = userInfo.preferredName();
+                this.age = userInfo.age();
+                this.email = userInfo.email();
+                this.priorities = userInfo
                         .priorities()
                         .stream()
                         .collect(Collectors.toMap(
@@ -113,198 +111,35 @@ public class User {
     }
 
     private void fetchCoreProjects() {
-        String core = getAbbreviation("core");
-        String user = getAbbreviation("user");
-        String email = getAbbreviation("email");
-        String projects = getAbbreviation("projects");
-
-        HttpClient client = HttpClient.newHttpClient();
-        try {
-            String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s", user, projects, core, email, this.email);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode projectsArray = mapper.readTree(response.body());
-                Map<UUID, CoreProject> coreProjectsMap = new HashMap<>();
-                for (JsonNode projectNode : projectsArray) {
-                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
-                    CoreProject coreProject = new CoreProject(uuid);
-                    String name = projectNode.get("name").asText();
-                    int type = projectNode.get("type").asInt();
-                    boolean favorite = projectNode.get("favorite").asBoolean();
-                    ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
-                    JsonNode completionNode = projectNode.get("completion");
-                    Map<String, Integer> completionMap = Map.of(
-                        "days", completionNode.get("days").asInt(),
-                        "weeks", completionNode.get("weeks").asInt(),
-                        "months", completionNode.get("months").asInt(),
-                        "years", completionNode.get("years").asInt()
-                    );
-                    MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
-                    List<Priority> projectPriorities = new ArrayList<>();
-                    JsonNode prioritiesNode = projectNode.get("priorities");
-                    if (prioritiesNode.isArray()) {
-                        for (JsonNode pNode : prioritiesNode) {
-                            int index = pNode.asInt();
-                            projectPriorities.add(this.getPriority(index));
-                        }
-                    }
-                    List<MeasuredGoal> measuredGoals = new ArrayList<>();
-                    JsonNode goalsNode = projectNode.get("measuredGoals");
-                    for (JsonNode goalNode : goalsNode) {
-                        int order = goalNode.get("order").asInt();
-                        String item = goalNode.get("item").asText();
-                        double weight = goalNode.get("weight").asDouble();
-                        double realGoal = goalNode.get("realGoal").asDouble();
-                        double realAdvance = goalNode.get("realAdvance").asDouble();
-                        int discreteGoal = goalNode.get("discreteGoal").asInt();
-                        int discreteAdvance = goalNode.get("discreteAdvance").asInt();
-
-                        MeasuredSet<Double> real = new MeasuredSet<>(
-                            Map.of("goal", realGoal, "advance", realAdvance),
-                            Double.class
-                        );
-                        MeasuredSet<Integer> discrete = new MeasuredSet<>(
-                            Map.of("goal", discreteGoal, "advance", discreteAdvance),
-                            Integer.class
-                        );
-
-                        List<Failure> failures = new ArrayList<>();
-                        JsonNode failuresNode = goalNode.get("failures");
-                        for (JsonNode failureNode : failuresNode) {
-                            failures.add(Failure.fromJson(failureNode));
-                        }
-                        boolean finished = goalNode.get("finished").asBoolean();
-                        measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
-                    }
-                    List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories = List.of();
-                    CoreProject.CoreProjectData data = new CoreProject.CoreProjectData(
-                            name,
-                            type,
-                            favorite,
-                            dateToStart,
-                            projectPriorities,
-                            measuredGoals,
-                            necessaryTime,
-                            underlyingCategories
-                    );
-                    coreProject.setData(data);
-                    coreProjectsMap.put(uuid, coreProject);
-                }
-                this.coreProjects = coreProjectsMap;
-            } else {
-                System.err.println("Error fetching core projects. Status code: " + response.statusCode());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ProjectsFetcher.configure(
+                new ProjectsFetcher.Config(
+                        this.email,
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                )
+        );
+        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
+        fetcher.fetch(EnumSet.of(Enumerations.CORE), EnumSet.of(Entities.MAIN_USER));
+        this.coreProjects = fetcher.getAllCoresOfMainUser();
     }
 
     private void fetchFavoriteProjects() {
-        String favoriteS = getAbbreviation("favorite");
-        String user = getAbbreviation("user");
-        String email = getAbbreviation("email");
-        String projects = getAbbreviation("projects");
-
-        HttpClient client = HttpClient.newHttpClient();
-        try {
-            String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s", user, projects, favoriteS, email, this.email);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode projectsArray = mapper.readTree(response.body());
-                Map<UUID, Project> favoriteProjectsMap = new HashMap<>();
-                for (JsonNode projectNode : projectsArray) {
-                    int type = projectNode.get("type").asInt();
-                    String name = projectNode.get("name").asText();
-                    boolean favorite = projectNode.get("favorite").asBoolean();
-                    UUID uuid = UUID.fromString(projectNode.get("uuid").asText());
-                    List<UUID> parentProjects = projectNode.has("parentProjects") && !projectNode.get("parentProjects").isNull()
-                            ? StreamSupport.stream(
-                                    projectNode.get("parentProjects").spliterator(), false)
-                            .map(JsonNode::asText)
-                            .map(UUID::fromString)
-                            .collect(Collectors.toList())
-                            : Collections.emptyList();
-                    Project project = new Project(uuid);
-                    ZonedDateTime dateToStart = ZonedDateTime.parse(projectNode.get("dateToStart").asText());
-                    JsonNode completionNode = projectNode.get("completion");
-                    Map<String, Integer> completionMap = Map.of(
-                            "days", completionNode.get("days").asInt(),
-                            "weeks", completionNode.get("weeks").asInt(),
-                            "months", completionNode.get("months").asInt(),
-                            "years", completionNode.get("years").asInt()
-                    );
-                    MeasuredSet<Integer> necessaryTime = new MeasuredSet<>(completionMap, Integer.class);
-                    List<Priority> projectPriorities = new ArrayList<>();
-                    JsonNode prioritiesNode = projectNode.get("priorities");
-                    if (prioritiesNode.isArray()) {
-                        for (JsonNode pNode : prioritiesNode) {
-                            int index = pNode.asInt();
-                            projectPriorities.add(this.getPriority(index));
-                        }
-                    }
-                    List<MeasuredGoal> measuredGoals = new ArrayList<>();
-                    JsonNode goalsNode = projectNode.get("measuredGoals");
-                    for (JsonNode goalNode : goalsNode) {
-                        int order = goalNode.get("order").asInt();
-                        String item = goalNode.get("item").asText();
-                        double weight = goalNode.get("weight").asDouble();
-                        double realGoal = goalNode.get("realGoal").asDouble();
-                        double realAdvance = goalNode.get("realAdvance").asDouble();
-                        int discreteGoal = goalNode.get("discreteGoal").asInt();
-                        int discreteAdvance = goalNode.get("discreteAdvance").asInt();
-
-                        MeasuredSet<Double> real = new MeasuredSet<>(
-                                Map.of("goal", realGoal, "advance", realAdvance),
-                                Double.class
-                        );
-                        MeasuredSet<Integer> discrete = new MeasuredSet<>(
-                                Map.of("goal", discreteGoal, "advance", discreteAdvance),
-                                Integer.class
-                        );
-
-                        List<Failure> failures = new ArrayList<>();
-                        JsonNode failuresNode = goalNode.get("failures");
-                        for (JsonNode failureNode : failuresNode) {
-                            failures.add(Failure.fromJson(failureNode));
-                        }
-                        boolean finished = goalNode.get("finished").asBoolean();
-                        measuredGoals.add(new MeasuredGoal(order, item, weight, real, discrete, finished, failures));
-                    }
-                    List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories = List.of();
-                    Project.ProjectData data = new Project.ProjectData(
-                            name,
-                            type,
-                            favorite,
-                            dateToStart,
-                            projectPriorities,
-                            measuredGoals,
-                            necessaryTime,
-                            underlyingCategories,
-                            parentProjects
-                    );
-                    project.setData(data);
-                    favoriteProjectsMap.put(uuid, project);
-                }
-                this.favoriteProjects = favoriteProjectsMap;
-            } else {
-                System.err.println("Error fetching core projects. Status code: " + response.statusCode());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ProjectsFetcher.configure(
+                new ProjectsFetcher.Config(
+                        this.email,
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                )
+        );
+        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
+        Set<Enumerations> projectsFilter = EnumSet.of(Enumerations.FAVORITE);
+        fetcher.fetch(projectsFilter, EnumSet.of(Entities.MAIN_USER));
+        this.favoriteProjects = fetcher.getAllFavoritesOfMainUser();
     }
 
-    private void fetchUserOrganizations() {
+    private void fetchOrganizations() {
         String userAbbr = getAbbreviation("user");
         String emailAbbr = getAbbreviation("email");
         String organizationsAbbr = getAbbreviation("organizations");
@@ -337,9 +172,9 @@ public class User {
                     JsonNode branchesNode = orgNode.get("branches");
                     if (branchesNode != null) {
                         branchesNode.fields().forEachRemaining(branchEntry -> {
-                            JsonNode branchData = branchEntry.getValue();
-                            int branchId = branchData.get("id").asInt();
-                            String branchName = branchData.get("name").asText();
+                            JsonNode branchInfo = branchEntry.getValue();
+                            int branchId = branchInfo.get("id").asInt();
+                            String branchName = branchInfo.get("name").asText();
 
                             Branch branch = new Branch(branchId, branchName);
                             branches.put(branchId, branch);
@@ -359,7 +194,7 @@ public class User {
         }
     }
 
-    private void fetchUserBranches() {
+    private void fetchBranches() {
         String user = getAbbreviation("user");
         String email = getAbbreviation("email");
         String branchesS = getAbbreviation("branches");
@@ -421,11 +256,12 @@ public class User {
         List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories =
                 parseUnderlyingCategories(projectNode.get("underlyingCategories"));
         List<UUID> parentProjects = parseParentProjects(projectNode.get("parentProjects"));
-        Project.ProjectData projectData = new Project.ProjectData(
-                projectNode.get("name").asText(),
+        EssentialInfo essentialInfo = new EssentialInfo(projectNode.get("name").asText(),
                 projectNode.get("type").asInt(),
                 projectNode.get("favorite").asBoolean(),
-                ZonedDateTime.parse(projectNode.get("dateToStart").asText()),
+                ZonedDateTime.parse(projectNode.get("dateToStart").asText()));
+        Project.ProjectInfo projectInfo = new Project.ProjectInfo(
+                essentialInfo,
                 priorities,
                 measuredGoals,
                 completion,
@@ -433,7 +269,7 @@ public class User {
                 parentProjects
         );
         Project project = new Project(projectUuid);
-        project.setData(projectData);
+        project.setInfo(projectInfo);
         return project;
     }
 

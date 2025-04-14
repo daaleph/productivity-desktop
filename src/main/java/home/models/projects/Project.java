@@ -1,8 +1,6 @@
 package home.models.projects;
 
 import home.records.*;
-
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,8 +11,8 @@ public class Project extends CoreProject {
         super(uuid);
     }
 
-    public void setData(ProjectData data) {
-        super.setData(data);
+    public void setInfo(ProjectInfo data) {
+        super.setInfo(data);
         this.parentProjects = data.parentProjects;
     }
 
@@ -22,14 +20,11 @@ public class Project extends CoreProject {
         return parentProjects;
     }
 
-    public static class ProjectData extends CoreProjectData {
+    public static class ProjectInfo extends CoreProjectInfo {
         private final List<UUID> parentProjects;
 
-        public ProjectData(
-                String name,
-                int type,
-                boolean favorite,
-                ZonedDateTime dateToStart,
+        public ProjectInfo(
+                EssentialInfo essential,
                 List<Priority> priorities,
                 List<MeasuredGoal> measuredGoals,
                 MeasuredSet<Integer> necessaryTime,
@@ -37,10 +32,7 @@ public class Project extends CoreProject {
                 List<UUID> parentProjects
         ) {
             super(
-                    name,
-                    type,
-                    favorite,
-                    dateToStart,
+                    essential,
                     priorities,
                     measuredGoals,
                     necessaryTime,
