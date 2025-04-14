@@ -1,11 +1,12 @@
 package home.models.branchs;
 
-import home.models.MainUser;
-import home.records.Tuple;
+import java.util.List;
+
 import home.models.projects.Project;
+
+import home.records.Tuple;
 import home.records.ProjectedBranchData;
 
-import java.util.List;
 
 public class UserBranch extends ProjectedBranch {
     private String email;
