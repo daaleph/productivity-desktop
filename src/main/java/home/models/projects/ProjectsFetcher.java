@@ -111,12 +111,17 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         }
 
         if (projectTypes.contains(Enumerations.CORE) && filterEntities.contains(Entities.MAIN_USER)) {
-            fetchAllCoresMainUser();
+            fetchCoresMainUser();
             return;
         }
 
         if (projectTypes.contains(Enumerations.FAVORITE) && filterEntities.contains(Entities.MAIN_USER)) {
-            fetchAllFavoritesMainUser();
+            fetchFavoritesMainUser();
+            return;
+        }
+
+        if (projectTypes.contains(Enumerations.ALL) && filterEntities.contains(Entities.MAIN_USER)) {
+            fetchAllMainUser();
             return;
         }
 
@@ -130,21 +135,21 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         if (filterEntities.contains(Entities.BRANCHES)) {
             System.out.println("Filtering by branches: " + config.branches);
         }
-
-        if (projectTypes.contains(Enumerations.ANY)) {
-            System.out.println("Fetching all projects");
-        }
     }
 
-    private void fetchAllCoresMainUser() {
-        pendingFetches.computeIfAbsent(config.mainEmail, this::fetchAllCoresByUser);
+    private void fetchCoresMainUser() {
+        pendingFetches.computeIfAbsent(config.mainEmail, this::fetchCoresByUser);
     }
 
-    private void fetchAllFavoritesMainUser() {
-        pendingFetches.computeIfAbsent(config.mainEmail, this::fetchAllFavoritesByUser);
+    private void fetchFavoritesMainUser() {
+        pendingFetches.computeIfAbsent(config.mainEmail, this::fetchFavoritesByUser);
     }
 
-    private CompletableFuture<Void> fetchAllCoresByUser(String email) {
+    private void fetchAllMainUser() {
+        pendingFetches.computeIfAbsent(config.mainEmail, this::fetchAllByUser);
+    }
+
+    private CompletableFuture<Void> fetchCoresByUser(String email) {
         String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s",
                 userS, projects, core, emailS, email);
 
@@ -157,14 +162,12 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
                 .thenApply(response -> processResponse(response, Enumerations.CORE))
                 .thenAccept(projects -> usersCoreProjects.put(email, safeCastToList(projects, CoreProject.class)))
                 .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
-                    }
+                    if (ex != null) System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
                     pendingFetches.remove(email);
                 });
     }
 
-    private CompletableFuture<Void> fetchAllFavoritesByUser(String email) {
+    private CompletableFuture<Void> fetchFavoritesByUser(String email) {
         String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s",
                 userS, projects, favoriteS, emailS, email);
 
@@ -182,27 +185,51 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
                 });
     }
 
+    private CompletableFuture<Void> fetchAllByUser(String email) {
+        String apiUrl = String.format("http://localhost:4000/api/%s/%s?%s=%s",
+                userS, projects, emailS, email);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .GET()
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> processResponse(response, Enumerations.ALL))
+                .thenAccept(projects -> {
+                    System.out.print("RESPONSE: ");
+                    System.out.println(projects);
+                    usersProjects.put(email, safeCastToList(projects, Project.class));
+                })
+                .whenComplete((result, ex) -> {
+                    if (ex != null) System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
+                    pendingFetches.remove(email);
+                });
+    }
+
     private List<? extends CoreProject> processResponse(HttpResponse<String> response, Enumerations type) {
         if (response.statusCode() != 200) {
             System.err.println("HTTP error: " + response.statusCode());
             return Collections.emptyList();
         }
+        MainUser mainUser = MainUser.getInstance(config.mainEmail);
+        Map<Integer, Priority> priorities = mainUser.getPriorities();
         try {
             switch (type) {
                 case Enumerations.CORE -> {
                     JsonNode projectsArray = mapper.readTree(response.body());
                     List<CoreProject> coreProjects = new ArrayList<>();
                     for (JsonNode projectNode : projectsArray) {
-                        CoreProject project = parseCore(projectNode);
+                        CoreProject project = parseCore(projectNode, priorities);
                         coreProjects.add(project);
                     }
                     return coreProjects;
                 }
-                case Enumerations.FAVORITE -> {
+                case Enumerations.ALL, Enumerations.FAVORITE -> {
                     JsonNode projectsArray = mapper.readTree(response.body());
                     List<Project> projects = new ArrayList<>();
                     for (JsonNode projectNode : projectsArray) {
-                        Project project = parse(projectNode);
+                        Project project = parse(projectNode, priorities);
                         projects.add(project);
                     }
                     return projects;
@@ -214,7 +241,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         return Collections.emptyList();
     }
 
-    private CoreProject parseCore(JsonNode projectNode) {
+    private CoreProject parseCore(JsonNode projectNode, Map<Integer, Priority> priorities) {
 
         UUID uuid;
         try {
@@ -237,7 +264,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             for (JsonNode pNode : prioritiesNode) {
                 try {
                     int index = pNode.asInt();
-                    Priority priority = MainUser.getInstance(config.mainEmail).getPriority(index);
+                    Priority priority = priorities.get(index);
                     if (priority == null) {
                         logger.log(Level.WARNING, "Priority not found for index: " + index);
                     } else {
@@ -267,8 +294,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             // Parse completion data
             MeasuredSet<Integer> necessaryTime = this.parseCompletionTime(completionNode);
             CoreProject.CoreProjectInfo info = new CoreProject.CoreProjectInfo(
-                    essential,
-                    projectPriorities, measuredGoals, necessaryTime, List.of()
+                    essential, projectPriorities, measuredGoals, necessaryTime, List.of()
             );
             coreProject.setInfo(info);
             logger.log(Level.FINE, "Successfully created and set project data");
@@ -280,7 +306,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         return coreProject;
     }
 
-    private Project parse(JsonNode projectNode) {
+    private Project parse(JsonNode projectNode, Map<Integer, Priority> prioritiesMap) {
 
         UUID uuid;
         try {
@@ -296,7 +322,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         EssentialInfo essential = this.parseEssentialData(projectNode);
 
         // Parse priorities
-        List<Priority> projectPriorities = parsePriorities(projectNode.get("priorities"));
+        List<Priority> prioritiesList = parsePriorities(projectNode.get("priorities"));
 
         // Parse measured goals
         List<MeasuredGoal> measuredGoals;
@@ -314,8 +340,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             // Parse completion data
             MeasuredSet<Integer> necessaryTime = this.parseCompletionTime(completionNode);
             CoreProject.CoreProjectInfo info = new CoreProject.CoreProjectInfo(
-                    essential,
-                    projectPriorities, measuredGoals, necessaryTime, List.of()
+                    essential, prioritiesList, measuredGoals, necessaryTime, List.of()
             );
             project.setInfo(info);
             logger.log(Level.FINE, "Successfully created and set project data");
@@ -426,7 +451,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         }
     }
 
-    public Map<UUID, CoreProject> getAllCoresOfMainUser() {
+    public Map<UUID, CoreProject> getCoresOfMainUser() {
         String email = config.mainEmail;
         CompletableFuture<?> fetchOperation = pendingFetches.get(email);
 
@@ -443,15 +468,27 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
                 ));
     }
 
-    public Map<UUID, Project> getAllFavoritesOfMainUser() {
+    public Map<UUID, Project> getFavoritesOfMainUser() {
         String email = config.mainEmail;
         CompletableFuture<?> fetchOperation = pendingFetches.get(email);
 
-        if (fetchOperation != null) {
-            fetchOperation.join();
-        }
+        if (fetchOperation != null) fetchOperation.join();
 
         return usersFavoriteProjects.getOrDefault(email, Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(
+                        Project::getUuid,
+                        Function.identity()
+                ));
+    }
+
+    public Map<UUID, Project> getAllOfMainUser() {
+        String email = config.mainEmail;
+        CompletableFuture<?> fetchOperation = pendingFetches.get(email);
+
+        if (fetchOperation != null) fetchOperation.join();
+
+        return usersProjects.getOrDefault(email, Collections.emptyList())
                 .stream()
                 .collect(Collectors.toMap(
                         Project::getUuid,

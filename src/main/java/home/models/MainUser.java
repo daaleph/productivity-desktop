@@ -30,8 +30,8 @@ public class MainUser {
     protected Map<Integer, UserBranch> branches = new HashMap<>();
     protected Map<Integer, Priority> priorities = new HashMap<>();
     protected Map<UUID, CoreProject> coreProjects = new HashMap<>();
-    protected Map<UUID, Project> favoriteProjects = new HashMap<>();
     protected Map<Integer, UserOrganization> organizations = new HashMap<>();
+    protected Map<UUID, Project> favoriteProjects, projects = new HashMap<>();
 
     /**
      * Returns the single instance of User. On the first call, the provided
@@ -73,6 +73,7 @@ public class MainUser {
     }
 
     private void fetchAsyncInfo() {
+        this.fetchProjects();
         this.fetchCoreProjects();
         this.fetchFavoriteProjects();
     }
@@ -122,7 +123,7 @@ public class MainUser {
         );
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
         fetcher.fetch(EnumSet.of(Enumerations.CORE), EnumSet.of(Entities.MAIN_USER));
-        this.coreProjects = fetcher.getAllCoresOfMainUser();
+        this.coreProjects = fetcher.getCoresOfMainUser();
     }
 
     private void fetchFavoriteProjects() {
@@ -135,9 +136,22 @@ public class MainUser {
                 )
         );
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
-        Set<Enumerations> projectsFilter = EnumSet.of(Enumerations.FAVORITE);
-        fetcher.fetch(projectsFilter, EnumSet.of(Entities.MAIN_USER));
-        this.favoriteProjects = fetcher.getAllFavoritesOfMainUser();
+        fetcher.fetch(EnumSet.of(Enumerations.FAVORITE), EnumSet.of(Entities.MAIN_USER));
+        this.favoriteProjects = fetcher.getFavoritesOfMainUser();
+    }
+
+    private void fetchProjects() {
+        ProjectsFetcher.configure(
+                new ProjectsFetcher.Config(
+                        this.email,
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                )
+        );
+        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
+        fetcher.fetch(EnumSet.of(Enumerations.ALL), EnumSet.of(Entities.MAIN_USER));
+        this.projects = fetcher.getAllOfMainUser();
     }
 
     private void fetchOrganizations() {
@@ -399,6 +413,10 @@ public class MainUser {
 
     public Map<Integer, Priority> getPriorities() {
         return priorities;
+    }
+
+    public Map<UUID, Project> getProjects() {
+        return projects;
     }
 
     public Map<UUID, CoreProject> getCoreProjects() {

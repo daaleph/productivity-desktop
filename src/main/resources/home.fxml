@@ -76,6 +76,10 @@
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
                         <FlowPane fx:id="userFavoriteProjects" styleClass="favorite-projects-flow" />
                     </ScrollPane>
+                    <Label text="All Projects" styleClass="sub-header" />
+                    <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
+                        <FlowPane fx:id="userProjects" styleClass="favorite-projects-flow" />
+                    </ScrollPane>
                 </VBox>
                 <VBox fx:id="userBranchesSubContainer" maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="1" GridPane.rowIndex="2">
