@@ -13,6 +13,7 @@ import home.records.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -292,35 +293,35 @@ public class MainUser {
 
     private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
         List<MeasuredGoal> goals = new ArrayList<>();
-        if (goalsNode != null && goalsNode.isArray()) {
-            goalsNode.forEach(goalNode -> {
-                MeasuredSet<Double> real = new MeasuredSet<>(
-                        Map.of(
-                                "goal", goalNode.get("realGoal").asDouble(),
-                                "advance", goalNode.get("realAdvance").asDouble()
-                        ),
-                        Double.class
-                );
-                MeasuredSet<Integer> discrete = new MeasuredSet<>(
-                        Map.of(
-                                "goal", goalNode.get("discreteGoal").asInt(),
-                                "advance", goalNode.get("discreteAdvance").asInt()
-                        ),
-                        Integer.class
-                );
-                List<Failure> failures = parseFailures(goalNode.get("failures"));
-                goals.add(new MeasuredGoal(
-                        goalNode.get("order").asInt(),
-                        goalNode.get("item").asText(),
-                        goalNode.get("weight").asDouble(),
-                        real,
-                        discrete,
-                        goalNode.get("finished").asBoolean(),
-                        failures
-                ));
-            });
+        if (goalsNode == null || !goalsNode.isArray()) {
+            return goals;
         }
+
+        goalsNode.forEach(goalNode -> {
+            MeasuredSet<Double> real = createMeasuredGoal(goalNode, "real", JsonNode::asDouble, Double.class);
+            MeasuredSet<Integer> discrete = createMeasuredGoal(goalNode, "discrete", JsonNode::asInt, Integer.class);
+            List<Failure> failures = parseFailures(goalNode.get("failures"));
+            goals.add(new MeasuredGoal(
+                    goalNode.get("order").asInt(),
+                    goalNode.get("item").asText(),
+                    goalNode.get("weight").asDouble(),
+                    real,
+                    discrete,
+                    goalNode.get("finished").asBoolean(),
+                    failures
+            ));
+        });
         return goals;
+    }
+
+    private <T> MeasuredSet<T> createMeasuredGoal(JsonNode goalNode, String prefix, Function<JsonNode, T> valueExtractor, Class<T> type) {
+        return new MeasuredSet<>(
+                Map.of(
+                        "goal", valueExtractor.apply(goalNode.get(prefix + "Goal")),
+                        "advance", valueExtractor.apply(goalNode.get(prefix + "Advance"))
+                ),
+                type
+        );
     }
 
     private MeasuredSet<Integer> parseMeasuredSet(JsonNode completionNode) {

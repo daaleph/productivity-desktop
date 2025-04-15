@@ -296,26 +296,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         EssentialInfo essential = this.parseEssentialData(projectNode);
 
         // Parse priorities
-        List<Priority> projectPriorities = new ArrayList<>();
-        JsonNode prioritiesNode = projectNode.get("priorities");
-        if (prioritiesNode != null && prioritiesNode.isArray()) {
-            logger.log(Level.FINE, "Found {0} priorities", prioritiesNode.size());
-            for (JsonNode pNode : prioritiesNode) {
-                try {
-                    int index = pNode.asInt();
-                    Priority priority = MainUser.getInstance(config.mainEmail).getPriority(index);
-                    if (priority == null) {
-                        logger.log(Level.WARNING, "Priority not found for index: " + index);
-                    } else {
-                        projectPriorities.add(priority);
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "Failed to parse priority node: " + pNode, e);
-                }
-            }
-        } else {
-            logger.log(Level.FINE, "No priorities found or priorities node is not an array");
-        }
+        List<Priority> projectPriorities = parsePriorities(projectNode.get("priorities"));
 
         // Parse measured goals
         List<MeasuredGoal> measuredGoals;
@@ -353,6 +334,30 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         ZonedDateTime dateToStart = ZonedDateTime.parse(project.get("dateToStart").asText());
 
         return new EssentialInfo(name, type, favorite, dateToStart);
+    }
+
+    private List<Priority> parsePriorities(JsonNode prioritiesNode) {
+        List<Priority> priorities = new ArrayList<>();
+        if (prioritiesNode == null || !prioritiesNode.isArray()) {
+            logger.log(Level.FINE, "No priorities found or priorities node is not an array");
+            return priorities;
+        }
+
+        logger.log(Level.FINE, "Found {0} priorities", prioritiesNode.size());
+        for (JsonNode pNode : prioritiesNode) {
+            try {
+                int index = pNode.asInt();
+                Priority priority = MainUser.getInstance(config.mainEmail).getPriority(index);
+                if (priority == null) {
+                    logger.log(Level.WARNING, "Priority not found for index: " + index);
+                } else {
+                    priorities.add(priority);
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Failed to parse priority node: " + pNode, e);
+            }
+        }
+        return priorities;
     }
 
     private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
