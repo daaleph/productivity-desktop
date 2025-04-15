@@ -34,8 +34,8 @@ public record Priority(Triplet<Integer, String, String> triplet) {
         return new Priority(
                 new Triplet<>(
                         node.asInt(),
-                        "A",
-                        "B"
+                        "English",
+                        "Spanish"
                 )
         );
     }
