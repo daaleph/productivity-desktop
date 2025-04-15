@@ -31,11 +31,11 @@ public class Home {
     double cellHeight = 24;
     private MainUser mainUser;
     @FXML private GridPane gridContainer;
-    @FXML private FlowPane userFavoriteProjects;
     @FXML private Label welcome, userAge, userName;
     @FXML private ListView<Priority> userPriorities;
     @FXML private Map<Integer, UserBranch> userBranches;
     @FXML private ListView<CoreProject> userCoreProjects;
+    @FXML private FlowPane userProjects, userFavoriteProjects;
     @FXML private Map<Integer, UserOrganization> userOrganizations;
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
@@ -105,6 +105,16 @@ public class Home {
             Label projectLabel = new Label(project.getName());
             projectLabel.getStyleClass().add("favorite-project-label");
             userFavoriteProjects.getChildren().add(projectLabel);
+        });
+    }
+
+    public void setUserProjects() {
+        List<Project> favoriteProjects = mainUser.getProjects().values().stream().toList();
+        userProjects.getChildren().clear();
+        favoriteProjects.forEach(project -> {
+            Label projectLabel = new Label(project.getName());
+            projectLabel.getStyleClass().add("favorite-project-label");
+            userProjects.getChildren().add(projectLabel);
         });
     }
 

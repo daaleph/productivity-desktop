@@ -25,6 +25,7 @@ public class Main extends Application {
             controller.setUserPriorities();
             controller.setUserCoreProjects();
             controller.setUserFavoriteProjects();
+            controller.setUserProjects();
             controller.setUserOrganizations();
             controller.setUserBranches();
             controller.setStage(primaryStage);

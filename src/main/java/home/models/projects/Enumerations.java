@@ -2,6 +2,6 @@ package home.models.projects;
 
 public enum Enumerations {
     CORE,
-    ANY,
+    ALL,
     FAVORITE
 }
