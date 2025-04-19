@@ -17,7 +17,7 @@
             fx:controller="home.controllers.Home"
             stylesheets="@/styles/windowControls.css,
             @/styles/mainContents.css,
-            @/styles/favoriteProjects.css,
+            @/styles/projects.css,
             @/styles/organizations.css,
             @/styles/branches.css,
             @/styles/priorities.css">
@@ -45,11 +45,11 @@
                 </rowConstraints>
                 <!-- Main Header -->
                 <VBox fx:id="welcomeSubContainer" maxWidth="Infinity" styleClass="main-subcontainer" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2">
-                    <Label fx:id="welcome" styleClass="header-label"/>
+                    <Label fx:id="welcome" styleClass="sub-header"/>
                 </VBox>
                 <!-- Sub Containers -->
                 <VBox fx:id="profileSubContainer" maxWidth="Infinity" styleClass="sub-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                    <Label text="Profile" styleClass="sub-header" />
+                    <Label text="Profile" styleClass="header-label" />
                     <HBox styleClass="nested-container">
                         <VBox fx:id="leftColumn" styleClass="nested-vbox">
                             <Label fx:id="userName" maxWidth="${leftColumn.width}"/>
@@ -65,25 +65,26 @@
                 </VBox>
                 <VBox fx:id="userOrganizationsSubContainer" maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <Label text="My Organizations" styleClass="sub-header" />
+                    <Label text="My Organizations" styleClass="header-label" />
                     <ScrollPane fitToWidth="true" styleClass="organization-scroll">
                         <VBox fx:id="organizationsContainer" styleClass="organizations-list" />
                     </ScrollPane>
                 </VBox>
-                <VBox fx:id="favoriteProjectsSubContainer" maxWidth="Infinity" styleClass="sub-container"
+                <VBox fx:id="projectsSubContainer" maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="0" GridPane.rowIndex="2">
-                    <Label text="Fav Projects" styleClass="sub-header" />
+                    <Label text="Projects" styleClass="header-label"/>
+                    <Label text="Favorite" styleClass="sub-header" />
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
-                        <FlowPane fx:id="userFavoriteProjects" styleClass="favorite-projects-flow" />
+                        <FlowPane fx:id="userFavoriteProjects" styleClass="projects-flow" />
                     </ScrollPane>
-                    <Label text="All Projects" styleClass="sub-header" />
+                    <Label text="All" styleClass="sub-header" />
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
-                        <FlowPane fx:id="userProjects" styleClass="favorite-projects-flow" />
+                        <FlowPane fx:id="userProjects" styleClass="projects-flow" />
                     </ScrollPane>
                 </VBox>
-                <VBox fx:id="userBranchesSubContainer" maxWidth="Infinity" styleClass="sub-container"
+                <VBox maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="1" GridPane.rowIndex="2">
-                    <Label text="My Branches" styleClass="sub-header" />
+                    <Label text="My Branches" styleClass="header-label" />
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll">
                         <FlowPane fx:id="branchesContainer" styleClass="branches-list" />
                     </ScrollPane>

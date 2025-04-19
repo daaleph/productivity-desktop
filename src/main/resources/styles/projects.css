@@ -1,5 +1,5 @@
 /* Favorite Projects FlowPane */
-.favorite-projects-flow {
+.projects-flow {
     -fx-hgap: 10;
     -fx-vgap: 10;
     -fx-padding: 5;
@@ -7,7 +7,7 @@
 }
 
 /* Project Labels */
-.favorite-project-label {
+.project-label {
     -fx-background-color: #e9ecef;
     -fx-padding: 5 10;
     -fx-border-radius: 3;

@@ -40,14 +40,12 @@ public class Home {
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     public VBox leftColumn,
-            organizationsContainer,
             profileSubContainer,
-            userOrganizationsSubContainer,
-            favoriteProjectsSubContainer,
-            userBranchesSubContainer,
-            welcomeSubContainer;
+            welcomeSubContainer,
+            projectsSubContainer,
+            organizationsContainer,
+            userOrganizationsSubContainer;
     public FlowPane branchesContainer;
-
     private Stage stage;
     private boolean isMaximized = false;
 
@@ -103,7 +101,7 @@ public class Home {
         userFavoriteProjects.getChildren().clear();
         favoriteProjects.forEach(project -> {
             Label projectLabel = new Label(project.getName());
-            projectLabel.getStyleClass().add("favorite-project-label");
+            projectLabel.getStyleClass().add("project-label");
             userFavoriteProjects.getChildren().add(projectLabel);
         });
     }
@@ -113,7 +111,7 @@ public class Home {
         userProjects.getChildren().clear();
         favoriteProjects.forEach(project -> {
             Label projectLabel = new Label(project.getName());
-            projectLabel.getStyleClass().add("favorite-project-label");
+            projectLabel.getStyleClass().add("project-label");
             userProjects.getChildren().add(projectLabel);
         });
     }
@@ -187,7 +185,7 @@ public class Home {
             case "userOrganizationsSubContainer" -> isPortrait ?
                     new int[]{0, 2, 2, 1} :
                     new int[]{1, 1, 1, 1};
-            case "favoriteProjectsSubContainer" -> isPortrait ?
+            case "projectsSubContainer" -> isPortrait ?
                     new int[]{0, 3, 2, 1} :
                     new int[]{0, 2, 1, 1};
             case "userBranchesSubContainer" -> isPortrait ?
