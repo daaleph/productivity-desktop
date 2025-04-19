@@ -303,22 +303,13 @@ public class Home {
     private Label createBranchLabel(Branch branch) {
         Label label = new Label(branch.getName());
         label.getStyleClass().add("branch-label");
-        Path branchIcon = new Path(
-                new MoveTo(4, 0),
-                new LineTo(4, 8),
-                new MoveTo(4, 4),
-                new LineTo(8, 6),
-                new LineTo(4, 8),
-                new MoveTo(4, 4),
-                new LineTo(0, 6),
-                new LineTo(4, 8)
-        );
-        branchIcon.setStroke(Color.web("#6c757d"));
-        branchIcon.setStrokeWidth(1.5);
-        branchIcon.setStrokeLineCap(StrokeLineCap.ROUND);
-        branchIcon.setStrokeLineJoin(StrokeLineJoin.ROUND);
+        Path icon = iconizedItem();
+        icon.setStroke(Color.web("#6c757d"));
+        icon.setStrokeWidth(1.5);
+        icon.setStrokeLineCap(StrokeLineCap.ROUND);
+        icon.setStrokeLineJoin(StrokeLineJoin.ROUND);
 
-        StackPane iconContainer = new StackPane(branchIcon); // Wrap in StackPane for proper sizing
+        StackPane iconContainer = new StackPane(icon);
         iconContainer.setPadding(new Insets(0, 3, 0, 0));
 
         label.setGraphic(iconContainer);
@@ -331,7 +322,24 @@ public class Home {
     private Label createProjectLabel(Project project) {
         Label label = new Label(project.getName());
         label.getStyleClass().add("project-label");
-        Path branchIcon = new Path(
+        Path icon = iconizedItem();
+        icon.setStroke(Color.web("#6c757d"));
+        icon.setStrokeWidth(1.5);
+        icon.setStrokeLineCap(StrokeLineCap.ROUND);
+        icon.setStrokeLineJoin(StrokeLineJoin.ROUND);
+
+        StackPane iconContainer = new StackPane(icon);
+        iconContainer.setPadding(new Insets(0, 3, 0, 0));
+
+        label.setGraphic(iconContainer);
+        label.setContentDisplay(ContentDisplay.LEFT);
+        label.setGraphicTextGap(5);
+
+        return label;
+    }
+
+    private Path iconizedItem() {
+        return new Path(
                 new MoveTo(4, 0),
                 new LineTo(4, 8),
                 new MoveTo(4, 4),
@@ -341,19 +349,6 @@ public class Home {
                 new LineTo(0, 6),
                 new LineTo(4, 8)
         );
-        branchIcon.setStroke(Color.web("#6c757d"));
-        branchIcon.setStrokeWidth(1.5);
-        branchIcon.setStrokeLineCap(StrokeLineCap.ROUND);
-        branchIcon.setStrokeLineJoin(StrokeLineJoin.ROUND);
-
-        StackPane iconContainer = new StackPane(branchIcon); // Wrap in StackPane for proper sizing
-        iconContainer.setPadding(new Insets(0, 3, 0, 0));
-
-        label.setGraphic(iconContainer);
-        label.setContentDisplay(ContentDisplay.LEFT);
-        label.setGraphicTextGap(5);
-
-        return label;
     }
 
     public Map<Integer, UserOrganization> getUserOrganizations() {

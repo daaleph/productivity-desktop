@@ -72,7 +72,11 @@
                 </VBox>
                 <VBox fx:id="projectsSubContainer" maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="0" GridPane.rowIndex="2">
-                    <Label text="Projects" styleClass="header-label"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="Infinity">
+                        <Label text="Projects" styleClass="header-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="+" styleClass="add-button"/>
+                    </HBox>
                     <Label text="Favorite" styleClass="sub-header" />
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
                         <FlowPane fx:id="userFavoriteProjects" styleClass="projects-flow" />
