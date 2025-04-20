@@ -28,8 +28,10 @@ public class MainUser {
     private final ObjectMapper mapper = new ObjectMapper();
     private final ApiClient apiClient = new JsonApiClient();
 
-    private final String USER_ABBRV = getAbbreviation("user");
-    private final String EMAIL_ABBRV = getAbbreviation("email");
+    private final String USER_ABBREVIATION = getAbbreviation("user");
+    private final String EMAIL_ABBREVIATION = getAbbreviation("email");
+    private final String ORG_ABBREVIATION = getAbbreviation("organizations");
+    private final String BRANCHES_ABBREVIATION = getAbbreviation("branches");
 
     protected int age;
     protected String completeName, preferredName, email;
@@ -98,13 +100,7 @@ public class MainUser {
     private void fetchPersonalInfo() {
 
         try {
-            ApiRequest<User> request = new ApiRequest<>(
-                    "/" + USER_ABBRV,
-                    ApiClient.HttpMethod.GET,
-                    Map.of(EMAIL_ABBRV, this.email),
-                    null,
-                    User.class
-            );
+            ApiRequest<User> request = buildUserApiRequest(User.class, USER_ABBREVIATION);
 
             User userInfo = executeApiRequest(request);
             this.completeName = userInfo.completeName();
@@ -122,16 +118,10 @@ public class MainUser {
     }
 
     private void fetchOrganizations() {
-        String orgAbbr = getAbbreviation("organizations");
+
 
         try {
-            ApiRequest<JsonNode> request = new ApiRequest<>(
-                    "/" + USER_ABBRV + "/" + orgAbbr,
-                    ApiClient.HttpMethod.GET,
-                    Map.of(EMAIL_ABBRV, this.email),
-                    null,
-                    JsonNode.class
-            );
+            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER_ABBREVIATION, ORG_ABBREVIATION);
 
             JsonNode rootNode = executeApiRequest(request);
             Map<Integer, UserOrganization> orgsMap = new HashMap<>();
@@ -141,12 +131,13 @@ public class MainUser {
                 int orgId = orgNode.get("id").asInt();
                 String name = orgNode.get("name").asText();
                 String email = orgNode.get("email").asText();
+                JsonNode branchesNode = orgNode.get("branches");
 
                 UserOrganization userOrg = new UserOrganization(orgId, email);
                 userOrg.setName(name);
 
                 Map<Integer, Branch> branches = new HashMap<>();
-                JsonNode branchesNode = orgNode.get("branches");
+
                 if (branchesNode != null) {
                     branchesNode.fields().forEachRemaining(branchEntry -> {
                         JsonNode branchInfo = branchEntry.getValue();
@@ -168,16 +159,8 @@ public class MainUser {
     }
 
     private void fetchBranches() {
-        String branchesAbbr = getAbbreviation("branches");
-
         try {
-            ApiRequest<JsonNode> request = new ApiRequest<>(
-                    "/" + USER_ABBRV + "/" + branchesAbbr,
-                    ApiClient.HttpMethod.GET,
-                    Map.of(EMAIL_ABBRV, this.email),
-                    null,
-                    JsonNode.class
-            );
+            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER_ABBREVIATION, BRANCHES_ABBREVIATION);
 
             JsonNode rootNode = executeApiRequest(request);
 
@@ -185,25 +168,20 @@ public class MainUser {
                 int branchId = Integer.parseInt(entry.getKey());
                 JsonNode branchNode = entry.getValue();
 
-                // Extract branch name
                 String branchName = branchNode.get("name").asText();
-
-                // Extract projects (if they exist)
                 JsonNode projectsNode = branchNode.get("projects");
+
                 List<Project> projects = new ArrayList<>();
 
                 if (projectsNode != null && !projectsNode.isEmpty()) {
                     projectsNode.fields().forEachRemaining(projectEntry -> {
                         String projectUuidStr = projectEntry.getKey();
                         JsonNode projectNode = projectEntry.getValue();
-
-                        // Parse project details
                         Project project = parseProject(projectNode, projectUuidStr);
                         projects.add(project);
                     });
                 }
 
-                // Create UserBranch and store projects
                 UserBranch userBranch = new UserBranch(branchId, this.email);
                 userBranch.setName(branchName);
                 userBranch.setProjects(projects);
@@ -216,16 +194,22 @@ public class MainUser {
 
     private Project parseProject(JsonNode projectNode, String projectUuidStr) {
         UUID projectUuid = UUID.fromString(projectUuidStr);
+
         List<Priority> priorities = parsePriorities(projectNode.get("priorities"));
         List<MeasuredGoal> measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
         MeasuredSet<Integer> completion = parseMeasuredSet(projectNode.get("completion"));
+        List<UUID> parentProjects = parseParentProjects(projectNode.get("parentProjects"));
+
         List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories =
                 parseUnderlyingCategories(projectNode.get("underlyingCategories"));
-        List<UUID> parentProjects = parseParentProjects(projectNode.get("parentProjects"));
-        EssentialInfo essentialInfo = new EssentialInfo(projectNode.get("name").asText(),
+
+        EssentialInfo essentialInfo = new EssentialInfo(
+                projectNode.get("name").asText(),
                 projectNode.get("type").asInt(),
                 projectNode.get("favorite").asBoolean(),
-                ZonedDateTime.parse(projectNode.get("dateToStart").asText()));
+                ZonedDateTime.parse(projectNode.get("dateToStart").asText())
+        );
+
         Project.ProjectInfo projectInfo = new Project.ProjectInfo(
                 essentialInfo,
                 priorities,
@@ -234,6 +218,7 @@ public class MainUser {
                 underlyingCategories,
                 parentProjects
         );
+
         Project project = new Project(projectUuid);
         project.setInfo(projectInfo);
         return project;
@@ -257,23 +242,18 @@ public class MainUser {
     }
 
     private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
-        List<MeasuredGoal> goals = new ArrayList<>();
-        if (goalsNode == null || !goalsNode.isArray()) {
-            return goals;
-        }
+        if (goalsNode == null || !goalsNode.isArray()) return new ArrayList<>();
 
+        List<MeasuredGoal> goals = new ArrayList<>();
         goalsNode.forEach(goalNode -> {
-            MeasuredSet<Double> real = createMeasuredGoal(goalNode, "real", JsonNode::asDouble, Double.class);
-            MeasuredSet<Integer> discrete = createMeasuredGoal(goalNode, "discrete", JsonNode::asInt, Integer.class);
-            List<Failure> failures = parseFailures(goalNode.get("failures"));
             goals.add(new MeasuredGoal(
                     goalNode.get("order").asInt(),
                     goalNode.get("item").asText(),
                     goalNode.get("weight").asDouble(),
-                    real,
-                    discrete,
+                    createMeasuredGoal(goalNode, "real", JsonNode::asDouble, Double.class),
+                    createMeasuredGoal(goalNode, "discrete", JsonNode::asInt, Integer.class),
                     goalNode.get("finished").asBoolean(),
-                    failures
+                    parseFailures(goalNode.get("failures")
             ));
         });
         return goals;
@@ -299,12 +279,12 @@ public class MainUser {
     }
 
     private List<Tuple<UUID, Triplet<Integer, String, Double>>> parseUnderlyingCategories(JsonNode categoriesNode) {
+        if (categoriesNode == null || !categoriesNode.has("priorities")) return new ArrayList<>();
+
         List<Tuple<UUID, Triplet<Integer, String, Double>>> categories = new ArrayList<>();
-        if (categoriesNode == null || !categoriesNode.has("priorities")) {
-            return categories;
-        }
         UUID categoryUuid = UUID.fromString(categoriesNode.get("uuid").asText());
         JsonNode prioritiesNode = categoriesNode.get("priorities");
+
         if (prioritiesNode.isArray()) {
             for (JsonNode priorityNode : prioritiesNode) {
                 if (priorityNode.isEmpty()) continue;
@@ -357,6 +337,17 @@ public class MainUser {
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
         fetcher.fetch(EnumSet.of(type), EnumSet.of(Entities.MAIN_USER));
         resultSetter.accept(resultExtractor.apply(fetcher));
+    }
+
+    private <T> ApiRequest<T> buildUserApiRequest(Class<T> responseType, String... pathSegments) {
+        String path = "/" + String.join("/", pathSegments);
+        return new ApiRequest<>(
+                path,
+                ApiClient.HttpMethod.GET,
+                Map.of(EMAIL_ABBREVIATION, this.email),
+                null,
+                responseType
+        );
     }
 
     private <T> T executeApiRequest(ApiRequest<T> request) throws InterruptedException, ExecutionException {
