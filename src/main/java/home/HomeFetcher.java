@@ -6,7 +6,6 @@ public abstract class HomeFetcher<C> {
     // Constructor takes configuration to pass to createEntity
     protected HomeFetcher(C config) {
         this.entity = createEntity(config);
-        System.out.println("Common initialization logic");
     }
 
     // Subclasses implement this to build Entity with their specific config

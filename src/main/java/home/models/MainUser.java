@@ -1,21 +1,16 @@
 package home.models;
 
-import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import home.models.branchs.Branch;
 import home.models.branchs.UserBranch;
 import home.models.organizations.UserOrganization;
 import home.models.projects.*;
 import home.records.*;
-
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

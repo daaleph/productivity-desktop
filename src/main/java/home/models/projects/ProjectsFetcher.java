@@ -264,6 +264,10 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
                     int index = pNode.asInt();
                     Priority priority = priorities.get(index);
                     if (priority == null) {
+                        System.out.print("PRIORITIES: ");
+                        System.out.println(priorities);
+                        System.out.print("INDEX: ");
+                        System.out.println(index);
                         logger.log(Level.WARNING, "Priority not found for index: " + index);
                     } else {
                         projectPriorities.add(priority);
