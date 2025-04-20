@@ -28,10 +28,13 @@ public class MainUser {
     private final ObjectMapper mapper = new ObjectMapper();
     private final ApiClient apiClient = new JsonApiClient();
 
-    private final String USER_ABBREVIATION = getAbbreviation("user");
-    private final String EMAIL_ABBREVIATION = getAbbreviation("email");
-    private final String ORG_ABBREVIATION = getAbbreviation("organizations");
-    private final String BRANCHES_ABBREVIATION = getAbbreviation("branches");
+    private final String ID = getAbbreviation("id");
+    private final String USER = getAbbreviation("user");
+    private final String EMAIL = getAbbreviation("email");
+    private final String ORG = getAbbreviation("organizations");
+    private final String BRANCHES = getAbbreviation("branches");
+    private final String TABLE = getAbbreviation("table");
+    private final String WEIGHT = getAbbreviation("weight");
 
     protected int age;
     protected String completeName, preferredName, email;
@@ -100,7 +103,7 @@ public class MainUser {
     private void fetchPersonalInfo() {
 
         try {
-            ApiRequest<User> request = buildUserApiRequest(User.class, USER_ABBREVIATION);
+            ApiRequest<User> request = buildUserApiRequest(User.class, USER);
 
             User userInfo = executeApiRequest(request);
             this.completeName = userInfo.completeName();
@@ -121,7 +124,7 @@ public class MainUser {
 
 
         try {
-            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER_ABBREVIATION, ORG_ABBREVIATION);
+            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER, ORG);
 
             JsonNode rootNode = executeApiRequest(request);
             Map<Integer, UserOrganization> orgsMap = new HashMap<>();
@@ -160,7 +163,7 @@ public class MainUser {
 
     private void fetchBranches() {
         try {
-            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER_ABBREVIATION, BRANCHES_ABBREVIATION);
+            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER, BRANCHES);
 
             JsonNode rootNode = executeApiRequest(request);
 
@@ -253,7 +256,7 @@ public class MainUser {
                     createMeasuredGoal(goalNode, "real", JsonNode::asDouble, Double.class),
                     createMeasuredGoal(goalNode, "discrete", JsonNode::asInt, Integer.class),
                     goalNode.get("finished").asBoolean(),
-                    parseFailures(goalNode.get("failures")
+                    parseFailures(goalNode.get("failures"))
             ));
         });
         return goals;
@@ -288,9 +291,9 @@ public class MainUser {
         if (prioritiesNode.isArray()) {
             for (JsonNode priorityNode : prioritiesNode) {
                 if (priorityNode.isEmpty()) continue;
-                int id = priorityNode.get("id").asInt();
-                String table = priorityNode.get("tble").asText();
-                double weight = priorityNode.get("wght").asDouble();
+                int id = priorityNode.get(ID).asInt();
+                String table = priorityNode.get(TABLE).asText();
+                double weight = priorityNode.get(WEIGHT).asDouble();
                 Triplet<Integer, String, Double> triplet = new Triplet<>(id, table, weight);
                 Tuple<UUID, Triplet<Integer, String, Double>> tuple = new Tuple<>(categoryUuid, triplet);
                 categories.add(tuple);
@@ -344,7 +347,7 @@ public class MainUser {
         return new ApiRequest<>(
                 path,
                 ApiClient.HttpMethod.GET,
-                Map.of(EMAIL_ABBREVIATION, this.email),
+                Map.of(EMAIL, this.email),
                 null,
                 responseType
         );
