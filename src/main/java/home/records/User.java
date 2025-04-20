@@ -17,12 +17,14 @@ public record User(
 ) {
     @JsonCreator
     public static User fromJson(JsonNode node) {
+
+        JsonNode newNode = node.get(0);
         return new User(
-            node.get(getAbbreviation("completeName")).asText(),
-            node.get(getAbbreviation("preferredName")).asText(),
-            node.get(getAbbreviation("age")).asInt(),
-            parsePriorities(node.get(getAbbreviation("priorities"))),
-            node.get(getAbbreviation("email")).asText()
+            newNode.get(getAbbreviation("completeName")).asText(),
+                newNode.get(getAbbreviation("preferredName")).asText(),
+                newNode.get(getAbbreviation("age")).asInt(),
+            parsePriorities(newNode.get(getAbbreviation("priorities"))),
+                newNode.get(getAbbreviation("email")).asText()
         );
     }
 

@@ -197,8 +197,6 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> processResponse(response, Enumerations.ALL))
                 .thenAccept(projects -> {
-                    System.out.print("RESPONSE: ");
-                    System.out.println(projects);
                     usersProjects.put(email, safeCastToList(projects, Project.class));
                 })
                 .whenComplete((result, ex) -> {

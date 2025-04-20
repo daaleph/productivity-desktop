@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import java.awt.event.ActionEvent;
+
 import home.records.Priority;
 
 import home.models.MainUser;
@@ -14,6 +16,8 @@ import home.models.branchs.UserBranch;
 import home.models.projects.CoreProject;
 import home.models.organizations.UserOrganization;
 
+import javafx.animation.TranslateTransition;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
@@ -23,8 +27,6 @@ import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.collections.FXCollections;
-import javafx.animation.TranslateTransition;
 
 public class Home {
     double padding = 5;
@@ -40,14 +42,12 @@ public class Home {
     @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     public VBox leftColumn,
-            organizationsContainer,
             profileSubContainer,
-            userOrganizationsSubContainer,
-            favoriteProjectsSubContainer,
-            userBranchesSubContainer,
-            welcomeSubContainer;
+            welcomeSubContainer,
+            projectsSubContainer,
+            organizationsContainer,
+            userOrganizationsSubContainer;
     public FlowPane branchesContainer;
-
     private Stage stage;
     private boolean isMaximized = false;
 
@@ -103,7 +103,7 @@ public class Home {
         userFavoriteProjects.getChildren().clear();
         favoriteProjects.forEach(project -> {
             Label projectLabel = new Label(project.getName());
-            projectLabel.getStyleClass().add("favorite-project-label");
+            projectLabel.getStyleClass().add("project-label");
             userFavoriteProjects.getChildren().add(projectLabel);
         });
     }
@@ -113,7 +113,7 @@ public class Home {
         userProjects.getChildren().clear();
         favoriteProjects.forEach(project -> {
             Label projectLabel = new Label(project.getName());
-            projectLabel.getStyleClass().add("favorite-project-label");
+            projectLabel.getStyleClass().add("project-label");
             userProjects.getChildren().add(projectLabel);
         });
     }
@@ -187,10 +187,10 @@ public class Home {
             case "userOrganizationsSubContainer" -> isPortrait ?
                     new int[]{0, 2, 2, 1} :
                     new int[]{1, 1, 1, 1};
-            case "favoriteProjectsSubContainer" -> isPortrait ?
+            case "projectsSubContainer" -> isPortrait ?
                     new int[]{0, 3, 2, 1} :
                     new int[]{0, 2, 1, 1};
-            case "userBranchesSubContainer" -> isPortrait ?
+            case "branchesSubContainer" -> isPortrait ?
                     new int[]{0, 4, 2, 1} :
                     new int[]{1, 2, 1, 1};
             default -> new int[]{0, 0, 1, 1};
@@ -305,22 +305,13 @@ public class Home {
     private Label createBranchLabel(Branch branch) {
         Label label = new Label(branch.getName());
         label.getStyleClass().add("branch-label");
-        Path branchIcon = new Path(
-                new MoveTo(4, 0),
-                new LineTo(4, 8),
-                new MoveTo(4, 4),
-                new LineTo(8, 6),
-                new LineTo(4, 8),
-                new MoveTo(4, 4),
-                new LineTo(0, 6),
-                new LineTo(4, 8)
-        );
-        branchIcon.setStroke(Color.web("#6c757d"));
-        branchIcon.setStrokeWidth(1.5);
-        branchIcon.setStrokeLineCap(StrokeLineCap.ROUND);
-        branchIcon.setStrokeLineJoin(StrokeLineJoin.ROUND);
+        Path icon = iconizedItem();
+        icon.setStroke(Color.web("#6c757d"));
+        icon.setStrokeWidth(1.5);
+        icon.setStrokeLineCap(StrokeLineCap.ROUND);
+        icon.setStrokeLineJoin(StrokeLineJoin.ROUND);
 
-        StackPane iconContainer = new StackPane(branchIcon); // Wrap in StackPane for proper sizing
+        StackPane iconContainer = new StackPane(icon);
         iconContainer.setPadding(new Insets(0, 3, 0, 0));
 
         label.setGraphic(iconContainer);
@@ -333,7 +324,24 @@ public class Home {
     private Label createProjectLabel(Project project) {
         Label label = new Label(project.getName());
         label.getStyleClass().add("project-label");
-        Path branchIcon = new Path(
+        Path icon = iconizedItem();
+        icon.setStroke(Color.web("#6c757d"));
+        icon.setStrokeWidth(1.5);
+        icon.setStrokeLineCap(StrokeLineCap.ROUND);
+        icon.setStrokeLineJoin(StrokeLineJoin.ROUND);
+
+        StackPane iconContainer = new StackPane(icon);
+        iconContainer.setPadding(new Insets(0, 3, 0, 0));
+
+        label.setGraphic(iconContainer);
+        label.setContentDisplay(ContentDisplay.LEFT);
+        label.setGraphicTextGap(5);
+
+        return label;
+    }
+
+    private Path iconizedItem() {
+        return new Path(
                 new MoveTo(4, 0),
                 new LineTo(4, 8),
                 new MoveTo(4, 4),
@@ -343,19 +351,11 @@ public class Home {
                 new LineTo(0, 6),
                 new LineTo(4, 8)
         );
-        branchIcon.setStroke(Color.web("#6c757d"));
-        branchIcon.setStrokeWidth(1.5);
-        branchIcon.setStrokeLineCap(StrokeLineCap.ROUND);
-        branchIcon.setStrokeLineJoin(StrokeLineJoin.ROUND);
+    }
 
-        StackPane iconContainer = new StackPane(branchIcon); // Wrap in StackPane for proper sizing
-        iconContainer.setPadding(new Insets(0, 3, 0, 0));
+    @FXML
+    private void handleAddProject(ActionEvent event) {
 
-        label.setGraphic(iconContainer);
-        label.setContentDisplay(ContentDisplay.LEFT);
-        label.setGraphicTextGap(5);
-
-        return label;
     }
 
     public Map<Integer, UserOrganization> getUserOrganizations() {
