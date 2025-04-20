@@ -13,17 +13,24 @@ import home.records.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import records.ApiRequest;
+import records.ApiResponse;
+import services.ApiClient;
+import services.ApiException;
+import services.JsonApiClient;
 
 import static data.Abbreviations.getAbbreviation;
 
 public class MainUser {
     private static MainUser instance;
-    private static volatile boolean initialized = false;
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final ApiClient apiClient = new JsonApiClient();
 
     protected int age;
     protected String completeName, preferredName, email;
@@ -61,94 +68,71 @@ public class MainUser {
         if (instance == null) {
             instance = new MainUser(email);
             instance.fetchAsyncInfo();
-            initialized = true;
         }
         return instance;
     }
 
     private void fetchInfo() {
-        this.fetchPersonalInfo();
-        this.fetchOrganizations();
-        this.fetchBranches();
+        fetchPersonalInfo();
+        fetchOrganizations();
+        fetchBranches();
     }
 
     private void fetchAsyncInfo() {
-        this.fetchProjects();
-        this.fetchCoreProjects();
-        this.fetchFavoriteProjects();
+        fetchProjects();
+        fetchCoreProjects();
+        fetchFavoriteProjects();
     }
 
     private void fetchPersonalInfo() {
-        String user = getAbbreviation("user");
-        String email = getAbbreviation("email");
-        HttpClient client = HttpClient.newHttpClient();
+        String userAbbr = getAbbreviation("user");
+        String emailAbbr = getAbbreviation("email");
+
         try {
-            String apiUrl = String.format("http://localhost:4000/api/%s/?%s=%s", user, email, this.email);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode root = mapper.readTree(response.body());
-                home.records.User userInfo = home.records.User.fromJson(root.get(0));
+            ApiRequest<User> request = new ApiRequest<>(
+                    "/" + userAbbr,
+                    ApiClient.HttpMethod.GET,
+                    Map.of(emailAbbr, this.email),
+                    null,
+                    User.class
+            );
+            ApiResponse<User> response = apiClient.execute(request).get();
+
+            if (response.isSuccess()) {
+                User userInfo = response.body();
                 this.completeName = userInfo.completeName();
                 this.preferredName = userInfo.preferredName();
                 this.age = userInfo.age();
                 this.email = userInfo.email();
-                this.priorities = userInfo
-                        .priorities()
-                        .stream()
+                this.priorities = userInfo.priorities().stream()
                         .collect(Collectors.toMap(
                                 Priority::id,
                                 p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()))
                         ));
             } else {
-                System.err.println("Error fetching personal data. Status code: " + response.statusCode());
+                System.err.println("Error fetching personal data. Status: " + response.statusCode());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new ApiException("Failed to fetch personal info", e);
         }
     }
 
     private void fetchCoreProjects() {
-        ProjectsFetcher.configure(
-                new ProjectsFetcher.Config(
-                        this.email,
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>()
-                )
-        );
+        ProjectsFetcher.configure(projectsFetcher());
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
         fetcher.fetch(EnumSet.of(Enumerations.CORE), EnumSet.of(Entities.MAIN_USER));
         this.coreProjects = fetcher.getCoresOfMainUser();
     }
 
     private void fetchFavoriteProjects() {
-        ProjectsFetcher.configure(
-                new ProjectsFetcher.Config(
-                        this.email,
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>()
-                )
-        );
+        ProjectsFetcher.configure(projectsFetcher());
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
         fetcher.fetch(EnumSet.of(Enumerations.FAVORITE), EnumSet.of(Entities.MAIN_USER));
         this.favoriteProjects = fetcher.getFavoritesOfMainUser();
     }
 
     private void fetchProjects() {
-        ProjectsFetcher.configure(
-                new ProjectsFetcher.Config(
-                        this.email,
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>()
-                )
-        );
+        ProjectsFetcher.configure(projectsFetcher());
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
         fetcher.fetch(EnumSet.of(Enumerations.ALL), EnumSet.of(Entities.MAIN_USER));
         this.projects = fetcher.getAllOfMainUser();
@@ -156,23 +140,23 @@ public class MainUser {
 
     private void fetchOrganizations() {
         String userAbbr = getAbbreviation("user");
+        String orgAbbr = getAbbreviation("organizations");
         String emailAbbr = getAbbreviation("email");
-        String organizationsAbbr = getAbbreviation("organizations");
-        HttpClient client = HttpClient.newHttpClient();
+
         try {
-            String apiUrl = String.format("http://localhost:4000/api/%s/%s?%s=%s",
-                    userAbbr, organizationsAbbr, emailAbbr, this.email);
+            ApiRequest<JsonNode> request = new ApiRequest<>(
+                    "/" + userAbbr + "/" + orgAbbr,
+                    ApiClient.HttpMethod.GET,
+                    Map.of(emailAbbr, this.email),
+                    null,
+                    JsonNode.class
+            );
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .GET()
-                    .build();
+            ApiResponse<JsonNode> response = apiClient.execute(request).get();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode rootNode = mapper.readTree(response.body());
+            if (response.isSuccess()) {
                 Map<Integer, UserOrganization> orgsMap = new HashMap<>();
+                JsonNode rootNode = response.body();
 
                 rootNode.fields().forEachRemaining(orgEntry -> {
                     JsonNode orgNode = orgEntry.getValue();
@@ -204,27 +188,29 @@ public class MainUser {
             } else {
                 System.err.println("Error fetching organizations: " + response.statusCode());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new ApiException("Failed to fetch organizations", e);
         }
     }
 
     private void fetchBranches() {
-        String user = getAbbreviation("user");
-        String email = getAbbreviation("email");
-        String branchesS = getAbbreviation("branches");
+        String userAbbr = getAbbreviation("user");
+        String branchesAbbr = getAbbreviation("branches");
+        String emailAbbr = getAbbreviation("email");
 
-        HttpClient client = HttpClient.newHttpClient();
         try {
-            String apiUrl = String.format("http://localhost:4000/api/%s/%s/?%s=%s", user, branchesS, email, this.email);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode rootNode = mapper.readTree(response.body());
+            ApiRequest<JsonNode> request = new ApiRequest<>(
+                    "/" + userAbbr + "/" + branchesAbbr,
+                    ApiClient.HttpMethod.GET,
+                    Map.of(emailAbbr, this.email),
+                    null,
+                    JsonNode.class
+            );
+
+            ApiResponse<JsonNode> response = apiClient.execute(request).get();
+
+            if (response.isSuccess()) {
+                JsonNode rootNode = response.body();
 
                 // Iterate over each branch in the JSON
                 rootNode.fields().forEachRemaining(entry -> {
@@ -258,8 +244,8 @@ public class MainUser {
             } else {
                 System.err.println("Error fetching projected branch data. Status code: " + response.statusCode());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new ApiException("Failed to fetch branches", e);
         }
     }
 
@@ -446,6 +432,15 @@ public class MainUser {
             }
         }
         return true;
+    }
+
+    private ProjectsFetcher.Config projectsFetcher() {
+        return new ProjectsFetcher.Config(
+                this.email,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
     }
 
     @Override
