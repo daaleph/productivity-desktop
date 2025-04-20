@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import java.awt.event.ActionEvent;
+
 import home.records.Priority;
 
 import home.models.MainUser;
@@ -14,6 +16,8 @@ import home.models.branchs.UserBranch;
 import home.models.projects.CoreProject;
 import home.models.organizations.UserOrganization;
 
+import javafx.animation.TranslateTransition;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
@@ -23,8 +27,6 @@ import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.collections.FXCollections;
-import javafx.animation.TranslateTransition;
 
 public class Home {
     double padding = 5;
@@ -349,6 +351,11 @@ public class Home {
                 new LineTo(0, 6),
                 new LineTo(4, 8)
         );
+    }
+
+    @FXML
+    private void handleAddProject(ActionEvent event) {
+
     }
 
     public Map<Integer, UserOrganization> getUserOrganizations() {

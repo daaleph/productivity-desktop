@@ -75,9 +75,9 @@
                     <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="Infinity">
                         <Label text="Projects" styleClass="header-label"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="+" styleClass="add-button"/>
+                        <Button text="+" styleClass="button-add-project"/>
                     </HBox>
-                    <Label text="Favorite" styleClass="sub-header" />
+                    <Label text="Favorite" styleClass="sub-header"/>
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
                         <FlowPane fx:id="userFavoriteProjects" styleClass="projects-flow" />
                     </ScrollPane>
