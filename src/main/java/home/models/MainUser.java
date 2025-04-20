@@ -3,6 +3,7 @@ package home.models;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,9 @@ public class MainUser {
     private static MainUser instance;
     private final ObjectMapper mapper = new ObjectMapper();
     private final ApiClient apiClient = new JsonApiClient();
+
+    private final String USER_ABBRV = getAbbreviation("user");
+    private final String EMAIL_ABBRV = getAbbreviation("email");
 
     protected int age;
     protected String completeName, preferredName, email;
@@ -79,166 +83,132 @@ public class MainUser {
         fetchFavoriteProjects();
     }
 
+    private void fetchCoreProjects() {
+        fetchProjectData(Enumerations.CORE, ProjectsFetcher::getCoresOfMainUser, cores -> this.coreProjects = cores);
+    }
+
+    private void fetchFavoriteProjects() {
+        fetchProjectData(Enumerations.FAVORITE, ProjectsFetcher::getFavoritesOfMainUser, favorites -> this.favoriteProjects = favorites);
+    }
+
+    private void fetchProjects() {
+        fetchProjectData(Enumerations.ALL, ProjectsFetcher::getAllOfMainUser, projects -> this.projects = projects);
+    }
+
     private void fetchPersonalInfo() {
-        String userAbbr = getAbbreviation("user");
-        String emailAbbr = getAbbreviation("email");
 
         try {
             ApiRequest<User> request = new ApiRequest<>(
-                    "/" + userAbbr,
+                    "/" + USER_ABBRV,
                     ApiClient.HttpMethod.GET,
-                    Map.of(emailAbbr, this.email),
+                    Map.of(EMAIL_ABBRV, this.email),
                     null,
                     User.class
             );
-            ApiResponse<User> response = apiClient.execute(request).get();
 
-            if (response.isSuccess()) {
-                User userInfo = response.body();
-                this.completeName = userInfo.completeName();
-                this.preferredName = userInfo.preferredName();
-                this.age = userInfo.age();
-                this.email = userInfo.email();
-                this.priorities = userInfo.priorities().stream()
-                        .collect(Collectors.toMap(
-                                Priority::id,
-                                p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()))
-                        ));
-            } else {
-                System.err.println("Error fetching personal data. Status: " + response.statusCode());
-            }
+            User userInfo = executeApiRequest(request);
+            this.completeName = userInfo.completeName();
+            this.preferredName = userInfo.preferredName();
+            this.age = userInfo.age();
+            this.email = userInfo.email();
+            this.priorities = userInfo.priorities().stream()
+                    .collect(Collectors.toMap(
+                            Priority::id,
+                            p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()))
+                    ));
         } catch (InterruptedException | ExecutionException e) {
             throw new ApiException("Failed to fetch personal info", e);
         }
     }
 
-    private void fetchCoreProjects() {
-        ProjectsFetcher.configure(projectsFetcher());
-        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
-        fetcher.fetch(EnumSet.of(Enumerations.CORE), EnumSet.of(Entities.MAIN_USER));
-        this.coreProjects = fetcher.getCoresOfMainUser();
-    }
-
-    private void fetchFavoriteProjects() {
-        ProjectsFetcher.configure(projectsFetcher());
-        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
-        fetcher.fetch(EnumSet.of(Enumerations.FAVORITE), EnumSet.of(Entities.MAIN_USER));
-        this.favoriteProjects = fetcher.getFavoritesOfMainUser();
-    }
-
-    private void fetchProjects() {
-        ProjectsFetcher.configure(projectsFetcher());
-        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
-        fetcher.fetch(EnumSet.of(Enumerations.ALL), EnumSet.of(Entities.MAIN_USER));
-        this.projects = fetcher.getAllOfMainUser();
-    }
-
     private void fetchOrganizations() {
-        String userAbbr = getAbbreviation("user");
         String orgAbbr = getAbbreviation("organizations");
-        String emailAbbr = getAbbreviation("email");
 
         try {
             ApiRequest<JsonNode> request = new ApiRequest<>(
-                    "/" + userAbbr + "/" + orgAbbr,
+                    "/" + USER_ABBRV + "/" + orgAbbr,
                     ApiClient.HttpMethod.GET,
-                    Map.of(emailAbbr, this.email),
+                    Map.of(EMAIL_ABBRV, this.email),
                     null,
                     JsonNode.class
             );
 
-            ApiResponse<JsonNode> response = apiClient.execute(request).get();
+            JsonNode rootNode = executeApiRequest(request);
+            Map<Integer, UserOrganization> orgsMap = new HashMap<>();
 
-            if (response.isSuccess()) {
-                Map<Integer, UserOrganization> orgsMap = new HashMap<>();
-                JsonNode rootNode = response.body();
+            rootNode.fields().forEachRemaining(orgEntry -> {
+                JsonNode orgNode = orgEntry.getValue();
+                int orgId = orgNode.get("id").asInt();
+                String name = orgNode.get("name").asText();
+                String email = orgNode.get("email").asText();
 
-                rootNode.fields().forEachRemaining(orgEntry -> {
-                    JsonNode orgNode = orgEntry.getValue();
-                    int orgId = orgNode.get("id").asInt();
-                    String name = orgNode.get("name").asText();
-                    String email = orgNode.get("email").asText();
+                UserOrganization userOrg = new UserOrganization(orgId, email);
+                userOrg.setName(name);
 
-                    UserOrganization userOrg = new UserOrganization(orgId, email);
-                    userOrg.setName(name);
+                Map<Integer, Branch> branches = new HashMap<>();
+                JsonNode branchesNode = orgNode.get("branches");
+                if (branchesNode != null) {
+                    branchesNode.fields().forEachRemaining(branchEntry -> {
+                        JsonNode branchInfo = branchEntry.getValue();
+                        int branchId = branchInfo.get("id").asInt();
+                        String branchName = branchInfo.get("name").asText();
 
-                    Map<Integer, Branch> branches = new HashMap<>();
-                    JsonNode branchesNode = orgNode.get("branches");
-                    if (branchesNode != null) {
-                        branchesNode.fields().forEachRemaining(branchEntry -> {
-                            JsonNode branchInfo = branchEntry.getValue();
-                            int branchId = branchInfo.get("id").asInt();
-                            String branchName = branchInfo.get("name").asText();
+                        Branch branch = new Branch(branchId, branchName);
+                        branches.put(branchId, branch);
+                    });
+                }
+                userOrg.setBranches(branches);
+                orgsMap.put(orgId, userOrg);
+            });
 
-                            Branch branch = new Branch(branchId, branchName);
-                            branches.put(branchId, branch);
-                        });
-                    }
-                    userOrg.setBranches(branches);
-
-                    orgsMap.put(orgId, userOrg);
-                });
-
-                this.organizations = orgsMap;
-            } else {
-                System.err.println("Error fetching organizations: " + response.statusCode());
-            }
+            this.organizations = orgsMap;
         } catch (InterruptedException | ExecutionException e) {
             throw new ApiException("Failed to fetch organizations", e);
         }
     }
 
     private void fetchBranches() {
-        String userAbbr = getAbbreviation("user");
         String branchesAbbr = getAbbreviation("branches");
-        String emailAbbr = getAbbreviation("email");
 
         try {
             ApiRequest<JsonNode> request = new ApiRequest<>(
-                    "/" + userAbbr + "/" + branchesAbbr,
+                    "/" + USER_ABBRV + "/" + branchesAbbr,
                     ApiClient.HttpMethod.GET,
-                    Map.of(emailAbbr, this.email),
+                    Map.of(EMAIL_ABBRV, this.email),
                     null,
                     JsonNode.class
             );
 
-            ApiResponse<JsonNode> response = apiClient.execute(request).get();
+            JsonNode rootNode = executeApiRequest(request);
 
-            if (response.isSuccess()) {
-                JsonNode rootNode = response.body();
+            rootNode.fields().forEachRemaining(entry -> {
+                int branchId = Integer.parseInt(entry.getKey());
+                JsonNode branchNode = entry.getValue();
 
-                // Iterate over each branch in the JSON
-                rootNode.fields().forEachRemaining(entry -> {
-                    int branchId = Integer.parseInt(entry.getKey());
-                    JsonNode branchNode = entry.getValue();
+                // Extract branch name
+                String branchName = branchNode.get("name").asText();
 
-                    // Extract branch name
-                    String branchName = branchNode.get("name").asText();
+                // Extract projects (if they exist)
+                JsonNode projectsNode = branchNode.get("projects");
+                List<Project> projects = new ArrayList<>();
 
-                    // Extract projects (if they exist)
-                    JsonNode projectsNode = branchNode.get("projects");
-                    List<Project> projects = new ArrayList<>();
+                if (projectsNode != null && !projectsNode.isEmpty()) {
+                    projectsNode.fields().forEachRemaining(projectEntry -> {
+                        String projectUuidStr = projectEntry.getKey();
+                        JsonNode projectNode = projectEntry.getValue();
 
-                    if (projectsNode != null && !projectsNode.isEmpty()) {
-                        projectsNode.fields().forEachRemaining(projectEntry -> {
-                            String projectUuidStr = projectEntry.getKey();
-                            JsonNode projectNode = projectEntry.getValue();
+                        // Parse project details
+                        Project project = parseProject(projectNode, projectUuidStr);
+                        projects.add(project);
+                    });
+                }
 
-                            // Parse project details
-                            Project project = parseProject(projectNode, projectUuidStr);
-                            projects.add(project);
-                        });
-                    }
-
-                    // Create UserBranch and store projects
-                    UserBranch userBranch = new UserBranch(branchId, this.email);
-                    userBranch.setName(branchName);
-                    userBranch.setProjects(projects);
-                    branches.put(branchId, userBranch);
-                });
-            } else {
-                System.err.println("Error fetching projected branch data. Status code: " + response.statusCode());
-            }
+                // Create UserBranch and store projects
+                UserBranch userBranch = new UserBranch(branchId, this.email);
+                userBranch.setName(branchName);
+                userBranch.setProjects(projects);
+                branches.put(branchId, userBranch);
+            });
         } catch (InterruptedException | ExecutionException e) {
             throw new ApiException("Failed to fetch branches", e);
         }
@@ -337,13 +307,10 @@ public class MainUser {
         JsonNode prioritiesNode = categoriesNode.get("priorities");
         if (prioritiesNode.isArray()) {
             for (JsonNode priorityNode : prioritiesNode) {
-                // Skip empty priorities (like [{}])
                 if (priorityNode.isEmpty()) continue;
-                // Extract priority fields
-                int id = priorityNode.get("id").asInt(); // Assuming 'id' is an Integer (adjust if UUID)
+                int id = priorityNode.get("id").asInt();
                 String table = priorityNode.get("tble").asText();
                 double weight = priorityNode.get("wght").asDouble();
-                // Create Triplet and Tuple
                 Triplet<Integer, String, Double> triplet = new Triplet<>(id, table, weight);
                 Tuple<UUID, Triplet<Integer, String, Double>> tuple = new Tuple<>(categoryUuid, triplet);
                 categories.add(tuple);
@@ -370,6 +337,58 @@ public class MainUser {
             });
         }
         return failures;
+    }
+
+    public boolean isConvertibleToIntegerList(JsonNode arrayNode) {
+        for (JsonNode element : arrayNode) {
+            if (!element.isInt() && !element.isLong() && !element.canConvertToInt()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private <T> void fetchProjectData(
+            Enumerations type,
+            Function<ProjectsFetcher, Map<UUID, T>> resultExtractor,
+            Consumer<Map<UUID, T>> resultSetter
+    ) {
+        ProjectsFetcher.configure(projectsFetcher());
+        ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
+        fetcher.fetch(EnumSet.of(type), EnumSet.of(Entities.MAIN_USER));
+        resultSetter.accept(resultExtractor.apply(fetcher));
+    }
+
+    private <T> T executeApiRequest(ApiRequest<T> request) throws InterruptedException, ExecutionException {
+        try {
+            ApiResponse<T> response = apiClient.execute(request).get();
+            if (!response.isSuccess()) {
+                throw new ApiException(
+                        response.statusCode(),
+                        request.path(),
+                        "API request failed with status: " + response.statusCode()
+                );
+            }
+            return response.body();
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof ApiException) throw (ApiException) cause;
+            throw new ApiException("Failed to execute API request: ", e);
+        }
+    }
+
+    private ProjectsFetcher.Config projectsFetcher() {
+        return new ProjectsFetcher.Config(
+                this.email,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Name: %s, Email: %s", completeName, email);
     }
 
     public String getName() {
@@ -418,29 +437,6 @@ public class MainUser {
 
     public UserOrganization getOrganization(Integer org) {
         return organizations.get(org);
-    }
-
-    public boolean isConvertibleToIntegerList(JsonNode arrayNode) {
-        for (JsonNode element : arrayNode) {
-            if (!element.isInt() && !element.isLong() && !element.canConvertToInt()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private ProjectsFetcher.Config projectsFetcher() {
-        return new ProjectsFetcher.Config(
-                this.email,
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Name: %s, Email: %s", completeName, email);
     }
 
 }
