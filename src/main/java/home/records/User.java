@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 import static data.Abbreviations.getAbbreviation;
 
 public record User(
@@ -17,50 +20,26 @@ public record User(
 ) {
     @JsonCreator
     public static User fromJson(JsonNode node) {
-
         JsonNode newNode = node.get(0);
         return new User(
-            newNode.get(getAbbreviation("completeName")).asText(),
+                newNode.get(getAbbreviation("completeName")).asText(),
                 newNode.get(getAbbreviation("preferredName")).asText(),
                 newNode.get(getAbbreviation("age")).asInt(),
-            parsePriorities(newNode.get(getAbbreviation("priorities"))),
+                parsePriorities(newNode.get(getAbbreviation("priorities"))),
                 newNode.get(getAbbreviation("email")).asText()
         );
     }
 
-    private static List<Integer> parseIntegerList(JsonNode node) {
-        List<Integer> list = new ArrayList<>();
-        if (node == null || !node.isArray()) {
-            return list;
-        }
-        for (JsonNode element : node) {
-            list.add(element.asInt());
-        }
-        return list;
-    }
-
-    private static List<String> parseStringList(JsonNode node) {
-        List<String> list = new ArrayList<>();
-        if (node == null || !node.isArray()) {
-            return list;
-        }
-        for (JsonNode element : node) {
-            list.add(element.asText());
-        }
-        return list;
-    }
-
     private static List<Priority> parsePriorities(JsonNode node) {
-        List<Priority> priorities = new ArrayList<>();
-        if (node == null || !node.isArray()) {
-            return priorities;
-        }
-        for (JsonNode priorityNode : node) {
-            int id = priorityNode.get("id").asInt();
-            String descriptionEn = priorityNode.get(getAbbreviation("descriptionEn")).asText();
-            String descriptionEs = priorityNode.get(getAbbreviation("descriptionEs")).asText();
-            priorities.add(new Priority(new Triplet<>(id, descriptionEn, descriptionEs)));
-        }
-        return priorities;
+        if (node == null || !node.isArray()) return new ArrayList<>();
+        return StreamSupport.stream(node.spliterator(), false)
+                .map(priorityNode -> new Priority(
+                        new Triplet<>(
+                                priorityNode.get("id").asInt(),
+                                priorityNode.get(getAbbreviation("descriptionEn")).asText(),
+                                priorityNode.get(getAbbreviation("descriptionEs")).asText()
+                        )
+                ))
+                .collect(Collectors.toList());
     }
 }

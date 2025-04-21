@@ -1,0 +1,58 @@
+package dialogs;
+
+import home.models.MainUser;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+import services.ApiException;
+
+public abstract class Entity<T> extends Stage {
+    protected final GridPane grid = new GridPane();
+    protected final Button submitButton = new Button("Submit");
+    protected final Button cancelButton = new Button("Cancel");
+    protected final MainUser mainUser;
+
+    protected Entity(String title, MainUser mainUser) {
+        this.mainUser = mainUser;
+        initializeUI(title);
+    }
+
+    private void initializeUI(String title) {
+        grid.setVgap(10);
+        grid.setHgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20));
+
+        var scene = new Scene(grid, 400, 300);
+        setScene(scene);
+        setTitle(title);
+
+        addFormFields();
+        setupButtons();
+    }
+
+    protected abstract void addFormFields();
+    protected abstract T validateAndCreate() throws ValidationException;
+
+    private void setupButtons() {
+        grid.add(submitButton, 0, 99);
+        grid.add(cancelButton, 1, 99);
+
+        submitButton.setOnAction(ae -> {
+            try {
+                T entity = validateAndCreate();
+                close();
+            } catch (ValidationException | ApiException e) {
+                showError(e.getMessage());
+            }
+        });
+
+        cancelButton.setOnAction(e -> {
+            close();
+            onCancel();
+        });
+    }
+
+    protected void onCancel() {}
+    protected void showError(String message) {}
+}

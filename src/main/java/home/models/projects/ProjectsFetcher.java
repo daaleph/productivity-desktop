@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletionException;
+import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -251,10 +252,8 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         }
         CoreProject coreProject = new CoreProject(uuid);
 
-        // Parse basic project data
         EssentialInfo essential = this.parseEssentialData(projectNode);
 
-        // Parse priorities
         List<Priority> projectPriorities = new ArrayList<>();
         JsonNode prioritiesNode = projectNode.get("priorities");
         if (prioritiesNode != null && prioritiesNode.isArray()) {
@@ -276,7 +275,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             logger.log(Level.FINE, "No priorities found or priorities node is not an array");
         }
 
-        // Parse measured goals
+
         List<MeasuredGoal> measuredGoals;
         try {
             measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
@@ -286,10 +285,8 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             throw e;
         }
 
-        // Create and set project data
         JsonNode completionNode = projectNode.get("completion");
         try {
-            // Parse completion data
             MeasuredSet<Integer> necessaryTime = this.parseCompletionTime(completionNode);
             CoreProject.CoreProjectInfo info = new CoreProject.CoreProjectInfo(
                     essential, projectPriorities, measuredGoals, necessaryTime, List.of()
@@ -314,15 +311,12 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             logger.log(Level.SEVERE, "Failed to parse UUID from: " + projectNode.get("uuid"), e);
             throw e;
         }
+
         Project project = new Project(uuid);
 
-        // Parse basic project data
+        // Parsing
         EssentialInfo essential = this.parseEssentialData(projectNode);
-
-        // Parse priorities
         List<Priority> prioritiesList = parsePriorities(projectNode.get("priorities"));
-
-        // Parse measured goals
         List<MeasuredGoal> measuredGoals;
         try {
             measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
@@ -335,7 +329,6 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         // Create and set project data
         JsonNode completionNode = projectNode.get("completion");
         try {
-            // Parse completion data
             MeasuredSet<Integer> necessaryTime = this.parseCompletionTime(completionNode);
             CoreProject.CoreProjectInfo info = new CoreProject.CoreProjectInfo(
                     essential, prioritiesList, measuredGoals, necessaryTime, List.of()
@@ -384,40 +377,12 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     }
 
     private List<MeasuredGoal> parseMeasuredGoals(JsonNode goalsNode) {
-        List<MeasuredGoal> goals = new ArrayList<>();
         if (goalsNode == null || !goalsNode.isArray()) {
-            return goals;
+            return new ArrayList<>();
         }
-
-        for (JsonNode goalNode : goalsNode) {
-            int order = goalNode.get("order").asInt();
-            String item = goalNode.get("item").asText();
-            double weight = goalNode.get("weight").asDouble();
-
-            MeasuredSet<Double> real = new MeasuredSet<>(
-                    Map.of(
-                            "goal", goalNode.get("realGoal").asDouble(),
-                            "advance", goalNode.get("realAdvance").asDouble()
-                    ),
-                    Double.class
-            );
-
-            MeasuredSet<Integer> discrete = new MeasuredSet<>(
-                    Map.of(
-                            "goal", goalNode.get("discreteGoal").asInt(),
-                            "advance", goalNode.get("discreteAdvance").asInt()
-                    ),
-                    Integer.class
-            );
-
-            List<Failure> failures = parseFailures(goalNode.get("failures"));
-            boolean finished = goalNode.get("finished").asBoolean();
-
-            goals.add(new MeasuredGoal(
-                    order, item, weight, real, discrete, finished, failures
-            ));
-        }
-        return goals;
+        return StreamSupport.stream(goalsNode.spliterator(), false)
+                .map(this::parseGoalNode)
+                .collect(Collectors.toList());
     }
 
     private List<Failure> parseFailures(JsonNode failuresNode) {
@@ -430,6 +395,33 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             failures.add(Failure.fromJson(failureNode));
         }
         return failures;
+    }
+
+    private MeasuredGoal parseGoalNode(JsonNode goalNode) {
+        int order = goalNode.get("order").asInt();
+        String item = goalNode.get("item").asText();
+        double weight = goalNode.get("weight").asDouble();
+        boolean finished = goalNode.get("finished").asBoolean();
+        JsonNode failures = goalNode.get("failures");
+
+        MeasuredSet<Double> real = createMeasuredGoal(
+                goalNode, "realGoal", "realAdvance", JsonNode::asDouble, Double.class);
+        MeasuredSet<Integer> discrete = createMeasuredGoal(
+                goalNode, "discreteGoal", "discreteAdvance", JsonNode::asInt, Integer.class);
+
+        return new MeasuredGoal(order, item, weight, real, discrete, finished, parseFailures(failures));
+    }
+
+    private <T> MeasuredSet<T> createMeasuredGoal(
+            JsonNode goalNode, String goalField, String advanceField, Function<JsonNode, T> extractor, Class<T> type
+    ) {
+        return new MeasuredSet<>(
+                Map.of(
+                        "goal", extractor.apply(goalNode.get(goalField)),
+                        "advance", extractor.apply(goalNode.get(advanceField))
+                ),
+                type
+        );
     }
 
     private MeasuredSet<Integer> parseCompletionTime(JsonNode completionNode) {
@@ -453,10 +445,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         String email = config.mainEmail;
         CompletableFuture<?> fetchOperation = pendingFetches.get(email);
 
-        // Wait for completion if fetch is in progress
-        if (fetchOperation != null) {
-            fetchOperation.join();
-        }
+        if (fetchOperation != null) fetchOperation.join(); // Wait for completion if fetch is in progress
 
         return usersCoreProjects.getOrDefault(email, Collections.emptyList())
                 .stream()
@@ -470,7 +459,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
         String email = config.mainEmail;
         CompletableFuture<?> fetchOperation = pendingFetches.get(email);
 
-        if (fetchOperation != null) fetchOperation.join();
+        if (fetchOperation != null) fetchOperation.join(); // Wait for completion if fetch is in progress
 
         return usersFavoriteProjects.getOrDefault(email, Collections.emptyList())
                 .stream()
