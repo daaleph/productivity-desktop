@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import java.awt.event.ActionEvent;
+import javafx.event.ActionEvent;
 
+import dialogs.ProjectDialog;
 import home.records.Priority;
 
 import home.models.MainUser;
@@ -39,7 +40,7 @@ public class Home {
     @FXML private ListView<CoreProject> userCoreProjects;
     @FXML private FlowPane userProjects, userFavoriteProjects;
     @FXML private Map<Integer, UserOrganization> userOrganizations;
-    @FXML private Button minimizeButton, maximizeButton, closeButton;
+    @FXML private Button minimizeButton, maximizeButton, closeButton, newProject;
 
     public VBox leftColumn,
             profileSubContainer,
@@ -354,8 +355,13 @@ public class Home {
     }
 
     @FXML
-    private void handleAddProject(ActionEvent event) {
-
+    private void handleNewProject(ActionEvent event) {
+        if (this.mainUser == null) {
+            System.err.println("Error: MainUser is not initialized in Home controller!");
+            return;
+        }
+        ProjectDialog projectDialog = new ProjectDialog(this.mainUser);
+        projectDialog.showAndWait();
     }
 
     public Map<Integer, UserOrganization> getUserOrganizations() {

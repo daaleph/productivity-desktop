@@ -101,7 +101,6 @@ public class MainUser {
     }
 
     private void fetchPersonalInfo() {
-
         try {
             ApiRequest<User> request = buildUserApiRequest(User.class, USER);
 
@@ -121,8 +120,6 @@ public class MainUser {
     }
 
     private void fetchOrganizations() {
-
-
         try {
             ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER, ORG);
 

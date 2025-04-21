@@ -75,7 +75,7 @@
                     <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="Infinity">
                         <Label text="Projects" styleClass="header-label"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="+" styleClass="button-add-project"/>
+                        <Button fx:id="newProject" text="+" styleClass="button-add-project" onAction="#handleNewProject"/>
                     </HBox>
                     <Label text="Favorite" styleClass="sub-header"/>
                     <ScrollPane fitToWidth="true" styleClass="branch-scroll" VBox.vgrow="ALWAYS">
