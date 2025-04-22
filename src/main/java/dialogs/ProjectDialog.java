@@ -3,193 +3,195 @@ package dialogs;
 import home.models.MainUser;
 import home.models.projects.EssentialInfo;
 import home.models.projects.Project;
-import home.records.Priority;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.util.StringConverter;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
+import records.Priority;
+import records.Tuple;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-// Assuming Entity<T> is an abstract class that ProjectDialog extends
-// and that Entity's constructor calls addFormFields()
-// IMPORTANT: This fix assumes the 'grid' field in the Entity base class is accessible
-// (e.g., declared as 'protected GridPane grid;' in Entity).
+
 public class ProjectDialog extends Entity<Project> {
+    private static final Logger LOGGER = Logger.getLogger(ProjectDialog.class.getName());
 
-    // These fields are declared here and will be initialized *after* the super() call returns.
     private final TextField nameField = new TextField();
-    private final ComboBox<Priority> priorityCombo = new ComboBox<>();
+    private final ListView<Priority> priorityList = new ListView<>();
+    private final ComboBox<Tuple<Integer, String>> projectType = new ComboBox<>(
+        FXCollections.observableArrayList(
+            List.of(
+                new Tuple<>(1, "Personal"),
+                new Tuple<>(2, "Organizational")
+            )
+        )
+    );
+
+    private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
+    private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
+    private static final Color TEXT_COLOR_SELECTED = Color.WHITE;
+    private static final Color TEXT_COLOR_UNSELECTED = Color.BLACK;
+    private static final BackgroundFill SELECTED_BACKGROUND_FILL =
+            new BackgroundFill(SELECTED_COLOR, new CornerRadii(3), Insets.EMPTY);
+    private static final Background SELECTED_BACKGROUND = new Background(SELECTED_BACKGROUND_FILL);
+    private static final Background UNSELECTED_BACKGROUND = Background.EMPTY;
+
+    // Custom PseudoClass to potentially help JavaFX track state if needed, although direct styling is primary here
+    private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("custom-selected");
 
     public ProjectDialog(MainUser mainUser) {
-        // 1. super() is called. The Entity constructor runs.
-        //    The Entity constructor likely calls initializeUI() which calls addFormFields() here.
-        //    At this point, nameField and priorityCombo are null from the perspective of the base constructor flow.
-        //    The overridden addFormFields() in THIS class (ProjectDialog) is called.
         super("New Project", mainUser);
-
-        // 2. After super() returns, the instance variable initializers in ProjectDialog run.
-        //    nameField = new TextField();
-        //    priorityCombo = new ComboBox<>();
-        //    At this point, nameField and priorityCombo are valid, non-null objects.
-
-        // 3. initializeForm() is called. This is the correct place to configure, populate,
-        //    and *add* the fields to the grid now that they are initialized.
+        if (mainUser == null) {
+            LOGGER.log(Level.SEVERE, "MainUser is null in ProjectDialog constructor!");
+            throw new IllegalArgumentException("MainUser cannot be null.");
+        }
         initializeForm();
+        setupDynamicBehaviors();
+        validateForm();
     }
 
-    // This method is called by the superclass constructor (Entity).
-    // Since our fields (nameField, priorityCombo) are not initialized when this is called,
-    // we must NOT try to add them to the grid here, as that would cause the NPE.
-    // Make this method empty in the derived class.
     @Override
-    protected void addFormFields() {
-        // Do NOTHING here. The actual adding to the grid is moved to initializeForm().
-        // If you were to call addFormRow("...", nameField, ...); here, nameField is still null.
-    }
+    protected void addFormFields() {}
 
     @Override
     protected Project validateAndCreate() throws ValidationException {
-        // This method is called later, typically when the dialog is submitted,
-        // long after initialization is complete, so nameField and priorityCombo are not null.
-        if (nameField.getText().isEmpty()) {
-            throw new ValidationException("Project name cannot be empty");
-        }
-        if (priorityCombo.getValue() == null) {
-            throw new ValidationException("Must select a priority");
-        }
+        String projectName = nameField.getText().trim();
+        if (projectName.isEmpty()) throw new ValidationException("Project name cannot be empty.");
 
-        // Create ProjectInfo first
-        Project.ProjectInfo projectInfo = new Project.ProjectInfo(
-                new EssentialInfo(
-                        nameField.getText(),
-                        0, // Default type
-                        false,
-                        ZonedDateTime.now()
-                ),
-                List.of(priorityCombo.getValue()), // priorityCombo has items and a selected value by now
-                List.of(), // Empty measured goals
-                null, // No completion time
-                List.of(), // No underlying categories
-                List.of()  // No parent projects
+        ObservableList<Priority> currentlySelected = priorityList.getSelectionModel().getSelectedItems();
+        if (currentlySelected.isEmpty()) throw new ValidationException("Must select at least one priority.");
+
+        LOGGER.log(Level.INFO, "Creating project with priorities: {0}", currentlySelected);
+
+        EssentialInfo essentialInfo = new EssentialInfo(
+                projectName, 0, false, ZonedDateTime.now()
         );
 
-        // Create and return Project with the generated UUID
+        Project.ProjectInfo projectInfo = new Project.ProjectInfo(
+                essentialInfo,
+                List.copyOf(currentlySelected),
+                List.of(), null, List.of(), List.of()
+        );
+
         Project project = new Project(UUID.randomUUID());
         project.setInfo(projectInfo);
         return project;
     }
 
-    // Helper method to add a labeled field to the grid.
-    // This method can be used in initializeForm() now.
-    // This assumes the 'grid' field is accessible (e.g., protected) from the base class.
-    private void addFormRow(String label, javafx.scene.Node field, int row) {
-        // Add the label and the initialized field to the grid
+    private void addFormRow(String label, Node field, int row) {
         grid.add(new Label(label), 0, row);
-        grid.add(field, 1, row); // field is non-null when this is called from initializeForm()
+        grid.add(field, 1, row);
     }
 
-
     private void initializeForm() {
-        // Set up form styling and component properties
-        // Assumes 'grid' is accessible from the base class
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
-        // Configure nameField
         nameField.setPromptText("Enter project name");
         nameField.setPrefWidth(250);
-        // Add listener here, after nameField is initialized
-        nameField.textProperty().addListener((obs, oldVal, newVal) ->
-                validateNotEmpty(newVal, nameField));
+        nameField.textProperty().addListener(
+            (obs, oldVal, newVal) -> validateNotEmpty(newVal, nameField)
+        );
 
-        // ********************************************************
-        // CONFIGURE, POPULATE, AND ADD priorityCombo HERE!
-        // This is called *after* priorityCombo is initialized by `new ComboBox<>()`
-        // ********************************************************
+        priorityList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        priorityList.setPrefWidth(250);
+        priorityList.setMinHeight(150);
+        priorityList.setFocusTraversable(true);
+
         Map<Integer, Priority> userPriorities = mainUser.getPriorities();
-
-        // Add items to the ComboBox
-        if (userPriorities != null) {
-            priorityCombo.getItems().addAll(userPriorities.values());
+        if (userPriorities != null && !userPriorities.isEmpty()) {
+            priorityList.setItems(FXCollections.observableArrayList(userPriorities.values()));
+            LOGGER.log(Level.INFO, "Populated priority list with {0} items.", userPriorities.size());
         } else {
-            // Handle case where getPriorities() might return null if necessary
-            System.err.println("Warning: User priorities map is null.");
+            priorityList.setPlaceholder(new Label("No priorities available."));
+            LOGGER.log(Level.WARNING, "No priorities found for user.");
         }
 
-        // Configure the ComboBox properties
-        priorityCombo.setPrefWidth(250);
-        priorityCombo.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Priority priority) {
-                // Use descriptionEs for display as in your original initializeForm
-                return priority != null ? priority.descriptionEs() : "";
-            }
-
-            @Override
-            public Priority fromString(String string) {
-                // Find the Priority object based on the Spanish description
-                return priorityCombo.getItems().stream()
-                        .filter(p -> p.descriptionEs().equals(string))
-                        .findFirst()
-                        .orElse(null); // Return null if not found
-            }
-        });
-
-        // Add listener here, after priorityCombo is initialized
-        priorityCombo.valueProperty().addListener((obs, oldVal, newVal) ->
-                validateComboSelection(priorityCombo));
-
-        // Optional: Set an initial selection if needed
-        // ... (code from previous example if you want a default selection) ...
-        // For now, we rely on validation requiring a selection.
-
-        // ********************************************************
-
-        // NOW, ADD the initialized fields to the grid.
-        // This is safe because nameField and priorityCombo are initialized now.
-        // This assumes the 'grid' field from the Entity base class is accessible.
         addFormRow("Project Name:", nameField, 0);
-        addFormRow("Priority:", priorityCombo, 1);
+        addFormRow("Priority (Click to select/deselect):", priorityList, 1);
+    }
 
+    private void setupDynamicBehaviors() {
+        priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
+        priorityList.getSelectionModel().getSelectedItems().addListener(
+            (ListChangeListener<Priority>) change -> {
+                validatePrioritySelection();
+            }
+        );
+    }
 
-        // Initial validation check
-        // Call validateForm *after* all fields are set up and potentially populated,
-        // as it checks their initial state.
+    private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
+        ListCell<Priority> cell = new ListCell<>() {
+
+            {
+                addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                    if (isEmpty() || getItem() == null) return;
+                    ListView<Priority> lv = getListView();
+                    SelectionModel<Priority> sm = lv.getSelectionModel();
+                    int index = getIndex();
+                    if (sm.isSelected(index)) {
+                        sm.clearSelection(index);
+                    } else {
+                        sm.select(index);
+                    }
+                    event.consume();
+                });
+            }
+
+            @Override
+            protected void updateItem(Priority priority, boolean empty) {
+                super.updateItem(priority, empty);
+
+                if (empty || priority == null) {
+                    setText(null);
+                    setGraphic(null);
+                    applyCellStyle(this, false);
+                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
+                } else {
+                    setText(priority.descriptionEs());
+                    setGraphic(null);
+                    boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
+                    applyCellStyle(this, isSelected);
+                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+                }
+            }
+        };
+
+        return cell;
+    }
+
+    private void applyCellStyle(ListCell<Priority> cell, boolean isSelected) {
+        cell.setBackground(isSelected ? SELECTED_BACKGROUND : UNSELECTED_BACKGROUND);
+        cell.setTextFill(isSelected ? TEXT_COLOR_SELECTED : TEXT_COLOR_UNSELECTED);
+    }
+
+    private void validatePrioritySelection() {
+        boolean isValid = !priorityList.getSelectionModel().getSelectedItems().isEmpty();
+        priorityList.setStyle(isValid ? null : "-fx-border-color: red; -fx-border-width: 1px;");
         validateForm();
     }
 
-    // Helper method for form validation
-    private void validateForm() {
-        // Check if name field is not empty and a priority is selected
-        // submitButton (presumably also from Entity) must be accessible.
-        // Assuming submitButton is protected in Entity.
-        if (submitButton != null) {
-            submitButton.setDisable(
-                    nameField.getText().trim().isEmpty() ||
-                            priorityCombo.getValue() == null // This check is now safe
-            );
-        }
-    }
-
-    // Validation utilities (keep as they are)
     private void validateNotEmpty(String value, TextField field) {
-        if (value.trim().isEmpty()) {
-            field.setStyle("-fx-border-color: #ff4444;"); // Highlight red
-        } else {
-            field.setStyle(""); // Remove highlight
-        }
-        validateForm(); // Re-validate form state
+        field.setStyle(value == null || value.trim().isEmpty() ? "-fx-border-color: red; -fx-border-width: 1px;" : null);
+        validateForm();
     }
 
-    private void validateComboSelection(ComboBox<?> combo) {
-        if (combo.getValue() == null) {
-            combo.setStyle("-fx-border-color: #ff4444;"); // Highlight red
-        } else {
-            combo.setStyle(""); // Remove highlight
-        }
-        validateForm(); // Re-validate form state
+    private void validateForm() {
+        boolean nameIsValid = nameField.getText() != null && !nameField.getText().trim().isEmpty();
+        boolean priorityIsValid = !priorityList.getSelectionModel().getSelectedItems().isEmpty();
+        boolean formIsValid = nameIsValid && priorityIsValid;
+        submitButton.setDisable(!formIsValid);
     }
 }

@@ -1,6 +1,10 @@
 package home.models.projects;
 
 import home.records.*;
+import records.Priority;
+import records.Triplet;
+import records.Tuple;
+
 import java.util.List;
 import java.util.UUID;
 

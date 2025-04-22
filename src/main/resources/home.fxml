@@ -20,7 +20,8 @@
             @/styles/projects.css,
             @/styles/organizations.css,
             @/styles/branches.css,
-            @/styles/priorities.css">
+            @/styles/priorities.css,
+            @/styles/dialogs/newProject.css">
     <top>
         <HBox styleClass="title-bar">
             <Region HBox.hgrow="ALWAYS" />

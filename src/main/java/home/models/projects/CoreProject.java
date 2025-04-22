@@ -1,6 +1,9 @@
 package home.models.projects;
 
 import home.records.*;
+import records.Priority;
+import records.Triplet;
+import records.Tuple;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -12,7 +15,7 @@ public class CoreProject {
     private List<Priority> priorities;
     private List<MeasuredGoal> measuredGoals;
     private MeasuredSet<Integer> necessaryTime;
-    private List<Tuple<UUID,Triplet<Integer, String, Double>>> underlyingCategories;
+    private List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories;
 
     public CoreProject(UUID uuid) {
         this.uuid = uuid;
