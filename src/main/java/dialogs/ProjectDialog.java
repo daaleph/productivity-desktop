@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 
 public class ProjectDialog extends Entity<Project> {
@@ -33,21 +32,21 @@ public class ProjectDialog extends Entity<Project> {
     private final TextField nameField = new TextField();
     private final ListView<Priority> priorityList = new ListView<>();
     private final ComboBox<Tuple<Integer, String>> projectType = new ComboBox<>(
-            FXCollections.observableArrayList(
-                    List.of(
-                            new Tuple<>(1, "Personal"),
-                            new Tuple<>(2, "Organizational")
-                    )
+        FXCollections.observableArrayList(
+            List.of(
+                new Tuple<>(1, "Personal"),
+                new Tuple<>(2, "Organizational")
             )
+        )
     );
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
     private static final Color TEXT_COLOR_SELECTED = Color.WHITE;
     private static final Color TEXT_COLOR_UNSELECTED = Color.BLACK;
-
-    // Define Backgrounds - Use slight CornerRadii for better visuals
-    private static final Background SELECTED_BACKGROUND = new Background(new BackgroundFill(SELECTED_COLOR, new CornerRadii(3), Insets.EMPTY));
+    private static final BackgroundFill SELECTED_BACKGROUND_FILL =
+            new BackgroundFill(SELECTED_COLOR, new CornerRadii(3), Insets.EMPTY);
+    private static final Background SELECTED_BACKGROUND = new Background(SELECTED_BACKGROUND_FILL);
     private static final Background UNSELECTED_BACKGROUND = Background.EMPTY;
 
     // Custom PseudoClass to potentially help JavaFX track state if needed, although direct styling is primary here
@@ -61,27 +60,19 @@ public class ProjectDialog extends Entity<Project> {
         }
         initializeForm();
         setupDynamicBehaviors();
-        validateForm(); // Initial validation check
+        validateForm();
     }
-
-    // Removed addFormFields as it's not needed if base class handles it or it's empty
 
     @Override
-    protected void addFormFields() {
-
-    }
+    protected void addFormFields() {}
 
     @Override
     protected Project validateAndCreate() throws ValidationException {
         String projectName = nameField.getText().trim();
-        if (projectName.isEmpty()) {
-            throw new ValidationException("Project name cannot be empty.");
-        }
+        if (projectName.isEmpty()) throw new ValidationException("Project name cannot be empty.");
 
         ObservableList<Priority> currentlySelected = priorityList.getSelectionModel().getSelectedItems();
-        if (currentlySelected.isEmpty()) {
-            throw new ValidationException("Must select at least one priority.");
-        }
+        if (currentlySelected.isEmpty()) throw new ValidationException("Must select at least one priority.");
 
         LOGGER.log(Level.INFO, "Creating project with priorities: {0}", currentlySelected);
 
@@ -91,7 +82,7 @@ public class ProjectDialog extends Entity<Project> {
 
         Project.ProjectInfo projectInfo = new Project.ProjectInfo(
                 essentialInfo,
-                List.copyOf(currentlySelected), // Pass immutable copy
+                List.copyOf(currentlySelected),
                 List.of(), null, List.of(), List.of()
         );
 
@@ -111,22 +102,16 @@ public class ProjectDialog extends Entity<Project> {
         nameField.setPromptText("Enter project name");
         nameField.setPrefWidth(250);
         nameField.textProperty().addListener(
-                (obs, oldVal, newVal) -> validateNotEmpty(newVal, nameField)
+            (obs, oldVal, newVal) -> validateNotEmpty(newVal, nameField)
         );
 
-        // Crucial: Set selection mode
         priorityList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         priorityList.setPrefWidth(250);
         priorityList.setMinHeight(150);
-        // Ensure list view itself can receive focus, might help with selection consistency
         priorityList.setFocusTraversable(true);
 
         Map<Integer, Priority> userPriorities = mainUser.getPriorities();
         if (userPriorities != null && !userPriorities.isEmpty()) {
-            // Sort priorities by ID for consistent order? Optional.
-            // List<Priority> sortedPriorities = new ArrayList<>(userPriorities.values());
-            // sortedPriorities.sort(Comparator.comparingInt(Priority::id));
-            // priorityList.setItems(FXCollections.observableArrayList(sortedPriorities));
             priorityList.setItems(FXCollections.observableArrayList(userPriorities.values()));
             LOGGER.log(Level.INFO, "Populated priority list with {0} items.", userPriorities.size());
         } else {
@@ -139,42 +124,10 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void setupDynamicBehaviors() {
-        // Configure cell factory to handle display AND the custom click logic + direct styling
         priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
-
-        // Add listener to update overall form validation when selection changes
         priorityList.getSelectionModel().getSelectedItems().addListener(
             (ListChangeListener<Priority>) change -> {
-                LOGGER.log(Level.INFO, "Priority selection change detected.");
-
-                // Process the change to see what was added/removed
-                while (change.next()) {
-                    if (change.wasRemoved()) {
-                        List<String> removedDescriptions = change.getRemoved().stream()
-                                .map(Priority::descriptionEs)
-                                .collect(Collectors.toList());
-                        LOGGER.log(Level.INFO, "  - Items removed: {0}", removedDescriptions);
-                    }
-                    if (change.wasAdded()) {
-                        List<String> addedDescriptions = change.getAddedSubList().stream()
-                                .map(Priority::descriptionEs)
-                                .collect(Collectors.toList());
-                        LOGGER.log(Level.INFO, "  - Items added: {0}", addedDescriptions);
-                    }
-                    // You could also check for change.wasPermutated() or change.wasUpdated() if needed
-                }
-                // It's often useful to reset the change pointer if the change object might be processed elsewhere,
-                // though usually not necessary if only iterating once here.
-                // change.reset();
-
-                // Log the *current* full selection state AFTER this change event
-                ObservableList<Priority> currentSelection = priorityList.getSelectionModel().getSelectedItems();
-                List<String> currentSelectionDesc = currentSelection.stream()
-                        .map(Priority::descriptionEs)
-                        .collect(Collectors.toList());
-                LOGGER.log(Level.INFO, "Current full selection: {0}", currentSelectionDesc);
-
-                validatePrioritySelection(); // Trigger validation update
+                validatePrioritySelection();
             }
         );
     }
@@ -182,34 +135,18 @@ public class ProjectDialog extends Entity<Project> {
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
         ListCell<Priority> cell = new ListCell<>() {
 
-            // Constructor-like setup for the cell instance
             {
-                // Define the click handler ONCE for this cell instance.
-                // This captures 'this' cell and the 'listView'.
-                addEventFilter(MouseEvent.MOUSE_PRESSED, event -> { // Use MOUSE_PRESSED for more immediate feel?
-                    if (isEmpty() || getItem() == null) {
-                        return; // Ignore clicks on empty parts
-                    }
-
-                    ListView<Priority> lv = getListView(); // Get the ListView this cell belongs to
+                addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                    if (isEmpty() || getItem() == null) return;
+                    ListView<Priority> lv = getListView();
                     SelectionModel<Priority> sm = lv.getSelectionModel();
                     int index = getIndex();
-
-                    // Toggle selection state in the SelectionModel
                     if (sm.isSelected(index)) {
                         sm.clearSelection(index);
                     } else {
-                        sm.select(index); // Adds to selection due to MULTIPLE mode
+                        sm.select(index);
                     }
-
-                    // IMPORTANT: Consume the event to prevent the default ListView behavior
-                    // which might otherwise clear other selections on a simple click.
                     event.consume();
-
-                    // We don't need to manually update style here because the selection model change
-                    // *should* trigger updateItem via the listener we added. If flicker persists,
-                    // we might re-add direct styling here, but let's try relying on updateItem first.
-                    // applyCellStyle(this, sm.isSelected(index)); // Potential immediate update if needed
                 });
             }
 
@@ -220,14 +157,11 @@ public class ProjectDialog extends Entity<Project> {
                 if (empty || priority == null) {
                     setText(null);
                     setGraphic(null);
-                    // Reset styles when cell is reused or becomes empty
-                    applyCellStyle(this, false); // Explicitly apply unselected style
+                    applyCellStyle(this, false);
                     pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
                 } else {
                     setText(priority.descriptionEs());
                     setGraphic(null);
-
-                    // Apply styles based *only* on the current selection model state
                     boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
                     applyCellStyle(this, isSelected);
                     pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
@@ -238,17 +172,13 @@ public class ProjectDialog extends Entity<Project> {
         return cell;
     }
 
-    // Helper method to centralize style application
     private void applyCellStyle(ListCell<Priority> cell, boolean isSelected) {
         cell.setBackground(isSelected ? SELECTED_BACKGROUND : UNSELECTED_BACKGROUND);
         cell.setTextFill(isSelected ? TEXT_COLOR_SELECTED : TEXT_COLOR_UNSELECTED);
-        // Optionally add a border or other visual cue for debugging
-        // cell.setBorder(isSelected ? new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, new CornerRadii(3), BorderWidths.DEFAULT)) : Border.EMPTY);
     }
 
     private void validatePrioritySelection() {
         boolean isValid = !priorityList.getSelectionModel().getSelectedItems().isEmpty();
-        // Using null removes any previously set inline style
         priorityList.setStyle(isValid ? null : "-fx-border-color: red; -fx-border-width: 1px;");
         validateForm();
     }
@@ -262,7 +192,6 @@ public class ProjectDialog extends Entity<Project> {
         boolean nameIsValid = nameField.getText() != null && !nameField.getText().trim().isEmpty();
         boolean priorityIsValid = !priorityList.getSelectionModel().getSelectedItems().isEmpty();
         boolean formIsValid = nameIsValid && priorityIsValid;
-        // Ensure submitButton is initialized before calling this
         submitButton.setDisable(!formIsValid);
     }
 }

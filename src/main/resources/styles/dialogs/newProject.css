@@ -1,24 +1,13 @@
-/* Example: application.css */
-
-/* Style all ListCells when they are selected */
-.list-cell:selected {
-    -fx-background-color: #007bff; /* A blue background */
-    -fx-text-fill: white;          /* White text for contrast */
-}
-
-/* Style ListCells in general (optional) */
 .list-cell {
     -fx-padding: 5px;
 }
 
-/* Style ListViews with a specific border */
-.list-view {
-    -fx-border-color: #cccccc;
-    -fx-border-width: 1px;
+.list-cell:selected {
+    -fx-background-color: #007bff;
+    -fx-text-fill: white;
 }
 
-/* Style for error states (can be applied via setStyle or StyleClass) */
 .error-border {
-    -fx-border-color: #ff4444; /* Red border */
+    -fx-border-color: #ff4444;
     -fx-border-width: 1px;
 }
