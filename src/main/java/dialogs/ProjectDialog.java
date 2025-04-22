@@ -6,7 +6,7 @@ import home.models.projects.Project;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.css.PseudoClass; // Import PseudoClass
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 public class ProjectDialog extends Entity<Project> {
@@ -40,16 +41,14 @@ public class ProjectDialog extends Entity<Project> {
             )
     );
 
-    // --- Styling Definitions ---
-    // Use distinct colors for clarity during debugging/testing
-    private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8); // Cornflower Blue with some transparency
-    private static final Color UNSELECTED_COLOR = Color.TRANSPARENT; // Fully transparent for unselected
+    private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
+    private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
     private static final Color TEXT_COLOR_SELECTED = Color.WHITE;
     private static final Color TEXT_COLOR_UNSELECTED = Color.BLACK;
 
     // Define Backgrounds - Use slight CornerRadii for better visuals
     private static final Background SELECTED_BACKGROUND = new Background(new BackgroundFill(SELECTED_COLOR, new CornerRadii(3), Insets.EMPTY));
-    private static final Background UNSELECTED_BACKGROUND = Background.EMPTY; // Use predefined EMPTY background for transparency
+    private static final Background UNSELECTED_BACKGROUND = Background.EMPTY;
 
     // Custom PseudoClass to potentially help JavaFX track state if needed, although direct styling is primary here
     private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("custom-selected");
@@ -58,7 +57,6 @@ public class ProjectDialog extends Entity<Project> {
         super("New Project", mainUser);
         if (mainUser == null) {
             LOGGER.log(Level.SEVERE, "MainUser is null in ProjectDialog constructor!");
-            // Handle this error appropriately, maybe throw exception or show error dialog
             throw new IllegalArgumentException("MainUser cannot be null.");
         }
         initializeForm();
@@ -123,7 +121,6 @@ public class ProjectDialog extends Entity<Project> {
         // Ensure list view itself can receive focus, might help with selection consistency
         priorityList.setFocusTraversable(true);
 
-
         Map<Integer, Priority> userPriorities = mainUser.getPriorities();
         if (userPriorities != null && !userPriorities.isEmpty()) {
             // Sort priorities by ID for consistent order? Optional.
@@ -147,9 +144,38 @@ public class ProjectDialog extends Entity<Project> {
 
         // Add listener to update overall form validation when selection changes
         priorityList.getSelectionModel().getSelectedItems().addListener(
-                (ListChangeListener<Priority>) change -> {
-                    validatePrioritySelection(); // Trigger validation update
+            (ListChangeListener<Priority>) change -> {
+                LOGGER.log(Level.INFO, "Priority selection change detected.");
+
+                // Process the change to see what was added/removed
+                while (change.next()) {
+                    if (change.wasRemoved()) {
+                        List<String> removedDescriptions = change.getRemoved().stream()
+                                .map(Priority::descriptionEs)
+                                .collect(Collectors.toList());
+                        LOGGER.log(Level.INFO, "  - Items removed: {0}", removedDescriptions);
+                    }
+                    if (change.wasAdded()) {
+                        List<String> addedDescriptions = change.getAddedSubList().stream()
+                                .map(Priority::descriptionEs)
+                                .collect(Collectors.toList());
+                        LOGGER.log(Level.INFO, "  - Items added: {0}", addedDescriptions);
+                    }
+                    // You could also check for change.wasPermutated() or change.wasUpdated() if needed
                 }
+                // It's often useful to reset the change pointer if the change object might be processed elsewhere,
+                // though usually not necessary if only iterating once here.
+                // change.reset();
+
+                // Log the *current* full selection state AFTER this change event
+                ObservableList<Priority> currentSelection = priorityList.getSelectionModel().getSelectedItems();
+                List<String> currentSelectionDesc = currentSelection.stream()
+                        .map(Priority::descriptionEs)
+                        .collect(Collectors.toList());
+                LOGGER.log(Level.INFO, "Current full selection: {0}", currentSelectionDesc);
+
+                validatePrioritySelection(); // Trigger validation update
+            }
         );
     }
 
@@ -234,9 +260,7 @@ public class ProjectDialog extends Entity<Project> {
 
     private void validateForm() {
         boolean nameIsValid = nameField.getText() != null && !nameField.getText().trim().isEmpty();
-        // Check selection model directly
         boolean priorityIsValid = !priorityList.getSelectionModel().getSelectedItems().isEmpty();
-
         boolean formIsValid = nameIsValid && priorityIsValid;
         // Ensure submitButton is initialized before calling this
         submitButton.setDisable(!formIsValid);
