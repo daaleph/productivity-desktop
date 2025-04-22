@@ -15,8 +15,7 @@ import home.records.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import records.ApiRequest;
-import records.ApiResponse;
+import records.*;
 import services.ApiClient;
 import services.ApiException;
 import services.JsonApiClient;
