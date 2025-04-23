@@ -10,12 +10,49 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+import static data.Abbreviations.getAbbreviation;
 
 public final class JsonApiClient implements ApiClient {
+
+    private final String EMAIL = getAbbreviation("email");
     private static final String BASE_URL = "http://localhost:4000/api";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    @Override
+    public <T> ApiRequest<T> buildUserApiRequest(Class<T> responseType, String email, String... pathSegments) {
+        String path = "/" + String.join("/", pathSegments);
+        return new ApiRequest<T>(
+                path,
+                ApiClient.HttpMethod.GET,
+                Map.of(EMAIL, email),
+                null,
+                responseType
+        );
+    }
+
+     @Override
+     public <T> T executeApiRequest(ApiRequest<T> request) throws InterruptedException {
+         try {
+             ApiResponse<T> response = this.execute(request).get();
+             if (!response.isSuccess()) {
+                 throw new ApiException(
+                         response.statusCode(),
+                         request.path(),
+                         "API request failed with status: " + response.statusCode()
+                 );
+             }
+             return response.body();
+         } catch (ExecutionException e) {
+             Throwable cause = e.getCause();
+             if (cause instanceof ApiException) throw (ApiException) cause;
+             throw new ApiException("Failed to execute API request: ", e);
+         }
+     }
 
     @Override
     public <T> CompletableFuture<ApiResponse<T>> execute(ApiRequest<T> request) {
