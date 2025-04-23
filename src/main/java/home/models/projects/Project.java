@@ -1,7 +1,7 @@
 package home.models.projects;
 
 import home.records.*;
-import records.Priority;
+import home.records.Priority;
 import records.Triplet;
 import records.Tuple;
 

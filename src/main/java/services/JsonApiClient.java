@@ -58,11 +58,14 @@ public final class JsonApiClient implements ApiClient {
         return URI.create(urlBuilder.toString());
     }
 
-    private <T> ApiResponse<T> processResponse(HttpResponse<String> response, Class<T> type) throws JsonProcessingException {
-        return new ApiResponse<>(
-                response.statusCode(),
-                MAPPER.readValue(response.body(), type),
-                response.headers().map()
+    private <T> ApiResponse<T> processResponse(
+            HttpResponse<String> response,
+            Class<T> type
+    ) throws JsonProcessingException {
+        return new ApiResponse<T>(
+            response.statusCode(),
+            MAPPER.readValue(response.body(), type),
+            response.headers().map()
         );
     }
 }

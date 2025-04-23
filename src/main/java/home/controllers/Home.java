@@ -8,7 +8,7 @@ import java.util.Comparator;
 import javafx.event.ActionEvent;
 
 import dialogs.ProjectDialog;
-import records.Priority;
+import home.records.Priority;
 
 import home.models.MainUser;
 import home.models.branchs.Branch;
