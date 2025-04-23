@@ -1,5 +1,6 @@
 package home.models.projects;
 
+import enumerations.Languages;
 import home.records.*;
 
 import home.Entity;
@@ -26,7 +27,7 @@ import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import records.Priority;
+import home.records.Priority;
 
 import static data.Abbreviations.getAbbreviation;
 
@@ -51,6 +52,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
 
     // Configuration class for this subclass
     public static class Config {
+        private final Languages language;
         private final String mainEmail;
         private final List<String> emails;
         private final List<Integer> organizations;
@@ -58,12 +60,14 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
 
         public Config(
                 String mainEmail,
+                Languages language,
                 List<String> emails,
                 List<Integer> organizations,
                 List<Integer> branches
         ) {
             this.emails = new ArrayList<>(emails);
             if (!this.emails.contains(mainEmail)) this.emails.add(mainEmail);
+            this.language = language;
             this.branches = branches;
             this.mainEmail = mainEmail;
             this.organizations = organizations;
@@ -127,7 +131,6 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
             return;
         }
 
-        // Existing filtering logic remains unchanged
         if (filterEntities.contains(Entities.EMAILS)) {
             System.out.println("Filtering by emails: " + config.emails);
         }

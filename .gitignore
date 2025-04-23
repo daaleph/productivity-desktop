@@ -1,4 +1,5 @@
 src/main/java/data/Abbreviations.java
+src/main/java/home/records/secret/
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar

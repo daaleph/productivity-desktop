@@ -1,5 +1,9 @@
 package home.models;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import enumerations.Languages;
+
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -13,8 +17,7 @@ import home.models.organizations.UserOrganization;
 import home.models.projects.*;
 import home.records.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import home.records.secret.PriorityJson;
 import records.*;
 import services.ApiClient;
 import services.ApiException;
@@ -24,8 +27,7 @@ import static data.Abbreviations.getAbbreviation;
 
 public class MainUser {
     private static MainUser instance;
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final ApiClient apiClient = new JsonApiClient();
+    private final JsonApiClient apiClient = new JsonApiClient();
 
     private final String ID = getAbbreviation("id");
     private final String USER = getAbbreviation("user");
@@ -34,8 +36,10 @@ public class MainUser {
     private final String BRANCHES = getAbbreviation("branches");
     private final String TABLE = getAbbreviation("table");
     private final String WEIGHT = getAbbreviation("weight");
+    private final String LANGUAGE = getAbbreviation("preferredLanguage");
 
     protected int age;
+    protected Languages language;
     protected String completeName, preferredName, email;
     protected Map<Integer, UserBranch> branches = new HashMap<>();
     protected Map<Integer, Priority> priorities = new HashMap<>();
@@ -102,16 +106,19 @@ public class MainUser {
     private void fetchPersonalInfo() {
         try {
             ApiRequest<User> request = buildUserApiRequest(User.class, USER);
-
             User userInfo = executeApiRequest(request);
             this.completeName = userInfo.completeName();
             this.preferredName = userInfo.preferredName();
+            this.language = userInfo.language();
             this.age = userInfo.age();
             this.email = userInfo.email();
             this.priorities = userInfo.priorities().stream()
                     .collect(Collectors.toMap(
-                            Priority::id,
-                            p -> new Priority(new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()))
+                        PriorityJson::id,
+                        p -> new Priority(
+                            new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()),
+                            this.language
+                        )
                     ));
         } catch (InterruptedException | ExecutionException e) {
             throw new ApiException("Failed to fetch personal info", e);
@@ -229,11 +236,11 @@ public class MainUser {
         if (prioritiesNode.isArray()) {
             if (isConvertibleToIntegerList) {
                 prioritiesNode.forEach(priorityNode -> {
-                    priorities.add(Priority.fromInt(priorityNode));
+                    priorities.add(Priority.fromInt(priorityNode, this.language));
                 });
             } else {
                 prioritiesNode.forEach(priorityNode -> {
-                    priorities.add(Priority.fromJson(priorityNode));
+                    priorities.add(Priority.fromJson(priorityNode, this.language));
                 });
             }
         }
@@ -320,9 +327,7 @@ public class MainUser {
 
     public boolean isConvertibleToIntegerList(JsonNode arrayNode) {
         for (JsonNode element : arrayNode) {
-            if (!element.isInt() && !element.isLong() && !element.canConvertToInt()) {
-                return false;
-            }
+            if (!element.isInt() && !element.isLong() && !element.canConvertToInt()) return false;
         }
         return true;
     }
@@ -340,7 +345,7 @@ public class MainUser {
 
     private <T> ApiRequest<T> buildUserApiRequest(Class<T> responseType, String... pathSegments) {
         String path = "/" + String.join("/", pathSegments);
-        return new ApiRequest<>(
+        return new ApiRequest<T>(
                 path,
                 ApiClient.HttpMethod.GET,
                 Map.of(EMAIL, this.email),
@@ -370,6 +375,7 @@ public class MainUser {
     private ProjectsFetcher.Config projectsFetcher() {
         return new ProjectsFetcher.Config(
                 this.email,
+                this.language,
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>()

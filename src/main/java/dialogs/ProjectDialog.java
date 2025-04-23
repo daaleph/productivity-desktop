@@ -14,9 +14,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import records.Priority;
-import records.Tuple;
+import home.records.Priority;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -31,14 +31,10 @@ public class ProjectDialog extends Entity<Project> {
 
     private final TextField nameField = new TextField();
     private final ListView<Priority> priorityList = new ListView<>();
-    private final ComboBox<Tuple<Integer, String>> projectType = new ComboBox<>(
-        FXCollections.observableArrayList(
-            List.of(
-                new Tuple<>(1, "Personal"),
-                new Tuple<>(2, "Organizational")
-            )
-        )
-    );
+    private final ToggleGroup projectTypeGroup = new ToggleGroup();
+    private final RadioButton personalRadio = new RadioButton("Personal");
+    private final RadioButton organizationalRadio = new RadioButton("Organizational");
+    private final ListView<Project> parentProjects = new ListView<>();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -48,8 +44,6 @@ public class ProjectDialog extends Entity<Project> {
             new BackgroundFill(SELECTED_COLOR, new CornerRadii(3), Insets.EMPTY);
     private static final Background SELECTED_BACKGROUND = new Background(SELECTED_BACKGROUND_FILL);
     private static final Background UNSELECTED_BACKGROUND = Background.EMPTY;
-
-    // Custom PseudoClass to potentially help JavaFX track state if needed, although direct styling is primary here
     private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("custom-selected");
 
     public ProjectDialog(MainUser mainUser) {
@@ -76,14 +70,10 @@ public class ProjectDialog extends Entity<Project> {
 
         LOGGER.log(Level.INFO, "Creating project with priorities: {0}", currentlySelected);
 
-        EssentialInfo essentialInfo = new EssentialInfo(
-                projectName, 0, false, ZonedDateTime.now()
-        );
+        EssentialInfo essentialInfo = new EssentialInfo(projectName, 0, false, ZonedDateTime.now());
 
         Project.ProjectInfo projectInfo = new Project.ProjectInfo(
-                essentialInfo,
-                List.copyOf(currentlySelected),
-                List.of(), null, List.of(), List.of()
+                essentialInfo, List.copyOf(currentlySelected), List.of(), null, List.of(), List.of()
         );
 
         Project project = new Project(UUID.randomUUID());
@@ -109,7 +99,6 @@ public class ProjectDialog extends Entity<Project> {
         priorityList.setPrefWidth(250);
         priorityList.setMinHeight(150);
         priorityList.setFocusTraversable(true);
-
         Map<Integer, Priority> userPriorities = mainUser.getPriorities();
         if (userPriorities != null && !userPriorities.isEmpty()) {
             priorityList.setItems(FXCollections.observableArrayList(userPriorities.values()));
@@ -119,8 +108,29 @@ public class ProjectDialog extends Entity<Project> {
             LOGGER.log(Level.WARNING, "No priorities found for user.");
         }
 
+        personalRadio.setToggleGroup(projectTypeGroup);
+        organizationalRadio.setToggleGroup(projectTypeGroup);
+        personalRadio.setSelected(true);
+        HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
+        typeBox.setPadding(new Insets(5));
+
+        parentProjects.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        parentProjects.setPrefWidth(250);
+        parentProjects.setMinHeight(150);
+        parentProjects.setFocusTraversable(true);
+        Map<UUID, Project> userParentProjects = mainUser.getProjects();
+        if (userParentProjects != null && !userParentProjects.isEmpty()) {
+            parentProjects.setItems(FXCollections.observableArrayList(userParentProjects.values()));
+            LOGGER.log(Level.INFO, "Populated parent projects list to select with {0} items.", userParentProjects.size());
+        } else {
+            parentProjects.setPlaceholder(new Label("No priorities available."));
+            LOGGER.log(Level.WARNING, "No priorities found for user.");
+        }
+
         addFormRow("Project Name:", nameField, 0);
-        addFormRow("Priority (Click to select/deselect):", priorityList, 1);
+        addFormRow("Project Type:", typeBox, 1);
+        addFormRow("Priority (Click to select/deselect):", priorityList, 2);
+        addFormRow("Parent Projects (Click to select/deselect):", parentProjects, 3);
     }
 
     private void setupDynamicBehaviors() {
@@ -130,6 +140,7 @@ public class ProjectDialog extends Entity<Project> {
                 validatePrioritySelection();
             }
         );
+        parentProjects.setCellFactory(this::createProjectCellWithManualStylingAndClick);
     }
 
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
@@ -160,7 +171,7 @@ public class ProjectDialog extends Entity<Project> {
                     applyCellStyle(this, false);
                     pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
                 } else {
-                    setText(priority.descriptionEs());
+                    setText(priority.getName());
                     setGraphic(null);
                     boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
                     applyCellStyle(this, isSelected);
@@ -172,7 +183,47 @@ public class ProjectDialog extends Entity<Project> {
         return cell;
     }
 
-    private void applyCellStyle(ListCell<Priority> cell, boolean isSelected) {
+    private ListCell<Project> createProjectCellWithManualStylingAndClick(ListView<Project> listView) {
+        ListCell<Project> cell = new ListCell<>() {
+
+            {
+                addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                    if (isEmpty() || getItem() == null) return;
+                    ListView<Project> lv = getListView();
+                    SelectionModel<Project> sm = lv.getSelectionModel();
+                    int index = getIndex();
+                    if (sm.isSelected(index)) {
+                        sm.clearSelection(index);
+                    } else {
+                        sm.select(index);
+                    }
+                    event.consume();
+                });
+            }
+
+            @Override
+            protected void updateItem(Project Project, boolean empty) {
+                super.updateItem(Project, empty);
+
+                if (empty || Project == null) {
+                    setText(null);
+                    setGraphic(null);
+                    applyCellStyle(this, false);
+                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
+                } else {
+                    setText(Project.getName());
+                    setGraphic(null);
+                    boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
+                    applyCellStyle(this, isSelected);
+                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+                }
+            }
+        };
+
+        return cell;
+    }
+
+    private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {
         cell.setBackground(isSelected ? SELECTED_BACKGROUND : UNSELECTED_BACKGROUND);
         cell.setTextFill(isSelected ? TEXT_COLOR_SELECTED : TEXT_COLOR_UNSELECTED);
     }
