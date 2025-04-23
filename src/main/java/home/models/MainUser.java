@@ -6,7 +6,6 @@ import enumerations.Languages;
 
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -19,7 +18,6 @@ import home.records.*;
 
 import home.records.secret.PriorityJson;
 import records.*;
-import services.ApiClient;
 import services.ApiException;
 import services.JsonApiClient;
 
@@ -31,12 +29,10 @@ public class MainUser {
 
     private final String ID = getAbbreviation("id");
     private final String USER = getAbbreviation("user");
-    private final String EMAIL = getAbbreviation("email");
     private final String ORG = getAbbreviation("organizations");
     private final String BRANCHES = getAbbreviation("branches");
     private final String TABLE = getAbbreviation("table");
     private final String WEIGHT = getAbbreviation("weight");
-    private final String LANGUAGE = getAbbreviation("preferredLanguage");
 
     protected int age;
     protected Languages language;
@@ -105,8 +101,8 @@ public class MainUser {
 
     private void fetchPersonalInfo() {
         try {
-            ApiRequest<User> request = buildUserApiRequest(User.class, USER);
-            User userInfo = executeApiRequest(request);
+            ApiRequest<User> request = apiClient.buildUserApiRequest(User.class, this.email, USER);
+            User userInfo = apiClient.executeApiRequest(request);
             this.completeName = userInfo.completeName();
             this.preferredName = userInfo.preferredName();
             this.language = userInfo.language();
@@ -120,16 +116,16 @@ public class MainUser {
                             this.language
                         )
                     ));
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             throw new ApiException("Failed to fetch personal info", e);
         }
     }
 
     private void fetchOrganizations() {
         try {
-            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER, ORG);
+            ApiRequest<JsonNode> request = apiClient.buildUserApiRequest(JsonNode.class, this.email, USER, ORG);
 
-            JsonNode rootNode = executeApiRequest(request);
+            JsonNode rootNode = apiClient.executeApiRequest(request);
             Map<Integer, UserOrganization> orgsMap = new HashMap<>();
 
             rootNode.fields().forEachRemaining(orgEntry -> {
@@ -159,16 +155,15 @@ public class MainUser {
             });
 
             this.organizations = orgsMap;
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             throw new ApiException("Failed to fetch organizations", e);
         }
     }
 
     private void fetchBranches() {
         try {
-            ApiRequest<JsonNode> request = buildUserApiRequest(JsonNode.class, USER, BRANCHES);
-
-            JsonNode rootNode = executeApiRequest(request);
+            ApiRequest<JsonNode> request = apiClient.buildUserApiRequest(JsonNode.class, this.email, USER, BRANCHES);
+            JsonNode rootNode = apiClient.executeApiRequest(request);
 
             rootNode.fields().forEachRemaining(entry -> {
                 int branchId = Integer.parseInt(entry.getKey());
@@ -193,7 +188,7 @@ public class MainUser {
                 userBranch.setProjects(projects);
                 branches.put(branchId, userBranch);
             });
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             throw new ApiException("Failed to fetch branches", e);
         }
     }
@@ -341,35 +336,6 @@ public class MainUser {
         ProjectsFetcher fetcher = ProjectsFetcher.getInstance();
         fetcher.fetch(EnumSet.of(type), EnumSet.of(Entities.MAIN_USER));
         resultSetter.accept(resultExtractor.apply(fetcher));
-    }
-
-    private <T> ApiRequest<T> buildUserApiRequest(Class<T> responseType, String... pathSegments) {
-        String path = "/" + String.join("/", pathSegments);
-        return new ApiRequest<T>(
-                path,
-                ApiClient.HttpMethod.GET,
-                Map.of(EMAIL, this.email),
-                null,
-                responseType
-        );
-    }
-
-    private <T> T executeApiRequest(ApiRequest<T> request) throws InterruptedException, ExecutionException {
-        try {
-            ApiResponse<T> response = apiClient.execute(request).get();
-            if (!response.isSuccess()) {
-                throw new ApiException(
-                        response.statusCode(),
-                        request.path(),
-                        "API request failed with status: " + response.statusCode()
-                );
-            }
-            return response.body();
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof ApiException) throw (ApiException) cause;
-            throw new ApiException("Failed to execute API request: ", e);
-        }
     }
 
     private ProjectsFetcher.Config projectsFetcher() {

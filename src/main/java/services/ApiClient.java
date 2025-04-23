@@ -4,6 +4,7 @@ import records.ApiRequest;
 import records.ApiResponse;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public sealed interface ApiClient permits JsonApiClient {
     enum HttpMethod {
@@ -11,4 +12,6 @@ public sealed interface ApiClient permits JsonApiClient {
     }
 
     <T> CompletableFuture<ApiResponse<T>> execute(ApiRequest<T> request);
+    <T> ApiRequest<T> buildUserApiRequest(Class<T> responseType, String email, String... pathSegments);
+    <T> T executeApiRequest(ApiRequest<T> request) throws InterruptedException, ExecutionException;
 }

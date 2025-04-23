@@ -29,18 +29,26 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import home.records.Priority;
 
+import records.ApiRequest;
+import records.ApiResponse;
+import services.ApiException;
+import services.JsonApiClient;
+
 import static data.Abbreviations.getAbbreviation;
 
 public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
-    String core = getAbbreviation("core");
-    String userS = getAbbreviation("user");
-    String emailS = getAbbreviation("email");
-    String projects = getAbbreviation("projects");
-    String favoriteS = getAbbreviation("favorite");
+    private final String CORE = getAbbreviation("core");
+    private final String USER = getAbbreviation("user");
+    private final String EMAIL = getAbbreviation("email");
+    private final String PROJECTS = getAbbreviation("projects");
+    private final String FAVORITE = getAbbreviation("favorite");
+    private final String ORG = getAbbreviation("organizations");
 
     private static Config config;
     private static volatile ProjectsFetcher instance;
+
     private final ObjectMapper mapper = new ObjectMapper();
+    private final JsonApiClient apiClient = new JsonApiClient();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private final Map<String, List<Project>> usersProjects = new ConcurrentHashMap<>();
@@ -155,16 +163,9 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     }
 
     private CompletableFuture<Void> fetchCoresByUser(String email) {
-        String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s",
-                userS, projects, core, emailS, email);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .GET()
-                .build();
-
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> processResponse(response, Enumerations.CORE))
+        ApiRequest<JsonNode> request = apiClient.buildUserApiRequest(JsonNode.class, email, USER, PROJECTS, CORE);
+        return apiClient.execute(request)
+                .thenApply(apiResponse -> processAPIResponse(apiResponse, Enumerations.CORE))
                 .thenAccept(projects -> usersCoreProjects.put(email, safeCastToList(projects, CoreProject.class)))
                 .whenComplete((result, ex) -> {
                     if (ex != null) System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
@@ -173,16 +174,9 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     }
 
     private CompletableFuture<Void> fetchFavoritesByUser(String email) {
-        String apiUrl = String.format("http://localhost:4000/api/%s/%s/%s?%s=%s",
-                userS, projects, favoriteS, emailS, email);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .GET()
-                .build();
-
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> processResponse(response, Enumerations.FAVORITE))
+        ApiRequest<JsonNode> request = apiClient.buildUserApiRequest(JsonNode.class, email, USER, PROJECTS, FAVORITE);
+        return apiClient.execute(request)
+                .thenApply(apiResponse -> processAPIResponse(apiResponse, Enumerations.FAVORITE))
                 .thenAccept(projects -> usersFavoriteProjects.put(email, safeCastToList(projects, Project.class)))
                 .whenComplete((result, ex) -> {
                     if (ex != null) System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
@@ -191,36 +185,27 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     }
 
     private CompletableFuture<Void> fetchAllByUser(String email) {
-        String apiUrl = String.format("http://localhost:4000/api/%s/%s?%s=%s",
-                userS, projects, emailS, email);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .GET()
-                .build();
-
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> processResponse(response, Enumerations.ALL))
-                .thenAccept(projects -> {
-                    usersProjects.put(email, safeCastToList(projects, Project.class));
-                })
+        ApiRequest<JsonNode> request = apiClient.buildUserApiRequest(JsonNode.class, email, USER, PROJECTS);
+        return apiClient.execute(request)
+                .thenApply(apiResponse -> processAPIResponse(apiResponse, Enumerations.ALL))
+                .thenAccept(projects -> usersProjects.put(email, safeCastToList(projects, Project.class)))
                 .whenComplete((result, ex) -> {
                     if (ex != null) System.err.println("Async fetch failed for " + email + ": " + ex.getMessage());
                     pendingFetches.remove(email);
                 });
     }
 
-    private List<? extends CoreProject> processResponse(HttpResponse<String> response, Enumerations type) {
-        if (response.statusCode() != 200) {
-            System.err.println("HTTP error: " + response.statusCode());
+    private List<? extends CoreProject> processAPIResponse(ApiResponse<JsonNode> apiResponse, Enumerations type) {
+        if (apiResponse.statusCode() != 200) {
+            System.err.println("HTTP error: " + apiResponse.statusCode());
             return Collections.emptyList();
         }
         MainUser mainUser = MainUser.getInstance(config.mainEmail);
         Map<Integer, Priority> priorities = mainUser.getPriorities();
         try {
             switch (type) {
-                case Enumerations.CORE -> {
-                    JsonNode projectsArray = mapper.readTree(response.body());
+                case CORE -> {
+                    JsonNode projectsArray = apiResponse.body();
                     List<CoreProject> coreProjects = new ArrayList<>();
                     for (JsonNode projectNode : projectsArray) {
                         CoreProject project = parseCore(projectNode, priorities);
@@ -228,8 +213,8 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
                     }
                     return coreProjects;
                 }
-                case Enumerations.ALL, Enumerations.FAVORITE -> {
-                    JsonNode projectsArray = mapper.readTree(response.body());
+                case ALL, FAVORITE -> {
+                    JsonNode projectsArray = apiResponse.body();
                     List<Project> projects = new ArrayList<>();
                     for (JsonNode projectNode : projectsArray) {
                         Project project = parse(projectNode, priorities);
@@ -237,11 +222,13 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
                     }
                     return projects;
                 }
+                default -> {
+                    return Collections.emptyList();
+                }
             }
         } catch (Exception e) {
-            throw new CompletionException("Failed to parse core projects", e);
+            throw new CompletionException("Failed to parse projects", e);
         }
-        return Collections.emptyList();
     }
 
     private CoreProject parseCore(JsonNode projectNode, Map<Integer, Priority> priorities) {
