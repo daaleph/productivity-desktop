@@ -41,9 +41,9 @@ public final class JsonApiClient implements ApiClient {
              ApiResponse<T> response = this.execute(request).get();
              if (!response.isSuccess()) {
                  throw new ApiException(
-                         response.statusCode(),
-                         request.path(),
-                         "API request failed with status: " + response.statusCode()
+                     response.statusCode(),
+                     request.path(),
+                     "API request failed with status: " + response.statusCode()
                  );
              }
              return response.body();
