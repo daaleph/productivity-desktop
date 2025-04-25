@@ -21,7 +21,7 @@ public class FieldConfigurator {
             @MinLen(1) @IndexOrHigh("2") int @NonNull @NonNegative ... lengths
     ) {
         int[] bounds = parseGregorianTimeCategories(lengths);
-        BoundedPair boundaries = new BoundedPair(bounds[0], bounds[1]);
+        BoundedPair<Integer> boundaries = new BoundedPair<>(bounds[0], bounds[1]);
         return configure(field, prompt, v -> v.matches("\\d+") && validateGregorianTimes(v, boundaries));
     }
 
@@ -32,7 +32,7 @@ public class FieldConfigurator {
             @MinLen(1) @IndexOrHigh("2") int @NonNull @NonNegative ... lengths
     ) {
         int[] bounds = parseLengths(lengths);
-        BoundedPair boundaries = new BoundedPair(bounds[0], bounds[1]);
+        BoundedPair<Integer> boundaries = new BoundedPair<>(bounds[0], bounds[1]);
         return configure(field, prompt, v -> !v.trim().isEmpty() && !v.contains(question.get()) && validateLength(v, boundaries));
     }
 
@@ -66,11 +66,11 @@ public class FieldConfigurator {
         return new int[]{lengths[0], lengths[1]};
     }
 
-    private static boolean validateLength(String value, BoundedPair pair) {
+    private static boolean validateLength(String value, BoundedPair<Integer> pair) {
         return value.length() >= pair.minimum() && value.length() <= pair.maximum();
     }
 
-    private static boolean validateGregorianTimes(String value, BoundedPair pair) {
+    private static boolean validateGregorianTimes(String value, BoundedPair<Integer> pair) {
         return Integer.parseInt(value) >= pair.minimum() && Integer.parseInt(value) <= pair.maximum();
     }
 

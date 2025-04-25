@@ -80,9 +80,6 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     @Override
-    protected void addFormFields() {}
-
-    @Override
     protected Project validateAndCreate() throws ValidationException {
         String projectName = nameField.getText().trim();
         if (projectName.isEmpty()) throw new ValidationException("Project name cannot be empty.");
@@ -105,7 +102,8 @@ public class ProjectDialog extends Entity<Project> {
         grid.add(field, 1, row);
     }
 
-    private void initializeForm() {
+    @Override
+    protected void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
         nameValid.bind(FieldConfigurator.configureForText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
