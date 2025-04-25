@@ -1,6 +1,6 @@
 package dialogs;
 
-import home.models.MainUser;
+import home.MainUser;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;

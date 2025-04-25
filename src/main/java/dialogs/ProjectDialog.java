@@ -1,9 +1,9 @@
 package dialogs;
 
-import home.models.MainUser;
-import home.models.projects.EssentialInfo;
-import home.models.projects.Project;
-import home.records.Priority;
+import home.MainUser;
+import model.projects.EssentialInfo;
+import model.projects.Project;
+import records.Priority;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -11,7 +11,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
-import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -23,30 +22,41 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 
 import java.time.ZonedDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static dialogs.Questions.*;
+
 public class ProjectDialog extends Entity<Project> {
     private static final Logger LOGGER = Logger.getLogger(ProjectDialog.class.getName());
 
     private final BooleanProperty nameValid = new SimpleBooleanProperty(false);
     private final BooleanProperty daysValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty weeksValid = new SimpleBooleanProperty(false);
     private final BooleanProperty monthsValid = new SimpleBooleanProperty(false);
     private final BooleanProperty yearsValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty priorityValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
 
-    private final TextField nameField = new TextField("What's the name of this?");
-    private final TextField completingDays = new TextField("Mow many days?");
-    private final TextField completingMonths = new TextField("Mow many months?");
-    private final TextField completingYears = new TextField("Mow many years?");
+//    private final ObservableList<MsrdGoal> msrdGoals = FXCollections.observableArrayList();
+//    private final ListView<MsrdGoal> msrdGoalsList = new ListView<>(msrdGoals);
+//    private final Button addMsrdGoalButton = new Button("Add MSRD Goal");
+
+    private final TextField nameField = new TextField(PROJECT_NAME.get());
+    private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
+    private final TextField completingWeeks = new TextField(COMPLETING_WEEKS.get());
+    private final TextField completingMonths = new TextField(COMPLETING_MONTHS.get());
+    private final TextField completingYears = new TextField(COMPLETING_YEARS.get());
     private final ToggleGroup projectTypeGroup = new ToggleGroup();
-    private final ListView<Priority> priorityList = new ListView<>();
-    private final ListView<Project> parentProjects = new ListView<>();
     private final RadioButton personalRadio = new RadioButton("Personal");
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
+    private final ListView<Priority> priorityList = new ListView<>();
+    private final ListView<Project> parentProjects = new ListView<>();
+    private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
+    private final CheckBox isFavorite = new CheckBox();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -57,8 +67,6 @@ public class ProjectDialog extends Entity<Project> {
     private static final Background SELECTED_BACKGROUND = new Background(SELECTED_BACKGROUND_FILL);
     private static final Background UNSELECTED_BACKGROUND = Background.EMPTY;
     private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("custom-selected");
-
-    private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1px;";
 
     public ProjectDialog(MainUser mainUser) {
         super("New Project", mainUser);
@@ -99,10 +107,12 @@ public class ProjectDialog extends Entity<Project> {
     private void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
-        nameValid.bind(FieldValidator.configureTextField(nameField, "Enter project name"));
-        daysValid.bind(FieldValidator.configureNumericField(completingDays, "Necessary days"));
-        monthsValid.bind(FieldValidator.configureNumericField(completingMonths, "Necessary months"));
-        yearsValid.bind(FieldValidator.configureNumericField(completingYears, "Necessary years"));
+        nameValid.bind(FieldConfigurator.configureForText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
+        daysValid.bind(FieldConfigurator.configureForGregorianTime(completingDays, "Necessary days", 0, 6));
+        weeksValid.bind(FieldConfigurator.configureForGregorianTime(completingWeeks, "Necessary weeks",0, 3));
+        monthsValid.bind(FieldConfigurator.configureForGregorianTime(completingMonths, "Necessary months",0, 11));
+        yearsValid.bind(FieldConfigurator.configureForGregorianTime(completingYears, "Necessary years",0, 100));
+        descriptionValid.bind(FieldConfigurator.configureForText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
 
         configureListView(
                 priorityList,
@@ -111,6 +121,12 @@ public class ProjectDialog extends Entity<Project> {
                 "Populated priority list with {0} items.",
                 "No priorities found for user."
         );
+        BooleanProperty priorityValid = FieldConfigurator.configureListViewSelection(
+                priorityList
+                //, "Select at least one priority"
+        );
+        priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
+
         configureListView(
                 parentProjects,
                 mainUser.getProjects(),
@@ -129,9 +145,12 @@ public class ProjectDialog extends Entity<Project> {
         addFormRow("Project Type:", typeBox, 1);
         addFormRow("Priority (Click to select/deselect):", priorityList, 2);
         addFormRow("Parent Projects (Click to select/deselect):", parentProjects, 3);
-        addFormRow("Completing days:", completingDays, 4);
+        addFormRow("Completing years:", completingYears, 4);
         addFormRow("Completing months:", completingMonths, 5);
-        addFormRow("Completing years:", completingYears, 6);
+        addFormRow("Completing weeks:", completingWeeks, 6);
+        addFormRow("Completing days:", completingDays, 7);
+        addFormRow("The details!", descriptionField, 8);
+        addFormRow("Will you enjoy it?", isFavorite, 9);
     }
 
     private void setupDynamicBehaviors() {
@@ -139,12 +158,6 @@ public class ProjectDialog extends Entity<Project> {
         priorityList.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Priority>) change -> validateForm()
         );
-        priorityList.getSelectionModel().getSelectedItems().addListener(
-            (ListChangeListener<Priority>) change -> {
-                validatePrioritySelection();
-            }
-        );
-
         parentProjects.setCellFactory(this::createProjectCellWithManualStylingAndClick);
         parentProjects.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Project>) change -> validateForm()
@@ -257,29 +270,12 @@ public class ProjectDialog extends Entity<Project> {
         cell.setTextFill(isSelected ? TEXT_COLOR_SELECTED : TEXT_COLOR_UNSELECTED);
     }
 
-    private void validatePrioritySelection() {
-        boolean isValid = !priorityList.getSelectionModel().getSelectedItems().isEmpty();
-        priorityList.setStyle(isValid ? null : WARNING_STYLE);
-    }
-
-    private boolean isFilled(String value) {
-        return value != null && !value.trim().isEmpty();
-    }
-
-    private boolean isNumber(String value) {
-        return isFilled(value) && value.matches("\\d+");
-    }
-
-//    private boolean areAllNumbers(String... values) {
-//        return values != null && Arrays.stream(values).allMatch(this::isNumber);
-//    }
-
     private void validateForm() {
         boolean formIsValid = nameValid.get() &&
                 daysValid.get() &&
                 monthsValid.get() &&
                 yearsValid.get() &&
-                !priorityList.getSelectionModel().getSelectedItems().isEmpty();
+                priorityValid.get();
 
         submitButton.setDisable(!formIsValid);
     }

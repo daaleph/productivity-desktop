@@ -1,5 +1,8 @@
+import org.checkerframework.gradle.plugin.CheckerFrameworkExtension
+
 plugins {
     application
+    id("org.checkerframework") version "0.6.53"
     id("org.openjfx.javafxplugin") version "0.1.0"
     id("org.beryx.jlink") version "3.1.1"
 }

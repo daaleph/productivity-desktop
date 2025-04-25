@@ -1,4 +1,4 @@
-package home.records;
+package records;
 
 import java.util.List;
 

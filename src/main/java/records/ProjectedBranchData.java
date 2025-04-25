@@ -1,7 +1,6 @@
-package home.records;
+package records;
 
-import home.models.projects.Project;
-import records.Tuple;
+import model.projects.Project;
 
 import java.util.List;
 

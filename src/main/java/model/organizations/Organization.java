@@ -1,7 +1,7 @@
-package home.models.organizations;
+package model.organizations;
 
 import java.util.Map;
-import home.models.branchs.Branch;
+import model.branchs.Branch;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class Organization {

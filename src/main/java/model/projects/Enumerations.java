@@ -1,4 +1,4 @@
-package home.models.projects;
+package model.projects;
 
 public enum Enumerations {
     CORE,

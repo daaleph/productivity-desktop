@@ -1,10 +1,10 @@
-// home.records.User
-package home.records;
+// records.User
+package records;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
 import enumerations.Languages;
-import home.records.secret.PriorityJson;
+import records.secret.PriorityJson;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,17 +1,13 @@
-package home.models.projects;
+package model.projects;
 
 import enumerations.Languages;
-import home.records.*;
 
 import home.Entity;
 import home.HomeFetcher;
-import home.models.Entities;
-import home.models.MainUser;
+import model.Entities;
+import home.MainUser;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 import java.time.ZonedDateTime;
 
@@ -27,11 +23,8 @@ import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import home.records.Priority;
+import records.*;
 
-import records.ApiRequest;
-import records.ApiResponse;
-import services.ApiException;
 import services.JsonApiClient;
 
 import static data.Abbreviations.getAbbreviation;
