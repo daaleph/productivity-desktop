@@ -15,7 +15,7 @@ public class FieldConfigurator {
     private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1;";
     private static final String VALID_STYLE = "-fx-border-color: lime; -fx-border-width: 1;";
 
-    public static BooleanProperty configureNumericField(
+    public static BooleanProperty configureForGregorianTime(
             TextField field,
             String prompt,
             @MinLen(1) @IndexOrHigh("2") int @NonNull @NonNegative ... lengths
@@ -25,7 +25,7 @@ public class FieldConfigurator {
         return configure(field, prompt, v -> v.matches("\\d+") && validateGregorianTimes(v, boundaries));
     }
 
-    public static BooleanProperty configureTextField(
+    public static BooleanProperty configureForText(
             TextField field,
             String prompt,
             Questions question,
@@ -37,16 +37,11 @@ public class FieldConfigurator {
     }
 
     public static BooleanProperty configureListViewSelection(
-            ListView<?> listView,
-            String emptyWarning
+            ListView<?> listView
     ) {
         BooleanProperty isValid = new SimpleBooleanProperty();
-
-        // Initial check (triggers style update)
         isValid.set(!listView.getSelectionModel().isEmpty());
         listView.setStyle(isValid.get() ? VALID_STYLE : WARNING_STYLE);
-
-        // Dynamic updates
         listView.getSelectionModel().getSelectedItems().addListener(
                 (InvalidationListener) change -> {
                     boolean hasSelection = !listView.getSelectionModel().isEmpty();
@@ -54,7 +49,6 @@ public class FieldConfigurator {
                     listView.setStyle(hasSelection ? VALID_STYLE : WARNING_STYLE);
                 }
         );
-
         return isValid;
     }
 

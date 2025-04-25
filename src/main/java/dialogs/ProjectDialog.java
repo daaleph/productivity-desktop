@@ -100,11 +100,11 @@ public class ProjectDialog extends Entity<Project> {
     private void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
-        nameValid.bind(FieldConfigurator.configureTextField(nameField, "Enter project name", PROJECT_NAME, 3, 255));
-        daysValid.bind(FieldConfigurator.configureNumericField(completingDays, "Necessary days", 0, 6));
-        weeksValid.bind(FieldConfigurator.configureNumericField(completingWeeks, "Necessary weeks",0, 3));
-        monthsValid.bind(FieldConfigurator.configureNumericField(completingMonths, "Necessary months",0, 11));
-        yearsValid.bind(FieldConfigurator.configureNumericField(completingYears, "Necessary years",0, 100));
+        nameValid.bind(FieldConfigurator.configureForText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
+        daysValid.bind(FieldConfigurator.configureForGregorianTime(completingDays, "Necessary days", 0, 6));
+        weeksValid.bind(FieldConfigurator.configureForGregorianTime(completingWeeks, "Necessary weeks",0, 3));
+        monthsValid.bind(FieldConfigurator.configureForGregorianTime(completingMonths, "Necessary months",0, 11));
+        yearsValid.bind(FieldConfigurator.configureForGregorianTime(completingYears, "Necessary years",0, 100));
 
         configureListView(
                 priorityList,
@@ -114,8 +114,8 @@ public class ProjectDialog extends Entity<Project> {
                 "No priorities found for user."
         );
         BooleanProperty priorityValid = FieldConfigurator.configureListViewSelection(
-                priorityList,
-                "Select at least one priority"
+                priorityList
+                //, "Select at least one priority"
         );
         priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
 
