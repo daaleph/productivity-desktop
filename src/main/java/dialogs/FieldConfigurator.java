@@ -15,7 +15,7 @@ public class FieldConfigurator {
     private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1;";
     private static final String VALID_STYLE = "-fx-border-color: lime; -fx-border-width: 1;";
 
-    public static BooleanProperty configureForGregorianTime(
+    public static BooleanProperty forGregorianTime(
             TextField field,
             String prompt,
             @MinLen(1) @IndexOrHigh("2") int @NonNull @NonNegative ... lengths
@@ -25,7 +25,7 @@ public class FieldConfigurator {
         return configure(field, prompt, v -> v.matches("\\d+") && validateGregorianTimes(v, boundaries));
     }
 
-    public static BooleanProperty configureForText(
+    public static BooleanProperty forText(
             TextField field,
             String prompt,
             Questions question,
@@ -36,7 +36,7 @@ public class FieldConfigurator {
         return configure(field, prompt, v -> !v.trim().isEmpty() && !v.contains(question.get()) && validateLength(v, boundaries));
     }
 
-    public static BooleanProperty configureListViewSelection(
+    public static BooleanProperty forListViewSelector(
             ListView<?> listView
     ) {
         BooleanProperty isValid = new SimpleBooleanProperty();

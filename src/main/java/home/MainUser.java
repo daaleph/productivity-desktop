@@ -171,6 +171,8 @@ public class MainUser {
             rootNode.fields().forEachRemaining(entry -> {
                 int branchId = Integer.parseInt(entry.getKey());
                 JsonNode branchNode = entry.getValue();
+                System.out.print("FETCHING BRANCHES: ");
+                System.out.println(branchNode);
 
                 String branchName = branchNode.get("name").asText();
                 JsonNode projectsNode = branchNode.get("projects");

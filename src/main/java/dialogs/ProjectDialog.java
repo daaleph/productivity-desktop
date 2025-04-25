@@ -42,9 +42,6 @@ public class ProjectDialog extends Entity<Project> {
     private final BooleanProperty yearsValid = new SimpleBooleanProperty(false);
     private final BooleanProperty priorityValid = new SimpleBooleanProperty(false);
     private final BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
-    private final ObservableList<MeasuredGoal> measuredGoals = FXCollections.observableArrayList();
-    private final ListView<MeasuredGoal> measuredGoalsList = new ListView<>(measuredGoals);
-    private final Button addGoalButton = new Button("Add Measured Goal");
 
     private final TextField nameField = new TextField(PROJECT_NAME.get());
     private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
@@ -56,8 +53,12 @@ public class ProjectDialog extends Entity<Project> {
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
     private final ListView<Priority> priorityList = new ListView<>();
     private final ListView<Project> parentProjects = new ListView<>();
+    private final ListView<MeasuredGoal> measuredGoalsList = new ListView<>();
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
     private final CheckBox isFavorite = new CheckBox();
+    private final Button addGoalButton = new Button("Add Measured Goal");
+
+    private final ObservableList<MeasuredGoal> measuredGoals = FXCollections.observableArrayList();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -106,12 +107,12 @@ public class ProjectDialog extends Entity<Project> {
     protected void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
-        nameValid.bind(FieldConfigurator.configureForText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
-        daysValid.bind(FieldConfigurator.configureForGregorianTime(completingDays, "Necessary days", 0, 6));
-        weeksValid.bind(FieldConfigurator.configureForGregorianTime(completingWeeks, "Necessary weeks",0, 3));
-        monthsValid.bind(FieldConfigurator.configureForGregorianTime(completingMonths, "Necessary months",0, 11));
-        yearsValid.bind(FieldConfigurator.configureForGregorianTime(completingYears, "Necessary years",0, 100));
-        descriptionValid.bind(FieldConfigurator.configureForText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
+        nameValid.bind(FieldConfigurator.forText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
+        daysValid.bind(FieldConfigurator.forGregorianTime(completingDays, "Necessary days", 0, 6));
+        weeksValid.bind(FieldConfigurator.forGregorianTime(completingWeeks, "Necessary weeks",0, 3));
+        monthsValid.bind(FieldConfigurator.forGregorianTime(completingMonths, "Necessary months",0, 11));
+        yearsValid.bind(FieldConfigurator.forGregorianTime(completingYears, "Necessary years",0, 100));
+        descriptionValid.bind(FieldConfigurator.forText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
 
         configureListView(
                 priorityList,
@@ -120,7 +121,7 @@ public class ProjectDialog extends Entity<Project> {
                 "Populated priority list with {0} items.",
                 "No priorities found for user."
         );
-        BooleanProperty priorityValid = FieldConfigurator.configureListViewSelection(
+        BooleanProperty priorityValid = FieldConfigurator.forListViewSelector(
                 priorityList
                 //, "Select at least one priority"
         );
@@ -134,11 +135,13 @@ public class ProjectDialog extends Entity<Project> {
                 "No parent projects found for user."
         );
 
+        measuredGoalsList.setMinHeight(100);
+        measuredGoalsList.setPrefHeight(100);
+
         personalRadio.setToggleGroup(projectTypeGroup);
         organizationalRadio.setToggleGroup(projectTypeGroup);
         personalRadio.setSelected(true);
         HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
-        typeBox.setPadding(new Insets(5));
 
         addFormRow("Project Name:", nameField, 0);
         addFormRow("Project Type:", typeBox, 1);
@@ -150,7 +153,6 @@ public class ProjectDialog extends Entity<Project> {
         addFormRow("Completing days:", completingDays, 7);
         addFormRow("The details!", descriptionField, 8);
         addFormRow("Will you enjoy it?", isFavorite, 9);
-
         addFormRow("Measured Goals:", measuredGoalsList, 10);
         addFormRow("", addGoalButton, 11);
         addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
@@ -168,7 +170,7 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
-        ListCell<Priority> cell = new ListCell<>() {
+        return new ListCell<>() {
 
             {
                 addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
@@ -203,12 +205,10 @@ public class ProjectDialog extends Entity<Project> {
                 }
             }
         };
-
-        return cell;
     }
 
     private ListCell<Project> createProjectCellWithManualStylingAndClick(ListView<Project> listView) {
-        ListCell<Project> cell = new ListCell<>() {
+        return new ListCell<>() {
 
             {
                 addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
@@ -243,8 +243,6 @@ public class ProjectDialog extends Entity<Project> {
                 }
             }
         };
-
-        return cell;
     }
 
     private <T> void configureListView(
@@ -252,12 +250,11 @@ public class ProjectDialog extends Entity<Project> {
             Map<?, T> items,
             String placeholderText,
             String successLogTemplate,
-            String warningLogMessage) {
-
+            String warningLogMessage
+    ) {
         listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        listView.setPrefWidth(250);
-        listView.setMinHeight(150);
-        listView.setFocusTraversable(true);
+        listView.setMaxHeight(100);
+        listView.setPrefWidth(100);
 
         if (items != null && !items.isEmpty()) {
             listView.setItems(FXCollections.observableArrayList(items.values()));
@@ -270,6 +267,8 @@ public class ProjectDialog extends Entity<Project> {
 
     private void showMeasuredGoalDialog() {
         Dialog<MeasuredGoal> dialog = new Dialog<>();
+        GridPane grid = new GridPane();
+        ScrollPane scrollPane = new ScrollPane(grid);
         dialog.setTitle("New Measured Goal");
 
         // Fields
@@ -286,13 +285,12 @@ public class ProjectDialog extends Entity<Project> {
         Button addFailureBtn = new Button("Add Failure");
 
         // Validation
-        BooleanProperty orderValid = FieldConfigurator.configureForGregorianTime(orderField, "Order (0-32767)", 0, 32767);
-        BooleanProperty itemValid = FieldConfigurator.configureForText(itemField, "Item", PROJECT_NAME, 1, 255);
-        BooleanProperty weightValid = FieldConfigurator.configureForGregorianTime(weightField, "Weight", 0, 1000);
+        BooleanProperty orderValid = FieldConfigurator.forGregorianTime(orderField, "Order (0-32767)", 0, 32767);
+        BooleanProperty itemValid = FieldConfigurator.forText(itemField, "Item", PROJECT_NAME, 1, 255);
+        BooleanProperty weightValid = FieldConfigurator.forGregorianTime(weightField, "Weight", 0, 1000);
         // Add similar validation for real/discrete fields...
 
         // Layout
-        GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
         grid.addRow(0, new Label("Order*:"), orderField);
         grid.addRow(1, new Label("Item*:"), itemField);
@@ -308,7 +306,7 @@ public class ProjectDialog extends Entity<Project> {
         // Failure addition handler
         addFailureBtn.setOnAction(e -> showFailureDialog(failures));
 
-        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().setContent(scrollPane);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         dialog.setResultConverter(btn -> {
@@ -325,7 +323,6 @@ public class ProjectDialog extends Entity<Project> {
             }
             return null;
         });
-
         dialog.showAndWait().ifPresent(measuredGoals::add);
     }
 
@@ -338,9 +335,9 @@ public class ProjectDialog extends Entity<Project> {
         TextField descriptionField = new TextField();
 
         // Validation
-        BooleanProperty reasonValid = FieldConfigurator.configureForText(reasonField, "Reason", PROJECT_NAME, 1, 2000);
-        BooleanProperty solutionValid = FieldConfigurator.configureForText(solutionField, "Solution", PROJECT_NAME, 1, 2000);
-        BooleanProperty descValid = FieldConfigurator.configureForText(descriptionField, "Description", PROJECT_NAME, 1, 4000);
+        BooleanProperty reasonValid = FieldConfigurator.forText(reasonField, "Reason", PROJECT_NAME, 1, 2000);
+        BooleanProperty solutionValid = FieldConfigurator.forText(solutionField, "Solution", PROJECT_NAME, 1, 2000);
+        BooleanProperty descValid = FieldConfigurator.forText(descriptionField, "Description", PROJECT_NAME, 1, 4000);
 
         GridPane grid = new GridPane();
         grid.setHgap(10); grid.setVgap(10);
