@@ -4,7 +4,7 @@ package records;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
 import enumerations.Languages;
-import records.secret.PriorityJson;
+import records.secrets.PriorityJson;
 
 import java.util.ArrayList;
 import java.util.List;

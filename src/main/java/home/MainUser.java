@@ -16,8 +16,8 @@ import model.branchs.UserBranch;
 import model.organizations.UserOrganization;
 import model.projects.*;
 
-import records.secret.PriorityJson;
 import records.*;
+import records.secrets.*;
 import services.ApiException;
 import services.JsonApiClient;
 
@@ -108,14 +108,17 @@ public class MainUser {
             this.language = userInfo.language();
             this.age = userInfo.age();
             this.email = userInfo.email();
-            this.priorities = userInfo.priorities().stream()
+            this.priorities = userInfo
+                    .priorities()
+                    .stream()
                     .collect(Collectors.toMap(
-                        PriorityJson::id,
-                        p -> new Priority(
-                            new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()),
-                            this.language
-                        )
+                            PriorityJson::id,
+                            p -> new Priority(
+                                    new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()),
+                                    this.language
+                            )
                     ));
+
         } catch (InterruptedException e) {
             throw new ApiException("Failed to fetch personal info", e);
         }
