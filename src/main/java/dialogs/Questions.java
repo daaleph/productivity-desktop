@@ -5,7 +5,8 @@ public enum Questions {
     COMPLETING_DAYS("Mow many days?"),
     COMPLETING_WEEKS("Mow many weeks?"),
     COMPLETING_MONTHS("Mow many months?"),
-    COMPLETING_YEARS("How many years?");
+    COMPLETING_YEARS("How many years?"),
+    PROJECT_DESCRIPTION("Which are the details of this?");
 
     private final String question;
 

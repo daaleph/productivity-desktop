@@ -33,7 +33,7 @@ public class FieldConfigurator {
     ) {
         int[] bounds = parseLengths(lengths);
         BoundedPair boundaries = new BoundedPair(bounds[0], bounds[1]);
-        return configure(field, prompt, v -> !v.trim().isEmpty() && !v.equals(question.get()) && validateLength(v, boundaries));
+        return configure(field, prompt, v -> !v.trim().isEmpty() && !v.contains(question.get()) && validateLength(v, boundaries));
     }
 
     public static BooleanProperty configureListViewSelection(

@@ -1,6 +1,6 @@
 package home;
 
-import home.models.Identifier;
+import model.Identifier;
 
 import java.util.List;
 import java.util.Optional;

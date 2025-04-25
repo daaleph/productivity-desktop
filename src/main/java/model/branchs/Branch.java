@@ -1,9 +1,9 @@
-package home.models.branchs;
+package model.branchs;
 
 import java.util.List;
 
-import home.models.projects.Project;
-import home.records.ProjectedBranchData;
+import model.projects.Project;
+import records.ProjectedBranchData;
 
 public class Branch {
     protected final Integer id;

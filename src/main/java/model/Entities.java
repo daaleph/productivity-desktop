@@ -1,4 +1,4 @@
-package home.models;
+package model;
 
 public enum Entities {
     MAIN_USER,

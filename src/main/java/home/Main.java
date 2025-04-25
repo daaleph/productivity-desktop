@@ -1,7 +1,6 @@
 // java/home/Main.java
 package home;
 
-import home.models.MainUser;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.Parent;

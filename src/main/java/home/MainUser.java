@@ -1,4 +1,4 @@
-package home.models;
+package home;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -10,13 +10,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import home.models.branchs.Branch;
-import home.models.branchs.UserBranch;
-import home.models.organizations.UserOrganization;
-import home.models.projects.*;
-import home.records.*;
+import model.Entities;
+import model.branchs.Branch;
+import model.branchs.UserBranch;
+import model.organizations.UserOrganization;
+import model.projects.*;
 
-import home.records.secret.PriorityJson;
+import records.secret.PriorityJson;
 import records.*;
 import services.ApiException;
 import services.JsonApiClient;

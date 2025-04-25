@@ -1,8 +1,7 @@
-package home.records;
+package records;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import enumerations.Languages;
-import records.Triplet;
 
 import static data.Abbreviations.getAbbreviation;
 

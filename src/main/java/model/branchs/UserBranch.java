@@ -1,11 +1,11 @@
-package home.models.branchs;
+package model.branchs;
 
 import java.util.List;
 
-import home.models.projects.Project;
+import model.projects.Project;
 
 import records.Tuple;
-import home.records.ProjectedBranchData;
+import records.ProjectedBranchData;
 
 
 public class UserBranch extends ProjectedBranch {

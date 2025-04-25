@@ -1,9 +1,9 @@
 package dialogs;
 
-import home.models.MainUser;
-import home.models.projects.EssentialInfo;
-import home.models.projects.Project;
-import home.records.Priority;
+import home.MainUser;
+import model.projects.EssentialInfo;
+import model.projects.Project;
+import records.Priority;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,6 +39,11 @@ public class ProjectDialog extends Entity<Project> {
     private final BooleanProperty monthsValid = new SimpleBooleanProperty(false);
     private final BooleanProperty yearsValid = new SimpleBooleanProperty(false);
     private final BooleanProperty priorityValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
+
+//    private final ObservableList<MsrdGoal> msrdGoals = FXCollections.observableArrayList();
+//    private final ListView<MsrdGoal> msrdGoalsList = new ListView<>(msrdGoals);
+//    private final Button addMsrdGoalButton = new Button("Add MSRD Goal");
 
     private final TextField nameField = new TextField(PROJECT_NAME.get());
     private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
@@ -46,10 +51,12 @@ public class ProjectDialog extends Entity<Project> {
     private final TextField completingMonths = new TextField(COMPLETING_MONTHS.get());
     private final TextField completingYears = new TextField(COMPLETING_YEARS.get());
     private final ToggleGroup projectTypeGroup = new ToggleGroup();
-    private final ListView<Priority> priorityList = new ListView<>();
-    private final ListView<Project> parentProjects = new ListView<>();
     private final RadioButton personalRadio = new RadioButton("Personal");
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
+    private final ListView<Priority> priorityList = new ListView<>();
+    private final ListView<Project> parentProjects = new ListView<>();
+    private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
+    private final CheckBox isFavorite = new CheckBox();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -105,6 +112,7 @@ public class ProjectDialog extends Entity<Project> {
         weeksValid.bind(FieldConfigurator.configureForGregorianTime(completingWeeks, "Necessary weeks",0, 3));
         monthsValid.bind(FieldConfigurator.configureForGregorianTime(completingMonths, "Necessary months",0, 11));
         yearsValid.bind(FieldConfigurator.configureForGregorianTime(completingYears, "Necessary years",0, 100));
+        descriptionValid.bind(FieldConfigurator.configureForText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
 
         configureListView(
                 priorityList,
@@ -141,6 +149,8 @@ public class ProjectDialog extends Entity<Project> {
         addFormRow("Completing months:", completingMonths, 5);
         addFormRow("Completing weeks:", completingWeeks, 6);
         addFormRow("Completing days:", completingDays, 7);
+        addFormRow("The details!", descriptionField, 8);
+        addFormRow("Will you enjoy it?", isFavorite, 9);
     }
 
     private void setupDynamicBehaviors() {

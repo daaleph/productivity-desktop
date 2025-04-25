@@ -1,10 +1,10 @@
-package home.models.organizations;
+package model.organizations;
 
 import java.util.Map;
 import java.util.List;
-import home.models.MainUser;
+import home.MainUser;
 import java.util.HashMap;
-import home.models.branchs.Branch;
+import model.branchs.Branch;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

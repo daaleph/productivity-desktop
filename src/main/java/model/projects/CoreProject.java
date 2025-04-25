@@ -1,9 +1,6 @@
-package home.models.projects;
+package model.projects;
 
-import home.records.*;
-import home.records.Priority;
-import records.Triplet;
-import records.Tuple;
+import records.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;

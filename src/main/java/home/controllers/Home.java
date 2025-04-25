@@ -8,14 +8,14 @@ import java.util.Comparator;
 import javafx.event.ActionEvent;
 
 import dialogs.ProjectDialog;
-import home.records.Priority;
+import records.Priority;
 
-import home.models.MainUser;
-import home.models.branchs.Branch;
-import home.models.projects.Project;
-import home.models.branchs.UserBranch;
-import home.models.projects.CoreProject;
-import home.models.organizations.UserOrganization;
+import home.MainUser;
+import model.branchs.Branch;
+import model.projects.Project;
+import model.branchs.UserBranch;
+import model.projects.CoreProject;
+import model.organizations.UserOrganization;
 
 import javafx.animation.TranslateTransition;
 import javafx.collections.FXCollections;
@@ -40,7 +40,7 @@ public class Home {
     @FXML private ListView<CoreProject> userCoreProjects;
     @FXML private FlowPane userProjects, userFavoriteProjects;
     @FXML private Map<Integer, UserOrganization> userOrganizations;
-    @FXML private Button minimizeButton, maximizeButton, closeButton, newProject;
+    @FXML private Button minimizeButton, maximizeButton, closeButton;
 
     public VBox leftColumn,
             profileSubContainer,
@@ -147,10 +147,10 @@ public class Home {
     }
 
     private void setupResponsiveListener() {
-        stage.getScene().widthProperty().addListener((obs, oldVal, newVal) -> {
-            adjustLayout();
+        stage.getScene().widthProperty().addListener(
+                (obs, oldVal, newVal) -> {
+                    adjustLayout();
         });
-        adjustLayout();
     }
 
     private void adjustLayout() {
