@@ -199,6 +199,12 @@ public class MainUser {
     }
 
     private Project parseProject(JsonNode projectNode, String projectUuidStr) {
+        System.out.print("PROJECT NODE: ");
+        System.out.println(projectNode);
+
+        System.out.print("PROJECT UUID STR: ");
+        System.out.println(projectUuidStr);
+
         UUID projectUuid = UUID.fromString(projectUuidStr);
 
         List<Priority> priorities = parsePriorities(projectNode.get("priorities"));
@@ -285,7 +291,7 @@ public class MainUser {
     }
 
     private List<Tuple<UUID, Triplet<Integer, String, Double>>> parseUnderlyingCategories(JsonNode categoriesNode) {
-        if (categoriesNode == null || !categoriesNode.has("priorities")) return new ArrayList<>();
+        if (categoriesNode == null || categoriesNode.get("uuid").isNull() || !categoriesNode.has("uuid") || !categoriesNode.has("priorities")) return new ArrayList<>();
 
         List<Tuple<UUID, Triplet<Integer, String, Double>>> categories = new ArrayList<>();
         UUID categoryUuid = UUID.fromString(categoriesNode.get("uuid").asText());

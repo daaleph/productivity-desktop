@@ -15,7 +15,7 @@ public class FieldConfigurator {
     private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1;";
     private static final String VALID_STYLE = "-fx-border-color: lime; -fx-border-width: 1;";
 
-    public static BooleanProperty forGregorianTime(
+    public static BooleanProperty forGregorianTimeCategories(
             TextField field,
             String prompt,
             @MinLen(1) @IndexOrHigh("2") int @NonNull @NonNegative ... lengths

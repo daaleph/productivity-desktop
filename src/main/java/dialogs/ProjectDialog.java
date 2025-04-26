@@ -108,10 +108,10 @@ public class ProjectDialog extends Entity<Project> {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
         nameValid.bind(FieldConfigurator.forText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
-        daysValid.bind(FieldConfigurator.forGregorianTime(completingDays, "Necessary days", 0, 6));
-        weeksValid.bind(FieldConfigurator.forGregorianTime(completingWeeks, "Necessary weeks",0, 3));
-        monthsValid.bind(FieldConfigurator.forGregorianTime(completingMonths, "Necessary months",0, 11));
-        yearsValid.bind(FieldConfigurator.forGregorianTime(completingYears, "Necessary years",0, 100));
+        daysValid.bind(FieldConfigurator.forGregorianTimeCategories(completingDays, "Necessary days", 0, 6));
+        weeksValid.bind(FieldConfigurator.forGregorianTimeCategories(completingWeeks, "Necessary weeks",0, 3));
+        monthsValid.bind(FieldConfigurator.forGregorianTimeCategories(completingMonths, "Necessary months",0, 11));
+        yearsValid.bind(FieldConfigurator.forGregorianTimeCategories(completingYears, "Necessary years",0, 100));
         descriptionValid.bind(FieldConfigurator.forText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
 
         configureListView(
@@ -266,10 +266,10 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void showMeasuredGoalDialog() {
-        Dialog<MeasuredGoal> dialog = new Dialog<>();
-        GridPane grid = new GridPane();
-        ScrollPane scrollPane = new ScrollPane(grid);
-        dialog.setTitle("New Measured Goal");
+        Dialog<MeasuredGoal> localDialog = new Dialog<>();
+        GridPane localGrid = new GridPane();
+        ScrollPane localScrollPane = new ScrollPane(localGrid);
+        localDialog.setTitle("New Measured Goal");
 
         // Fields
         TextField orderField = new TextField();
@@ -285,31 +285,31 @@ public class ProjectDialog extends Entity<Project> {
         Button addFailureBtn = new Button("Add Failure");
 
         // Validation
-        BooleanProperty orderValid = FieldConfigurator.forGregorianTime(orderField, "Order (0-32767)", 0, 32767);
+        BooleanProperty orderValid = FieldConfigurator.forGregorianTimeCategories(orderField, "Order (0-32767)", 0, 32767);
         BooleanProperty itemValid = FieldConfigurator.forText(itemField, "Item", PROJECT_NAME, 1, 255);
-        BooleanProperty weightValid = FieldConfigurator.forGregorianTime(weightField, "Weight", 0, 1000);
+        BooleanProperty weightValid = FieldConfigurator.forGregorianTimeCategories(weightField, "Weight", 0, 1000);
         // Add similar validation for real/discrete fields...
 
         // Layout
-        grid.setHgap(10); grid.setVgap(10);
-        grid.addRow(0, new Label("Order*:"), orderField);
-        grid.addRow(1, new Label("Item*:"), itemField);
-        grid.addRow(2, new Label("Weight*:"), weightField);
-        grid.addRow(3, new Label("Real Goal:"), realGoalField);
-        grid.addRow(4, new Label("Real Advance:"), realAdvanceField);
-        grid.addRow(5, new Label("Discrete Goal:"), discreteGoalField);
-        grid.addRow(6, new Label("Discrete Advance:"), discreteAdvanceField);
-        grid.addRow(7, new Label("Finished:"), finishedCheck);
-        grid.addRow(8, new Label("Failures:"), failuresList);
-        grid.addRow(9, addFailureBtn);
+        localGrid.setHgap(10); localGrid.setVgap(10);
+        localGrid.addRow(0, new Label("Order*:"), orderField);
+        localGrid.addRow(1, new Label("Item*:"), itemField);
+        localGrid.addRow(2, new Label("Weight*:"), weightField);
+        localGrid.addRow(3, new Label("Real Goal:"), realGoalField);
+        localGrid.addRow(4, new Label("Real Advance:"), realAdvanceField);
+        localGrid.addRow(5, new Label("Discrete Goal:"), discreteGoalField);
+        localGrid.addRow(6, new Label("Discrete Advance:"), discreteAdvanceField);
+        localGrid.addRow(7, new Label("Finished:"), finishedCheck);
+        localGrid.addRow(8, new Label("Failures:"), failuresList);
+        localGrid.addRow(9, addFailureBtn);
 
         // Failure addition handler
         addFailureBtn.setOnAction(e -> showFailureDialog(failures));
 
-        dialog.getDialogPane().setContent(scrollPane);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        localDialog.getDialogPane().setContent(localScrollPane);
+        localDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(btn -> {
+        localDialog.setResultConverter(btn -> {
             if (btn == ButtonType.OK) {
                 return new MeasuredGoal(
                         Integer.parseInt(orderField.getText()),
@@ -323,12 +323,12 @@ public class ProjectDialog extends Entity<Project> {
             }
             return null;
         });
-        dialog.showAndWait().ifPresent(measuredGoals::add);
+        localDialog.showAndWait().ifPresent(measuredGoals::add);
     }
 
     private void showFailureDialog(ObservableList<Failure> targetList) {
-        Dialog<Failure> dialog = new Dialog<>();
-        dialog.setTitle("New Failure Entry");
+        Dialog<Failure> localDialog = new Dialog<>();
+        localDialog.setTitle("New Failure Entry");
 
         TextField reasonField = new TextField();
         TextField solutionField = new TextField();
@@ -339,16 +339,16 @@ public class ProjectDialog extends Entity<Project> {
         BooleanProperty solutionValid = FieldConfigurator.forText(solutionField, "Solution", PROJECT_NAME, 1, 2000);
         BooleanProperty descValid = FieldConfigurator.forText(descriptionField, "Description", PROJECT_NAME, 1, 4000);
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10);
-        grid.addRow(0, new Label("Reason*:"), reasonField);
-        grid.addRow(1, new Label("Solution*:"), solutionField);
-        grid.addRow(2, new Label("Description*:"), descriptionField);
+        GridPane localGrid = new GridPane();
+        localGrid.setHgap(10); localGrid.setVgap(10);
+        localGrid.addRow(0, new Label("Reason*:"), reasonField);
+        localGrid.addRow(1, new Label("Solution*:"), solutionField);
+        localGrid.addRow(2, new Label("Description*:"), descriptionField);
 
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        localDialog.getDialogPane().setContent(localGrid);
+        localDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(btn -> {
+        localDialog.setResultConverter(btn -> {
             if (btn == ButtonType.OK) {
                 return new Failure(new Triplet<>(
                         reasonField.getText(),
@@ -359,7 +359,7 @@ public class ProjectDialog extends Entity<Project> {
             return null;
         });
 
-        dialog.showAndWait().ifPresent(targetList::add);
+        localDialog.showAndWait().ifPresent(targetList::add);
     }
 
     private <T> MeasuredSet<T> createMeasuredSet(TextField goalField, TextField advanceField, Class<T> type) {
