@@ -171,9 +171,11 @@ public class MainUser {
             rootNode.fields().forEachRemaining(entry -> {
                 int branchId = Integer.parseInt(entry.getKey());
                 JsonNode branchNode = entry.getValue();
-                System.out.print("FETCHING BRANCHES: ");
-                System.out.println(branchNode);
 
+                if (branchNode.isNull() || branchNode.get("name").isNull()) {
+                    System.out.print("BRANCH NAMES: ");
+                    System.out.println(branchNode);
+                }
                 String branchName = branchNode.get("name").asText();
                 JsonNode projectsNode = branchNode.get("projects");
 
@@ -199,12 +201,6 @@ public class MainUser {
     }
 
     private Project parseProject(JsonNode projectNode, String projectUuidStr) {
-        System.out.print("PROJECT NODE: ");
-        System.out.println(projectNode);
-
-        System.out.print("PROJECT UUID STR: ");
-        System.out.println(projectUuidStr);
-
         UUID projectUuid = UUID.fromString(projectUuidStr);
 
         List<Priority> priorities = parsePriorities(projectNode.get("priorities"));

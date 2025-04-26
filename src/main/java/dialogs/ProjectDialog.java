@@ -5,7 +5,6 @@ import javafx.scene.layout.*;
 import model.projects.EssentialInfo;
 import model.projects.Project;
 import records.MeasuredGoal;
-import records.MeasuredSet;
 import records.Priority;
 
 import javafx.beans.property.BooleanProperty;
@@ -19,11 +18,8 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import records.Triplet;
-import records.Failure;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -266,117 +262,9 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void showMeasuredGoalDialog() {
-        Dialog<MeasuredGoal> localDialog = new Dialog<>();
-        GridPane localGrid = new GridPane();
-        ScrollPane localScrollPane = new ScrollPane(localGrid);
-        localDialog.setTitle("New Measured Goal");
-
-        // Fields
-        TextField orderField = new TextField();
-        TextField itemField = new TextField();
-        TextField weightField = new TextField();
-        TextField realGoalField = new TextField();
-        TextField realAdvanceField = new TextField();
-        TextField discreteGoalField = new TextField();
-        TextField discreteAdvanceField = new TextField();
-        CheckBox finishedCheck = new CheckBox("Finished");
-        ObservableList<Failure> failures = FXCollections.observableArrayList();
-        ListView<Failure> failuresList = new ListView<>(failures);
-        Button addFailureBtn = new Button("Add Failure");
-
-        // Validation
-        BooleanProperty orderValid = FieldConfigurator.forGregorianTimeCategories(orderField, "Order (0-32767)", 0, 32767);
-        BooleanProperty itemValid = FieldConfigurator.forText(itemField, "Item", PROJECT_NAME, 1, 255);
-        BooleanProperty weightValid = FieldConfigurator.forGregorianTimeCategories(weightField, "Weight", 0, 1000);
-        // Add similar validation for real/discrete fields...
-
-        // Layout
-        localGrid.setHgap(10); localGrid.setVgap(10);
-        localGrid.addRow(0, new Label("Order*:"), orderField);
-        localGrid.addRow(1, new Label("Item*:"), itemField);
-        localGrid.addRow(2, new Label("Weight*:"), weightField);
-        localGrid.addRow(3, new Label("Real Goal:"), realGoalField);
-        localGrid.addRow(4, new Label("Real Advance:"), realAdvanceField);
-        localGrid.addRow(5, new Label("Discrete Goal:"), discreteGoalField);
-        localGrid.addRow(6, new Label("Discrete Advance:"), discreteAdvanceField);
-        localGrid.addRow(7, new Label("Finished:"), finishedCheck);
-        localGrid.addRow(8, new Label("Failures:"), failuresList);
-        localGrid.addRow(9, addFailureBtn);
-
-        // Failure addition handler
-        addFailureBtn.setOnAction(e -> showFailureDialog(failures));
-
-        localDialog.getDialogPane().setContent(localScrollPane);
-        localDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        localDialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK) {
-                return new MeasuredGoal(
-                        Integer.parseInt(orderField.getText()),
-                        itemField.getText(),
-                        Double.parseDouble(weightField.getText()),
-                        createMeasuredSet(realGoalField, realAdvanceField, Double.class),
-                        createMeasuredSet(discreteGoalField, discreteAdvanceField, Integer.class),
-                        finishedCheck.isSelected(),
-                        new ArrayList<>(failures)
-                );
-            }
-            return null;
-        });
-        localDialog.showAndWait().ifPresent(measuredGoals::add);
-    }
-
-    private void showFailureDialog(ObservableList<Failure> targetList) {
-        Dialog<Failure> localDialog = new Dialog<>();
-        localDialog.setTitle("New Failure Entry");
-
-        TextField reasonField = new TextField();
-        TextField solutionField = new TextField();
-        TextField descriptionField = new TextField();
-
-        // Validation
-        BooleanProperty reasonValid = FieldConfigurator.forText(reasonField, "Reason", PROJECT_NAME, 1, 2000);
-        BooleanProperty solutionValid = FieldConfigurator.forText(solutionField, "Solution", PROJECT_NAME, 1, 2000);
-        BooleanProperty descValid = FieldConfigurator.forText(descriptionField, "Description", PROJECT_NAME, 1, 4000);
-
-        GridPane localGrid = new GridPane();
-        localGrid.setHgap(10); localGrid.setVgap(10);
-        localGrid.addRow(0, new Label("Reason*:"), reasonField);
-        localGrid.addRow(1, new Label("Solution*:"), solutionField);
-        localGrid.addRow(2, new Label("Description*:"), descriptionField);
-
-        localDialog.getDialogPane().setContent(localGrid);
-        localDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        localDialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK) {
-                return new Failure(new Triplet<>(
-                        reasonField.getText(),
-                        solutionField.getText(),
-                        descriptionField.getText()
-                ));
-            }
-            return null;
-        });
-
-        localDialog.showAndWait().ifPresent(targetList::add);
-    }
-
-    private <T> MeasuredSet<T> createMeasuredSet(TextField goalField, TextField advanceField, Class<T> type) {
-        return new MeasuredSet<>(
-                Map.of(
-                        "goal", parseValue(goalField.getText(), type),
-                        "advance", parseValue(advanceField.getText(), type)
-                ),
-                type
-        );
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T parseValue(String text, Class<T> type) {
-        if (type == Double.class) return (T) Double.valueOf(text);
-        if (type == Integer.class) return (T) Integer.valueOf(text);
-        throw new IllegalArgumentException("Unsupported type");
+        MeasuredGoalDialog dialog = new MeasuredGoalDialog();
+        dialog.showAndWait();
+//        dialog.getResult().ifPresent(measuredGoals::add);
     }
 
     private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {
