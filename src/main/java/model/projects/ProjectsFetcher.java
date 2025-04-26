@@ -6,9 +6,6 @@ import home.Entity;
 import home.HomeFetcher;
 import model.Entities;
 import home.MainUser;
-
-import java.net.http.HttpClient;
-
 import java.time.ZonedDateTime;
 
 import java.util.*;
@@ -22,7 +19,6 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import records.*;
 
 import services.JsonApiClient;
@@ -40,9 +36,7 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     private static Config config;
     private static volatile ProjectsFetcher instance;
 
-    private final ObjectMapper mapper = new ObjectMapper();
     private final JsonApiClient apiClient = new JsonApiClient();
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private final Map<String, List<Project>> usersProjects = new ConcurrentHashMap<>();
     private final Map<String, List<Project>> usersFavoriteProjects = new ConcurrentHashMap<>();
@@ -51,7 +45,6 @@ public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
 
     private static final Logger logger = Logger.getLogger(ProjectsFetcher.class.getName());
 
-    // Configuration class for this subclass
     public static class Config {
         private final Languages language;
         private final String mainEmail;

@@ -1,8 +1,10 @@
 package dialogs;
 
 import home.MainUser;
+import javafx.scene.layout.*;
 import model.projects.EssentialInfo;
 import model.projects.Project;
+import records.MeasuredGoal;
 import records.Priority;
 
 import javafx.beans.property.BooleanProperty;
@@ -15,10 +17,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 
 import java.time.ZonedDateTime;
@@ -41,10 +39,6 @@ public class ProjectDialog extends Entity<Project> {
     private final BooleanProperty priorityValid = new SimpleBooleanProperty(false);
     private final BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
 
-//    private final ObservableList<MsrdGoal> msrdGoals = FXCollections.observableArrayList();
-//    private final ListView<MsrdGoal> msrdGoalsList = new ListView<>(msrdGoals);
-//    private final Button addMsrdGoalButton = new Button("Add MSRD Goal");
-
     private final TextField nameField = new TextField(PROJECT_NAME.get());
     private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
     private final TextField completingWeeks = new TextField(COMPLETING_WEEKS.get());
@@ -55,8 +49,12 @@ public class ProjectDialog extends Entity<Project> {
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
     private final ListView<Priority> priorityList = new ListView<>();
     private final ListView<Project> parentProjects = new ListView<>();
+    private final ListView<MeasuredGoal> measuredGoalsList = new ListView<>();
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
     private final CheckBox isFavorite = new CheckBox();
+    private final Button addGoalButton = new Button("Add Measured Goal");
+
+    private final ObservableList<MeasuredGoal> measuredGoals = FXCollections.observableArrayList();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -77,9 +75,6 @@ public class ProjectDialog extends Entity<Project> {
         initializeForm();
         setupDynamicBehaviors();
     }
-
-    @Override
-    protected void addFormFields() {}
 
     @Override
     protected Project validateAndCreate() throws ValidationException {
@@ -104,15 +99,16 @@ public class ProjectDialog extends Entity<Project> {
         grid.add(field, 1, row);
     }
 
-    private void initializeForm() {
+    @Override
+    protected void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
 
-        nameValid.bind(FieldConfigurator.configureForText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
-        daysValid.bind(FieldConfigurator.configureForGregorianTime(completingDays, "Necessary days", 0, 6));
-        weeksValid.bind(FieldConfigurator.configureForGregorianTime(completingWeeks, "Necessary weeks",0, 3));
-        monthsValid.bind(FieldConfigurator.configureForGregorianTime(completingMonths, "Necessary months",0, 11));
-        yearsValid.bind(FieldConfigurator.configureForGregorianTime(completingYears, "Necessary years",0, 100));
-        descriptionValid.bind(FieldConfigurator.configureForText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
+        nameValid.bind(FieldConfigurator.forText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
+        daysValid.bind(FieldConfigurator.forGregorianTimeCategories(completingDays, "Necessary days", 0, 6));
+        weeksValid.bind(FieldConfigurator.forGregorianTimeCategories(completingWeeks, "Necessary weeks",0, 3));
+        monthsValid.bind(FieldConfigurator.forGregorianTimeCategories(completingMonths, "Necessary months",0, 11));
+        yearsValid.bind(FieldConfigurator.forGregorianTimeCategories(completingYears, "Necessary years",0, 100));
+        descriptionValid.bind(FieldConfigurator.forText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
 
         configureListView(
                 priorityList,
@@ -121,7 +117,7 @@ public class ProjectDialog extends Entity<Project> {
                 "Populated priority list with {0} items.",
                 "No priorities found for user."
         );
-        BooleanProperty priorityValid = FieldConfigurator.configureListViewSelection(
+        BooleanProperty priorityValid = FieldConfigurator.forListViewSelector(
                 priorityList
                 //, "Select at least one priority"
         );
@@ -135,11 +131,13 @@ public class ProjectDialog extends Entity<Project> {
                 "No parent projects found for user."
         );
 
+        measuredGoalsList.setMinHeight(100);
+        measuredGoalsList.setPrefHeight(100);
+
         personalRadio.setToggleGroup(projectTypeGroup);
         organizationalRadio.setToggleGroup(projectTypeGroup);
         personalRadio.setSelected(true);
         HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
-        typeBox.setPadding(new Insets(5));
 
         addFormRow("Project Name:", nameField, 0);
         addFormRow("Project Type:", typeBox, 1);
@@ -151,6 +149,9 @@ public class ProjectDialog extends Entity<Project> {
         addFormRow("Completing days:", completingDays, 7);
         addFormRow("The details!", descriptionField, 8);
         addFormRow("Will you enjoy it?", isFavorite, 9);
+        addFormRow("Measured Goals:", measuredGoalsList, 10);
+        addFormRow("", addGoalButton, 11);
+        addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
     }
 
     private void setupDynamicBehaviors() {
@@ -165,7 +166,7 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
-        ListCell<Priority> cell = new ListCell<>() {
+        return new ListCell<>() {
 
             {
                 addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
@@ -200,12 +201,10 @@ public class ProjectDialog extends Entity<Project> {
                 }
             }
         };
-
-        return cell;
     }
 
     private ListCell<Project> createProjectCellWithManualStylingAndClick(ListView<Project> listView) {
-        ListCell<Project> cell = new ListCell<>() {
+        return new ListCell<>() {
 
             {
                 addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
@@ -240,8 +239,6 @@ public class ProjectDialog extends Entity<Project> {
                 }
             }
         };
-
-        return cell;
     }
 
     private <T> void configureListView(
@@ -249,12 +246,11 @@ public class ProjectDialog extends Entity<Project> {
             Map<?, T> items,
             String placeholderText,
             String successLogTemplate,
-            String warningLogMessage) {
-
+            String warningLogMessage
+    ) {
         listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        listView.setPrefWidth(250);
-        listView.setMinHeight(150);
-        listView.setFocusTraversable(true);
+        listView.setMaxHeight(100);
+        listView.setPrefWidth(100);
 
         if (items != null && !items.isEmpty()) {
             listView.setItems(FXCollections.observableArrayList(items.values()));
@@ -263,6 +259,12 @@ public class ProjectDialog extends Entity<Project> {
             listView.setPlaceholder(new Label(placeholderText));
             LOGGER.log(Level.WARNING, warningLogMessage);
         }
+    }
+
+    private void showMeasuredGoalDialog() {
+        MeasuredGoalDialog dialog = new MeasuredGoalDialog();
+        dialog.showAndWait();
+//        dialog.getResult().ifPresent(measuredGoals::add);
     }
 
     private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {

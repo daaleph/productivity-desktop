@@ -355,7 +355,7 @@ public class Home {
     }
 
     @FXML
-    private void handleNewProject(ActionEvent event) {
+    private void handleNewProject(ActionEvent e) {
         if (this.mainUser == null) {
             System.err.println("Error: MainUser is not initialized in Home controller!");
             return;

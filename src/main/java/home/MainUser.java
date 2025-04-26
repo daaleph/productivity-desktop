@@ -16,8 +16,8 @@ import model.branchs.UserBranch;
 import model.organizations.UserOrganization;
 import model.projects.*;
 
-import records.secret.PriorityJson;
 import records.*;
+import records.secrets.*;
 import services.ApiException;
 import services.JsonApiClient;
 
@@ -108,14 +108,17 @@ public class MainUser {
             this.language = userInfo.language();
             this.age = userInfo.age();
             this.email = userInfo.email();
-            this.priorities = userInfo.priorities().stream()
+            this.priorities = userInfo
+                    .priorities()
+                    .stream()
                     .collect(Collectors.toMap(
-                        PriorityJson::id,
-                        p -> new Priority(
-                            new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()),
-                            this.language
-                        )
+                            PriorityJson::id,
+                            p -> new Priority(
+                                    new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()),
+                                    this.language
+                            )
                     ));
+
         } catch (InterruptedException e) {
             throw new ApiException("Failed to fetch personal info", e);
         }
@@ -169,6 +172,10 @@ public class MainUser {
                 int branchId = Integer.parseInt(entry.getKey());
                 JsonNode branchNode = entry.getValue();
 
+                if (branchNode.isNull() || branchNode.get("name").isNull()) {
+                    System.out.print("BRANCH NAMES: ");
+                    System.out.println(branchNode);
+                }
                 String branchName = branchNode.get("name").asText();
                 JsonNode projectsNode = branchNode.get("projects");
 
@@ -280,7 +287,7 @@ public class MainUser {
     }
 
     private List<Tuple<UUID, Triplet<Integer, String, Double>>> parseUnderlyingCategories(JsonNode categoriesNode) {
-        if (categoriesNode == null || !categoriesNode.has("priorities")) return new ArrayList<>();
+        if (categoriesNode == null || categoriesNode.get("uuid").isNull() || !categoriesNode.has("uuid") || !categoriesNode.has("priorities")) return new ArrayList<>();
 
         List<Tuple<UUID, Triplet<Integer, String, Double>>> categories = new ArrayList<>();
         UUID categoryUuid = UUID.fromString(categoriesNode.get("uuid").asText());

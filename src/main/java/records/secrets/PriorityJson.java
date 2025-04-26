@@ -1,5 +1,4 @@
-package records.secret;
-
+package records.secrets;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record PriorityJson(

@@ -1,3 +1,3 @@
 package records;
 
-public record BoundedPair(int minimum, int maximum) {}
+public record BoundedPair<T>(T minimum, T maximum) {}
