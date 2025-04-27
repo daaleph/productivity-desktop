@@ -22,10 +22,10 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final BooleanProperty orderValid = new SimpleBooleanProperty(false);
     private final BooleanProperty itemValid  = new SimpleBooleanProperty(false);
     private final BooleanProperty weightValid  = new SimpleBooleanProperty(false);
-    private final BooleanProperty discreteGoalValid = new SimpleBooleanProperty(false);
-    private final BooleanProperty discreteAdvanceValid = new SimpleBooleanProperty(false);
     private final BooleanProperty realGoalValid = new SimpleBooleanProperty(false);
     private final BooleanProperty realAdvanceValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty discreteGoalValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty discreteAdvanceValid = new SimpleBooleanProperty(false);
 
     private final TextField orderField = new TextField();
     private final TextField itemField = new TextField();
@@ -38,7 +38,6 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final ObservableList<Failure> failures = FXCollections.observableArrayList();
     private final ListView<Failure> failuresList = new ListView<>(failures);
     private final Button addFailureBtn = new Button("Add Failure");
-
 
     public MeasuredGoalDialog(MainUser mainUser) {
         super("New Measured Goal", mainUser);
@@ -65,22 +64,21 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
 
     @Override
     protected void createAlphanumericValidations() {
-        orderValid.bind(FieldConfigurator.forGregorianTimeCategories(orderField, "Order", 0, 32767));
+        orderValid.bind(FieldConfigurator.forInteger(orderField, "Order", 0, 32767));
         itemValid.bind(FieldConfigurator.forText(itemField, "Description", PROJECT_NAME, 1, 255));
-        weightValid.bind(FieldConfigurator.forGregorianTimeCategories(weightField, "Relevance (0, 100%)",
+        weightValid.bind(FieldConfigurator.forDouble(weightField, "Relevance (0, 100)%",
                 1, 100));
-        discreteGoalValid.bind(FieldConfigurator.forText(discreteGoalField, "Discrete goal ((2^63)−1, (2^63)−1)",
-                DISCRETE_GOAL, Long.MIN_VALUE, Long.MAX_VALUE));
-        discreteAdvanceValid.bind(FieldConfigurator.forText(discreteAdvanceField, "Discrete advance ((2^63)−1, (2^63)−1)",
-                DISCRETE_GOAL, Long.MIN_VALUE, Long.MAX_VALUE));
-        realGoalValid.bind(FieldConfigurator.forText(realGoalField, "Real goal (0, 100%)", REAL_GOAL,100));
-        realAdvanceValid.bind(FieldConfigurator.forText(realAdvanceField, "Real advance (1, 100%)", REAL_GOAL,
-                1, 100));
+        discreteGoalValid.bind(FieldConfigurator.forLong(discreteGoalField, "Discrete goal ((2^63)−1, (2^63)−1)",
+                Long.MIN_VALUE, Long.MAX_VALUE));
+        discreteAdvanceValid.bind(FieldConfigurator.forLong(discreteAdvanceField, "Discrete advance ((2^63)−1, (2^63)−1)",
+                Long.MIN_VALUE, Long.MAX_VALUE));
+        realGoalValid.bind(FieldConfigurator.forDouble(realGoalField, "Real goal (1, 100)%", 1, 100));
+        realAdvanceValid.bind(FieldConfigurator.forDouble(realAdvanceField, "Real advance (0, 100)%",100));
     }
 
     @Override
     protected MeasuredGoal validateAndCreate() {
-        return new MeasuredGoal(
+        MeasuredGoal goal = new MeasuredGoal(
                 Integer.parseInt(orderField.getText()),
                 itemField.getText(),
                 Double.parseDouble(weightField.getText()),
@@ -89,11 +87,13 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
                 finishedCheck.isSelected(),
                 new ArrayList<>(failures)
         );
+        setResult(goal);
+        return goal;
     }
 
     @Override
     protected void setupDynamicBehaviors() {
-        addFailureBtn.setOnAction(e -> handleAddFailure());
+        addFailureBtn.setOnAction(e -> showFailureDialog());
         submitButton.disableProperty().bind(
                 orderValid.not().or(itemValid.not()).or(weightValid.not())
         );
@@ -127,7 +127,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         return type.cast(parser.apply(text));
     }
 
-    private void handleAddFailure() {
+    private void showFailureDialog() {
         FailureDialog dialog = FailureDialog.getInstance(mainUser);
         this.addChildDialog(dialog);
         dialog.show();
