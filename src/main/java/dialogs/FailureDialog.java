@@ -1,5 +1,6 @@
 package dialogs;
 
+import home.MainUser;
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -9,13 +10,22 @@ import records.Triplet;
 import static dialogs.Questions.PROJECT_NAME;
 
 public class FailureDialog extends Entity<Failure> {
+    private static FailureDialog instance;
     private final TextField reasonField = new TextField();
     private final TextField solutionField = new TextField();
     private final TextField descriptionField = new TextField();
 
-    public FailureDialog() {
-        super("New Failure Entry", null);
+    public FailureDialog(MainUser mainUser) {
+        super("New Failure Entry", mainUser);
         initializeForm();
+    }
+
+    public static synchronized FailureDialog getInstance(MainUser mainUser) {
+        if (instance == null) {
+            instance = new FailureDialog(mainUser);
+            instance.setOnShown(e -> instance.toFront());
+        }
+        return instance;
     }
 
     @Override
@@ -43,5 +53,10 @@ public class FailureDialog extends Entity<Failure> {
                 solutionField.getText().trim(),
                 descriptionField.getText().trim()
         ));
+    }
+
+    @Override
+    protected void cleanup() {
+        instance = null;
     }
 }
