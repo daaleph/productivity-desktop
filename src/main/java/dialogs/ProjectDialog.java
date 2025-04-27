@@ -125,7 +125,7 @@ public class ProjectDialog extends Entity<Project> {
     protected void setupDynamicBehaviors() {
         priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
         priorityList.getSelectionModel().getSelectedItems().addListener(
-                (ListChangeListener<Priority>) change -> validateForm()
+                (ListChangeListener<Priority>) c -> validateForm()
         );
         parentProjects.setCellFactory(this::createProjectCellWithManualStylingAndClick);
         parentProjects.getSelectionModel().getSelectedItems().addListener(
@@ -146,6 +146,7 @@ public class ProjectDialog extends Entity<Project> {
     private void createListingValidations() {
         priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
         priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
+        measuredGoalsValid.setValue(observableMeasuredGoals.isEmpty());
     }
 
     protected void addFormRows() {
@@ -188,7 +189,9 @@ public class ProjectDialog extends Entity<Project> {
         measuredGoals.setMinHeight(100);
         measuredGoals.setPrefHeight(100);
         measuredGoals.setItems(observableMeasuredGoals);
-        measuredGoals.setPlaceholder(new Label("No measured goals available."));
+        Label measuredGoalsPlaceholder = new Label("At least one measured goal is required!");
+        measuredGoalsPlaceholder.setStyle("-fx-text-fill: red; -fx-font-style: italic;");
+        measuredGoals.setPlaceholder(measuredGoalsPlaceholder);
     }
 
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
@@ -306,7 +309,8 @@ public class ProjectDialog extends Entity<Project> {
                 daysValid.get() &&
                 monthsValid.get() &&
                 yearsValid.get() &&
-                priorityValid.get();
+                priorityValid.get() &&
+                measuredGoalsValid.get();
 
         submitButton.setDisable(!formIsValid);
     }

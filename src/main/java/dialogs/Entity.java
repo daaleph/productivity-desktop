@@ -12,7 +12,6 @@ import services.ApiException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class Entity<T> extends Stage {
     private T result;

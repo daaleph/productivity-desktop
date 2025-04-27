@@ -72,7 +72,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
                 Long.MIN_VALUE, Long.MAX_VALUE));
         discreteAdvanceValid.bind(FieldConfigurator.forLong(discreteAdvanceField, "Discrete advance ((2^63)−1, (2^63)−1)",
                 Long.MIN_VALUE, Long.MAX_VALUE));
-        realGoalValid.bind(FieldConfigurator.forDouble(realGoalField, "Real goal (0, 100)%", 1, 100));
+        realGoalValid.bind(FieldConfigurator.forDouble(realGoalField, "Real goal (1, 100)%", 1, 100));
         realAdvanceValid.bind(FieldConfigurator.forDouble(realAdvanceField, "Real advance (0, 100)%",100));
     }
 
