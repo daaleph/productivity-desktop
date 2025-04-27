@@ -67,7 +67,7 @@
                 <VBox fx:id="userOrganizationsSubContainer" id="userOrganizationsSubContainer" maxWidth="Infinity" styleClass="sub-container"
                       GridPane.columnIndex="1" GridPane.rowIndex="1">
                     <Label text="My Organizations" styleClass="header-label" />
-                    <ScrollPane fitToWidth="true" styleClass="organization-scroll">
+                    <ScrollPane fitToWidth="true" styleClass="organization-scroll" VBox.vgrow="ALWAYS">
                         <VBox fx:id="organizationsContainer" styleClass="organizations-list" />
                     </ScrollPane>
                 </VBox>
