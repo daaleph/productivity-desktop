@@ -59,6 +59,9 @@ public abstract class Entity<T> extends Stage {
 
     protected abstract void cleanup();
     protected abstract void initializeForm();
+    protected abstract void addFormRows();
+    protected abstract void setupDynamicBehaviors();
+    protected abstract void createAlphanumericValidations();
     protected abstract T validateAndCreate() throws ValidationException;
 
     private void setupButtons() {

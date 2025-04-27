@@ -2,6 +2,7 @@ package dialogs;
 
 import home.MainUser;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
@@ -11,11 +12,20 @@ import records.MeasuredSet;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Function;
 
-import static dialogs.Questions.PROJECT_NAME;
+import static dialogs.Questions.*;
 
 public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private static MeasuredGoalDialog instance;
+
+    private final BooleanProperty orderValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty itemValid  = new SimpleBooleanProperty(false);
+    private final BooleanProperty weightValid  = new SimpleBooleanProperty(false);
+    private final BooleanProperty discreteGoalValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty discreteAdvanceValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty realGoalValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty realAdvanceValid = new SimpleBooleanProperty(false);
 
     private final TextField orderField = new TextField();
     private final TextField itemField = new TextField();
@@ -29,9 +39,11 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final ListView<Failure> failuresList = new ListView<>(failures);
     private final Button addFailureBtn = new Button("Add Failure");
 
+
     public MeasuredGoalDialog(MainUser mainUser) {
         super("New Measured Goal", mainUser);
         initializeForm();
+        createAlphanumericValidations();
     }
 
     public static synchronized MeasuredGoalDialog getInstance(MainUser user) {
@@ -46,27 +58,24 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     protected void initializeForm() {
         grid.setHgap(10);
         grid.setVgap(10);
+        createAlphanumericValidations();
+        setupDynamicBehaviors();
+        addFormRows();
+    }
 
-        BooleanProperty orderValid = FieldConfigurator.forGregorianTimeCategories(orderField, "Order (0-32767)", 0, 32767);
-        BooleanProperty itemValid = FieldConfigurator.forText(itemField, "Item", PROJECT_NAME, 1, 255);
-        BooleanProperty weightValid = FieldConfigurator.forGregorianTimeCategories(weightField, "Weight", 0, 1000);
-
-        grid.addRow(0, new Label("Order*:"), orderField);
-        grid.addRow(1, new Label("Item*:"), itemField);
-        grid.addRow(2, new Label("Weight*:"), weightField);
-        grid.addRow(3, new Label("Real Goal:"), realGoalField);
-        grid.addRow(4, new Label("Real Advance:"), realAdvanceField);
-        grid.addRow(5, new Label("Discrete Goal:"), discreteGoalField);
-        grid.addRow(6, new Label("Discrete Advance:"), discreteAdvanceField);
-        grid.addRow(7, new Label("Finished:"), finishedCheck);
-        grid.addRow(8, new Label("Failures:"), failuresList);
-        grid.addRow(9, addFailureBtn);
-
-        addFailureBtn.setOnAction(e -> handleAddFailure());
-
-        submitButton.disableProperty().bind(
-                orderValid.not().or(itemValid.not()).or(weightValid.not())
-        );
+    @Override
+    protected void createAlphanumericValidations() {
+        orderValid.bind(FieldConfigurator.forGregorianTimeCategories(orderField, "Order", 0, 32767));
+        itemValid.bind(FieldConfigurator.forText(itemField, "Description", PROJECT_NAME, 1, 255));
+        weightValid.bind(FieldConfigurator.forGregorianTimeCategories(weightField, "Relevance (0, 100%)",
+                1, 100));
+        discreteGoalValid.bind(FieldConfigurator.forText(discreteGoalField, "Discrete goal ((2^63)−1, (2^63)−1)",
+                DISCRETE_GOAL, Long.MIN_VALUE, Long.MAX_VALUE));
+        discreteAdvanceValid.bind(FieldConfigurator.forText(discreteAdvanceField, "Discrete advance ((2^63)−1, (2^63)−1)",
+                DISCRETE_GOAL, Long.MIN_VALUE, Long.MAX_VALUE));
+        realGoalValid.bind(FieldConfigurator.forText(realGoalField, "Real goal (0, 100%)", REAL_GOAL,100));
+        realAdvanceValid.bind(FieldConfigurator.forText(realAdvanceField, "Real advance (1, 100%)", REAL_GOAL,
+                1, 100));
     }
 
     @Override
@@ -82,6 +91,28 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         );
     }
 
+    @Override
+    protected void setupDynamicBehaviors() {
+        addFailureBtn.setOnAction(e -> handleAddFailure());
+        submitButton.disableProperty().bind(
+                orderValid.not().or(itemValid.not()).or(weightValid.not())
+        );
+    }
+
+    @Override
+    protected void addFormRows() {
+        grid.addRow(0, new Label("Order*:"), orderField);
+        grid.addRow(1, new Label("Item*:"), itemField);
+        grid.addRow(2, new Label("Weight*:"), weightField);
+        grid.addRow(3, new Label("Real Goal:"), realGoalField);
+        grid.addRow(4, new Label("Real Advance:"), realAdvanceField);
+        grid.addRow(5, new Label("Discrete Goal:"), discreteGoalField);
+        grid.addRow(6, new Label("Discrete Advance:"), discreteAdvanceField);
+        grid.addRow(7, new Label("Finished:"), finishedCheck);
+        grid.addRow(8, new Label("Failures:"), failuresList);
+        grid.addRow(9, addFailureBtn);
+    }
+
     private <T> MeasuredSet<T> createMeasuredSet(TextField goalField, TextField advanceField, Class<T> type) {
         T goal = parseValue(goalField.getText().isEmpty() ? "0" : goalField.getText(), type);
         T advance = parseValue(advanceField.getText().isEmpty() ? "0" : advanceField.getText(), type);
@@ -89,9 +120,11 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     }
 
     private <T> T parseValue(String text, Class<T> type) {
-        if (type == Double.class) return type.cast(Double.valueOf(text));
-        if (type == Integer.class) return type.cast(Integer.valueOf(text));
-        throw new IllegalArgumentException("Unsupported type");
+        Function<String, ?> parser = PARSERS.get(type);
+        if (parser == null) {
+            throw new IllegalArgumentException("Unsupported type");
+        }
+        return type.cast(parser.apply(text));
     }
 
     private void handleAddFailure() {
@@ -104,4 +137,10 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     protected void cleanup() {
         instance = null;
     }
+
+    private static final Map<Class<?>, Function<String, ?>> PARSERS = Map.of(
+            Long.class, Long::valueOf,
+            Double.class, Double::valueOf,
+            Integer.class, Integer::valueOf
+    );
 }

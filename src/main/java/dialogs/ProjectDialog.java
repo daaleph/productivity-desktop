@@ -40,6 +40,7 @@ public class ProjectDialog extends Entity<Project> {
     private final BooleanProperty yearsValid = new SimpleBooleanProperty(false);
     private final BooleanProperty priorityValid = new SimpleBooleanProperty(false);
     private final BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty measuredGoalsValid = new SimpleBooleanProperty(false);
 
     private final TextField nameField = new TextField(PROJECT_NAME.get());
     private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
@@ -51,12 +52,11 @@ public class ProjectDialog extends Entity<Project> {
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
     private final ListView<Priority> priorityList = new ListView<>();
     private final ListView<Project> parentProjects = new ListView<>();
-    private final ListView<MeasuredGoal> measuredGoalsList = new ListView<>();
+    private final HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
+    private final ListView<MeasuredGoal> measuredGoals = new ListView<>();
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
     private final CheckBox isFavorite = new CheckBox();
     private final Button addGoalButton = new Button("Add Measured Goal");
-
-    private final ObservableList<MeasuredGoal> measuredGoals = FXCollections.observableArrayList();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -75,7 +75,6 @@ public class ProjectDialog extends Entity<Project> {
             throw new IllegalArgumentException("MainUser cannot be null.");
         }
         initializeForm();
-        setupDynamicBehaviors();
     }
 
     public static synchronized ProjectDialog getInstance(MainUser mainUser) {
@@ -112,43 +111,42 @@ public class ProjectDialog extends Entity<Project> {
     @Override
     protected void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
+        addFormRows();
+        configureNotListViews();
+        configureListViews();
+        createListingValidations();
+        setupDynamicBehaviors();
+        createAlphanumericValidations();
+    }
 
+    @Override
+    protected void setupDynamicBehaviors() {
+        priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
+        priorityList.getSelectionModel().getSelectedItems().addListener(
+                (ListChangeListener<Priority>) change -> validateForm()
+        );
+        parentProjects.setCellFactory(this::createProjectCellWithManualStylingAndClick);
+        parentProjects.getSelectionModel().getSelectedItems().addListener(
+                (ListChangeListener<Project>) change -> validateForm()
+        );
+    }
+
+    @Override
+    protected void createAlphanumericValidations() {
         nameValid.bind(FieldConfigurator.forText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
         daysValid.bind(FieldConfigurator.forGregorianTimeCategories(completingDays, "Necessary days", 0, 6));
         weeksValid.bind(FieldConfigurator.forGregorianTimeCategories(completingWeeks, "Necessary weeks",0, 3));
         monthsValid.bind(FieldConfigurator.forGregorianTimeCategories(completingMonths, "Necessary months",0, 11));
         yearsValid.bind(FieldConfigurator.forGregorianTimeCategories(completingYears, "Necessary years",0, 100));
         descriptionValid.bind(FieldConfigurator.forText(descriptionField, "The description", PROJECT_DESCRIPTION,20, 2000));
+    }
 
-        configureListView(
-                priorityList,
-                mainUser.getPriorities(),
-                "No priorities available.",
-                "Populated priority list with {0} items.",
-                "No priorities found for user."
-        );
-        BooleanProperty priorityValid = FieldConfigurator.forListViewSelector(
-                priorityList
-                //, "Select at least one priority"
-        );
+    private void createListingValidations() {
+        priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
         priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
+    }
 
-        configureListView(
-                parentProjects,
-                mainUser.getProjects(),
-                "No parent projects available.",
-                "Populated parent projects list to select with {0} items.",
-                "No parent projects found for user."
-        );
-
-        measuredGoalsList.setMinHeight(100);
-        measuredGoalsList.setPrefHeight(100);
-
-        personalRadio.setToggleGroup(projectTypeGroup);
-        organizationalRadio.setToggleGroup(projectTypeGroup);
-        personalRadio.setSelected(true);
-        HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
-
+    protected void addFormRows() {
         addFormRow("Project Name:", nameField, 0);
         addFormRow("Project Type:", typeBox, 1);
         addFormRow("Priority (Click to select/deselect):", priorityList, 2);
@@ -159,20 +157,41 @@ public class ProjectDialog extends Entity<Project> {
         addFormRow("Completing days:", completingDays, 7);
         addFormRow("The details!", descriptionField, 8);
         addFormRow("Will you enjoy it?", isFavorite, 9);
-        addFormRow("Measured Goals:", measuredGoalsList, 10);
+        addFormRow("Measured Goals:", measuredGoals, 10);
         addFormRow("", addGoalButton, 11);
+    }
+
+    private void configureNotListViews() {
+        personalRadio.setToggleGroup(projectTypeGroup);
+        organizationalRadio.setToggleGroup(projectTypeGroup);
+        personalRadio.setSelected(true);
         addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
     }
 
-    private void setupDynamicBehaviors() {
-        priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
-        priorityList.getSelectionModel().getSelectedItems().addListener(
-                (ListChangeListener<Priority>) change -> validateForm()
+    private void configureListViews() {
+        configureListView(
+                priorityList,
+                mainUser.getPriorities(),
+                "No priorities available.",
+                "Populated priority list with {0} items.",
+                "No priorities found for user."
         );
-        parentProjects.setCellFactory(this::createProjectCellWithManualStylingAndClick);
-        parentProjects.getSelectionModel().getSelectedItems().addListener(
-                (ListChangeListener<Project>) change -> validateForm()
+        configureListView(
+                parentProjects,
+                mainUser.getProjects(),
+                "No parent projects available.",
+                "Populated parent projects list to select with {0} items.",
+                "No parent projects found for user."
         );
+//        configureListView(
+//                measuredGoals,
+//                observableMeasuredGoals,
+//                "No parent projects available.",
+//                "Populated parent projects list to select with {0} items.",
+//                "No parent projects found for user."
+//        );
+        measuredGoals.setMinHeight(100);
+        measuredGoals.setPrefHeight(100);
     }
 
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {

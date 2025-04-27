@@ -29,16 +29,25 @@ public class FieldConfigurator {
             TextField field,
             String prompt,
             Questions question,
-            @MinLen(1) @IndexOrHigh("2") int @NonNull @NonNegative ... lengths
+            @MinLen(1) @IndexOrHigh("2") @NonNegative Number... lengths
     ) {
-        int[] bounds = parseLengths(lengths);
-        BoundedPair<Integer> boundaries = new BoundedPair<>(bounds[0], bounds[1]);
-        return configure(field, prompt, v -> !v.trim().isEmpty() && !v.contains(question.get()) && validateLength(v, boundaries));
+
+        Number[] bounds = parseLengths(lengths);
+        BoundedPair<Integer> boundaries = new BoundedPair<>(
+                bounds[0].intValue(),
+                bounds[1].intValue()
+        );
+
+        return configure(
+                field,
+                prompt,
+                v -> !v.trim().isEmpty()
+                        && !v.contains(question.get())
+                        && validateLength(v, boundaries)
+        );
     }
 
-    public static BooleanProperty forListViewSelector(
-            ListView<?> listView
-    ) {
+    public static BooleanProperty forListViewSelector(ListView<?> listView) {
         BooleanProperty isValid = new SimpleBooleanProperty();
         isValid.set(!listView.getSelectionModel().isEmpty());
         listView.setStyle(isValid.get() ? VALID_STYLE : WARNING_STYLE);
@@ -52,11 +61,12 @@ public class FieldConfigurator {
         return isValid;
     }
 
-    private static int[] parseLengths(int... lengths) {
+    private static Number[] parseLengths(Number... lengths) {
+        if (lengths == null || lengths.length == 0) return new Number[]{1, 10};
         return switch (lengths.length) {
-            case 1 -> new int[]{1, lengths[0]};
-            case 2 -> new int[]{lengths[0], lengths[1]};
-            default -> new int[]{1, 10};
+            case 1 -> new Number[]{1, lengths[0]};
+            case 2 -> new Number[]{lengths[0], lengths[1]};
+            default -> throw new IllegalArgumentException("Too many arguments. Use 1 or 2 lengths.");
         };
     }
 
