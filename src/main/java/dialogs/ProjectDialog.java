@@ -111,15 +111,16 @@ public class ProjectDialog extends Entity<Project> {
     @Override
     protected void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
-        createAlphanumericValidations();
-        createListingValidations();
+        addFormRows();
         configureNotListViews();
         configureListViews();
+        createListingValidations();
         setupDynamicBehaviors();
-        addFormRows();
+        createAlphanumericValidations();
     }
 
-    private void setupDynamicBehaviors() {
+    @Override
+    protected void setupDynamicBehaviors() {
         priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
         priorityList.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Priority>) change -> validateForm()
@@ -145,7 +146,7 @@ public class ProjectDialog extends Entity<Project> {
         priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
     }
 
-    private void addFormRows() {
+    protected void addFormRows() {
         addFormRow("Project Name:", nameField, 0);
         addFormRow("Project Type:", typeBox, 1);
         addFormRow("Priority (Click to select/deselect):", priorityList, 2);
