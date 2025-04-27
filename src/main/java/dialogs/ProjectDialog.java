@@ -22,6 +22,7 @@ import javafx.scene.paint.Color;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,6 +58,7 @@ public class ProjectDialog extends Entity<Project> {
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
     private final CheckBox isFavorite = new CheckBox();
     private final Button addGoalButton = new Button("Add Measured Goal");
+    private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -183,15 +185,10 @@ public class ProjectDialog extends Entity<Project> {
                 "Populated parent projects list to select with {0} items.",
                 "No parent projects found for user."
         );
-//        configureListView(
-//                measuredGoals,
-//                observableMeasuredGoals,
-//                "No parent projects available.",
-//                "Populated parent projects list to select with {0} items.",
-//                "No parent projects found for user."
-//        );
         measuredGoals.setMinHeight(100);
         measuredGoals.setPrefHeight(100);
+        measuredGoals.setItems(observableMeasuredGoals);
+        measuredGoals.setPlaceholder(new Label("No measured goals available."));
     }
 
     private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
@@ -292,8 +289,11 @@ public class ProjectDialog extends Entity<Project> {
 
     private void showMeasuredGoalDialog() {
         MeasuredGoalDialog dialog = MeasuredGoalDialog.getInstance(mainUser);
-        this.addChildDialog(dialog);
         dialog.show();
+        dialog.setOnHidden(e -> {
+            observableMeasuredGoals.add(dialog.getResult(MeasuredGoal.class));
+        });
+        this.addChildDialog(dialog);
     }
 
     private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {

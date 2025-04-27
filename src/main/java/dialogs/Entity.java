@@ -7,12 +7,15 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import records.MeasuredGoal;
 import services.ApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class Entity<T> extends Stage {
+    private T result;
     protected final MainUser mainUser;
 
     protected final GridPane grid = new GridPane();
@@ -85,4 +88,12 @@ public abstract class Entity<T> extends Stage {
 
     protected void onCancel() {}
     protected void showError(String message) {}
+
+    protected void setResult(T result) {
+        this.result = result;
+    }
+
+    public T getResult(Class<T> type) {
+        return type.cast(result);
+    }
 }

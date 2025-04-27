@@ -11,6 +11,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.common.value.qual.MinLen;
 import records.BoundedPair;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.Function;
+
 public class FieldConfigurator {
     private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1;";
     private static final String VALID_STYLE = "-fx-border-color: lime; -fx-border-width: 1;";
@@ -45,6 +50,70 @@ public class FieldConfigurator {
                         && !v.contains(question.get())
                         && validateLength(v, boundaries)
         );
+    }
+
+    @SafeVarargs
+    public static <T extends Number & Comparable<T>> BooleanProperty forNumber(
+            TextField field,
+            String prompt,
+            Function<String, T> parser,
+            @MinLen(1) @IndexOrHigh("2") @NonNegative T... bounds) {
+
+        Objects.requireNonNull(field, "TextField cannot be null");
+        Objects.requireNonNull(parser, "Parser function cannot be null");
+
+        T[] validatedBounds = parseNumericBounds(parser, bounds);
+        T min = validatedBounds[0];
+        T max = validatedBounds[1];
+
+        return configure(field, prompt, v -> {
+            String trimmed = v.trim();
+            if (trimmed.isEmpty()) return false;
+
+            try {
+                T value = parser.apply(trimmed);
+                return value.compareTo(min) >= 0 && value.compareTo(max) <= 0;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        });
+    }
+
+    @SafeVarargs
+    private static <T extends Number & Comparable<T>> T[] parseNumericBounds(Function<String, T> parser, T... bounds) {
+        if (bounds == null) throw new IllegalArgumentException("At least one bound must be specified");
+
+        return switch (bounds.length) {
+            case 0 -> {
+                T min = parser.apply("0");
+                T max = parser.apply("10");
+                @SuppressWarnings("unchecked")
+                T[] result = (T[]) new Number[]{min, max};
+                yield result;
+            }
+            case 1 -> {
+                T min = parser.apply("0");
+                @SuppressWarnings("unchecked")
+                T[] result = (T[]) Array.newInstance(bounds.getClass().getComponentType(), 2);
+                result[0] = min;
+                result[1] = bounds[0];
+                yield result;
+            }
+            case 2 -> bounds;
+            default -> throw new IllegalArgumentException("Maximum 2 bounds allowed (min, max)");
+        };
+    }
+
+    public static BooleanProperty forInteger(TextField field, String prompt, int... bounds) {
+        return forNumber(field, prompt, Integer::parseInt, Arrays.stream(bounds).boxed().toArray(Integer[]::new));
+    }
+
+    public static BooleanProperty forLong(TextField field, String prompt, long... bounds) {
+        return forNumber(field, prompt, Long::parseLong, Arrays.stream(bounds).boxed().toArray(Long[]::new));
+    }
+
+    public static BooleanProperty forDouble(TextField field, String prompt, double... bounds) {
+        return forNumber(field, prompt, Double::parseDouble, Arrays.stream(bounds).boxed().toArray(Double[]::new));
     }
 
     public static BooleanProperty forListViewSelector(ListView<?> listView) {
