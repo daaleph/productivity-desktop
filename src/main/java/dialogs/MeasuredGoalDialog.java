@@ -2,6 +2,7 @@ package dialogs;
 
 import home.MainUser;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
@@ -12,10 +13,18 @@ import records.MeasuredSet;
 import java.util.ArrayList;
 import java.util.Map;
 
-import static dialogs.Questions.PROJECT_NAME;
+import static dialogs.Questions.*;
 
 public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private static MeasuredGoalDialog instance;
+
+    private final BooleanProperty orderValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty itemValid  = new SimpleBooleanProperty(false);
+    private final BooleanProperty weightValid  = new SimpleBooleanProperty(false);
+    private final BooleanProperty discreteGoalValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty discreteAdvanceValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty realGoalValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty realAdvanceValid = new SimpleBooleanProperty(false);
 
     private final TextField orderField = new TextField();
     private final TextField itemField = new TextField();
@@ -28,6 +37,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final ObservableList<Failure> failures = FXCollections.observableArrayList();
     private final ListView<Failure> failuresList = new ListView<>(failures);
     private final Button addFailureBtn = new Button("Add Failure");
+
 
     public MeasuredGoalDialog(MainUser mainUser) {
         super("New Measured Goal", mainUser);
@@ -47,10 +57,6 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         grid.setHgap(10);
         grid.setVgap(10);
 
-        BooleanProperty orderValid = FieldConfigurator.forGregorianTimeCategories(orderField, "Order (0-32767)", 0, 32767);
-        BooleanProperty itemValid = FieldConfigurator.forText(itemField, "Item", PROJECT_NAME, 1, 255);
-        BooleanProperty weightValid = FieldConfigurator.forGregorianTimeCategories(weightField, "Weight", 0, 1000);
-
         grid.addRow(0, new Label("Order*:"), orderField);
         grid.addRow(1, new Label("Item*:"), itemField);
         grid.addRow(2, new Label("Weight*:"), weightField);
@@ -67,6 +73,21 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         submitButton.disableProperty().bind(
                 orderValid.not().or(itemValid.not()).or(weightValid.not())
         );
+    }
+
+    @Override
+    protected void createAlphanumericValidations() {
+        orderValid.bind(FieldConfigurator.forGregorianTimeCategories(orderField, "Order", 0, 32767));
+        itemValid.bind(FieldConfigurator.forText(itemField, "Description", PROJECT_NAME, 1, 255));
+        weightValid.bind(FieldConfigurator.forGregorianTimeCategories(weightField, "Relevance (0, 100%)",
+                1, 100));
+        discreteGoalValid.bind(FieldConfigurator.forText(weightField, "Discrete goal ((2^63)−1, (2^63)−1)",
+                DISCRETE_GOAL, Long.MIN_VALUE, Long.MAX_VALUE));
+        discreteAdvanceValid.bind(FieldConfigurator.forText(weightField, "Discrete advance ((2^63)−1, (2^63)−1)",
+                DISCRETE_GOAL, Long.MIN_VALUE, Long.MAX_VALUE));
+        realGoalValid.bind(FieldConfigurator.forText(weightField, "Real goal (0, 100%)", REAL_GOAL,100));
+        realAdvanceValid.bind(FieldConfigurator.forText(weightField, "Real advance (1, 100%)", REAL_GOAL,
+                1, 100));
     }
 
     @Override

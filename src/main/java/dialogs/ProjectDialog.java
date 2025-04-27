@@ -130,7 +130,8 @@ public class ProjectDialog extends Entity<Project> {
         );
     }
 
-    private void createAlphanumericValidations() {
+    @Override
+    protected void createAlphanumericValidations() {
         nameValid.bind(FieldConfigurator.forText(nameField, "Enter project name", PROJECT_NAME, 3, 255));
         daysValid.bind(FieldConfigurator.forGregorianTimeCategories(completingDays, "Necessary days", 0, 6));
         weeksValid.bind(FieldConfigurator.forGregorianTimeCategories(completingWeeks, "Necessary weeks",0, 3));

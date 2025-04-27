@@ -47,6 +47,9 @@ public class FailureDialog extends Entity<Failure> {
     }
 
     @Override
+    protected void createAlphanumericValidations() {}
+
+    @Override
     protected Failure validateAndCreate() {
         return new Failure(new Triplet<>(
                 reasonField.getText().trim(),

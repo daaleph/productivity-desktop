@@ -6,7 +6,11 @@ public enum Questions {
     COMPLETING_WEEKS("Mow many weeks?"),
     COMPLETING_MONTHS("Mow many months?"),
     COMPLETING_YEARS("How many years?"),
-    PROJECT_DESCRIPTION("Which are the details of this?");
+    PROJECT_DESCRIPTION("Which are the details of this?"),
+    REAL_GOAL("How much?"),
+    REAL_ADVANCE("How much done?"),
+    DISCRETE_GOAL("To what extent?"),
+    DISCRETE_ADVANCE("What's the advance?");
 
     private final String question;
 
