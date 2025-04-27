@@ -1,6 +1,7 @@
 package dialogs;
 
 import home.MainUser;
+import javafx.beans.binding.Bindings;
 import javafx.scene.layout.*;
 import model.projects.EssentialInfo;
 import model.projects.Project;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,6 +61,7 @@ public class ProjectDialog extends Entity<Project> {
     private final CheckBox isFavorite = new CheckBox();
     private final Button addGoalButton = new Button("Add Measured Goal");
     private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
+    private final Button deleteGoalButton = new Button("Delete Selected Goals");
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
     private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
@@ -105,11 +108,6 @@ public class ProjectDialog extends Entity<Project> {
         return project;
     }
 
-    private void addFormRow(String label, Node field, int row) {
-        grid.add(new Label(label), 0, row);
-        grid.add(field, 1, row);
-    }
-
     @Override
     protected void initializeForm() {
         grid.setStyle("-fx-padding: 20; -fx-vgap: 15; -fx-hgap: 10;");
@@ -123,13 +121,18 @@ public class ProjectDialog extends Entity<Project> {
 
     @Override
     protected void setupDynamicBehaviors() {
-        priorityList.setCellFactory(this::createPriorityCellWithManualStylingAndClick);
+        priorityList.setCellFactory(this::createDynamicStyledPriorityCell);
         priorityList.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Priority>) c -> validateForm()
         );
-        parentProjects.setCellFactory(this::createProjectCellWithManualStylingAndClick);
+        parentProjects.setCellFactory(this::createDynamicStyledProjectCell);
         parentProjects.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Project>) change -> validateForm()
+        );
+
+        measuredGoals.setCellFactory(this::createDynamicStyledMeasuredGoalCell);
+        deleteGoalButton.disableProperty().bind(
+                Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems())
         );
     }
 
@@ -161,7 +164,8 @@ public class ProjectDialog extends Entity<Project> {
         addFormRow("The details!", descriptionField, 8);
         addFormRow("Will you enjoy it?", isFavorite, 9);
         addFormRow("Measured Goals:", measuredGoals, 10);
-        addFormRow("", addGoalButton, 11);
+        HBox buttonContainer = new HBox(10, addGoalButton, deleteGoalButton);
+        addFormRow("", buttonContainer, 11);
     }
 
     private void configureNotListViews() {
@@ -169,6 +173,11 @@ public class ProjectDialog extends Entity<Project> {
         organizationalRadio.setToggleGroup(projectTypeGroup);
         personalRadio.setSelected(true);
         addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
+        deleteGoalButton.setOnAction(e ->
+                observableMeasuredGoals.removeAll(
+                        measuredGoals.getSelectionModel().getSelectedItems()
+                )
+        );
     }
 
     private void configureListViews() {
@@ -192,17 +201,18 @@ public class ProjectDialog extends Entity<Project> {
         Label measuredGoalsPlaceholder = new Label("At least one measured goal is required!");
         measuredGoalsPlaceholder.setStyle("-fx-text-fill: red; -fx-font-style: italic;");
         measuredGoals.setPlaceholder(measuredGoalsPlaceholder);
+        measuredGoals.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
-    private ListCell<Priority> createPriorityCellWithManualStylingAndClick(ListView<Priority> listView) {
+    private <T> ListCell<T> createStyledListCell(Function<T, String> textExtractor) {
         return new ListCell<>() {
-
             {
                 addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
                     if (isEmpty() || getItem() == null) return;
-                    ListView<Priority> lv = getListView();
-                    SelectionModel<Priority> sm = lv.getSelectionModel();
+                    ListView<T> lv = getListView();
+                    SelectionModel<T> sm = lv.getSelectionModel();
                     int index = getIndex();
+
                     if (sm.isSelected(index)) {
                         sm.clearSelection(index);
                     } else {
@@ -213,16 +223,15 @@ public class ProjectDialog extends Entity<Project> {
             }
 
             @Override
-            protected void updateItem(Priority priority, boolean empty) {
-                super.updateItem(priority, empty);
-
-                if (empty || priority == null) {
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
                     setText(null);
                     setGraphic(null);
                     applyCellStyle(this, false);
                     pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
                 } else {
-                    setText(priority.getName());
+                    setText(textExtractor.apply(item));
                     setGraphic(null);
                     boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
                     applyCellStyle(this, isSelected);
@@ -232,42 +241,16 @@ public class ProjectDialog extends Entity<Project> {
         };
     }
 
-    private ListCell<Project> createProjectCellWithManualStylingAndClick(ListView<Project> listView) {
-        return new ListCell<>() {
+    private ListCell<Priority> createDynamicStyledPriorityCell(ListView<Priority> listView) {
+        return createStyledListCell(Priority::getName);
+    }
 
-            {
-                addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-                    if (isEmpty() || getItem() == null) return;
-                    ListView<Project> lv = getListView();
-                    SelectionModel<Project> sm = lv.getSelectionModel();
-                    int index = getIndex();
-                    if (sm.isSelected(index)) {
-                        sm.clearSelection(index);
-                    } else {
-                        sm.select(index);
-                    }
-                    event.consume();
-                });
-            }
+    private ListCell<Project> createDynamicStyledProjectCell(ListView<Project> listView) {
+        return createStyledListCell(Project::getName);
+    }
 
-            @Override
-            protected void updateItem(Project Project, boolean empty) {
-                super.updateItem(Project, empty);
-
-                if (empty || Project == null) {
-                    setText(null);
-                    setGraphic(null);
-                    applyCellStyle(this, false);
-                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
-                } else {
-                    setText(Project.getName());
-                    setGraphic(null);
-                    boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
-                    applyCellStyle(this, isSelected);
-                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-                }
-            }
-        };
+    private ListCell<MeasuredGoal> createDynamicStyledMeasuredGoalCell(ListView<MeasuredGoal> listView) {
+        return createStyledListCell(MeasuredGoal::item);
     }
 
     private <T> void configureListView(
@@ -313,6 +296,11 @@ public class ProjectDialog extends Entity<Project> {
                 measuredGoalsValid.get();
 
         submitButton.setDisable(!formIsValid);
+    }
+
+    private void addFormRow(String label, Node field, int row) {
+        grid.add(new Label(label), 0, row);
+        grid.add(field, 1, row);
     }
 
     @Override
