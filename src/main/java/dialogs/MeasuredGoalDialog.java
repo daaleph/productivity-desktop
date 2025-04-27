@@ -62,13 +62,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         grid.addRow(8, new Label("Failures:"), failuresList);
         grid.addRow(9, addFailureBtn);
 
-        addFailureBtn.setOnAction(e -> {
-            FailureDialog failureDialog = FailureDialog.getInstance(mainUser);
-            failureDialog.showAndWait();
-//            failureDialog.getResult().ifPresent(failures::add);
-        });
-
-        handleAddFailure();
+        addFailureBtn.setOnAction(e -> handleAddFailure());
 
         submitButton.disableProperty().bind(
                 orderValid.not().or(itemValid.not()).or(weightValid.not())
