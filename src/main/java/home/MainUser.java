@@ -172,7 +172,7 @@ public class MainUser {
                 int branchId = Integer.parseInt(entry.getKey());
                 JsonNode branchNode = entry.getValue();
 
-                if (branchNode.isNull() || branchNode.get("name").isNull()) {
+                if (branchNode.get("name") == null) {
                     System.out.print("BRANCH NAMES: ");
                     System.out.println(branchNode);
                 }

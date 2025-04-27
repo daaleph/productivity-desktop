@@ -1,24 +1,17 @@
 package home.controllers;
 
+import dialogs.ProjectDialog;
+
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import javafx.event.ActionEvent;
-
-import dialogs.ProjectDialog;
-import records.Priority;
-
 import home.MainUser;
-import model.branchs.Branch;
-import model.projects.Project;
-import model.branchs.UserBranch;
-import model.projects.CoreProject;
-import model.organizations.UserOrganization;
 
 import javafx.animation.TranslateTransition;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
@@ -28,6 +21,14 @@ import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import model.branchs.Branch;
+import model.projects.Project;
+import model.branchs.UserBranch;
+import model.projects.CoreProject;
+import model.organizations.UserOrganization;
+
+import records.Priority;
 
 public class Home {
     double padding = 5;
@@ -226,8 +227,7 @@ public class Home {
         Label branchLabel = new Label(branch.getName());
         branchLabel.getStyleClass().add("branch-name");
 
-        double labelWidth = branchLabel.prefWidth(-1);
-        // initial wrap width
+        double labelWidth = branchLabel.prefWidth(-1); // initial wrap width
 
         List<HBox> projectRows = new ArrayList<>();
         HBox currentRow = new HBox(5); // assuming hgap is 5
@@ -360,7 +360,7 @@ public class Home {
             System.err.println("Error: MainUser is not initialized in Home controller!");
             return;
         }
-        ProjectDialog projectDialog = new ProjectDialog(this.mainUser);
+        ProjectDialog projectDialog = ProjectDialog.getInstance(this.mainUser);
         projectDialog.showAndWait();
     }
 

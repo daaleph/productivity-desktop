@@ -1,5 +1,6 @@
 package dialogs;
 
+import home.MainUser;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +15,8 @@ import java.util.Map;
 import static dialogs.Questions.PROJECT_NAME;
 
 public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
+    private static MeasuredGoalDialog instance;
+
     private final TextField orderField = new TextField();
     private final TextField itemField = new TextField();
     private final TextField weightField = new TextField();
@@ -26,9 +29,17 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final ListView<Failure> failuresList = new ListView<>(failures);
     private final Button addFailureBtn = new Button("Add Failure");
 
-    public MeasuredGoalDialog() {
-        super("New Measured Goal", null);
+    public MeasuredGoalDialog(MainUser mainUser) {
+        super("New Measured Goal", mainUser);
         initializeForm();
+    }
+
+    public static synchronized MeasuredGoalDialog getInstance(MainUser user) {
+        if (instance == null) {
+            instance = new MeasuredGoalDialog(user);
+            instance.setOnShown(e -> instance.toFront());
+        }
+        return instance;
     }
 
     @Override
@@ -52,10 +63,12 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         grid.addRow(9, addFailureBtn);
 
         addFailureBtn.setOnAction(e -> {
-            FailureDialog failureDialog = new FailureDialog();
+            FailureDialog failureDialog = FailureDialog.getInstance(mainUser);
             failureDialog.showAndWait();
 //            failureDialog.getResult().ifPresent(failures::add);
         });
+
+        handleAddFailure();
 
         submitButton.disableProperty().bind(
                 orderValid.not().or(itemValid.not()).or(weightValid.not())
@@ -81,10 +94,20 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         return new MeasuredSet<>(Map.of("goal", goal, "advance", advance), type);
     }
 
-    @SuppressWarnings("unchecked")
     private <T> T parseValue(String text, Class<T> type) {
-        if (type == Double.class) return (T) Double.valueOf(text);
-        if (type == Integer.class) return (T) Integer.valueOf(text);
+        if (type == Double.class) return type.cast(Double.valueOf(text));
+        if (type == Integer.class) return type.cast(Integer.valueOf(text));
         throw new IllegalArgumentException("Unsupported type");
+    }
+
+    private void handleAddFailure() {
+        FailureDialog dialog = FailureDialog.getInstance(mainUser);
+        this.addChildDialog(dialog);
+        dialog.show();
+    }
+
+    @Override
+    protected void cleanup() {
+        instance = null;
     }
 }

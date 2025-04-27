@@ -29,6 +29,8 @@ import java.util.logging.Logger;
 import static dialogs.Questions.*;
 
 public class ProjectDialog extends Entity<Project> {
+
+    private static ProjectDialog instance;
     private static final Logger LOGGER = Logger.getLogger(ProjectDialog.class.getName());
 
     private final BooleanProperty nameValid = new SimpleBooleanProperty(false);
@@ -74,6 +76,14 @@ public class ProjectDialog extends Entity<Project> {
         }
         initializeForm();
         setupDynamicBehaviors();
+    }
+
+    public static synchronized ProjectDialog getInstance(MainUser mainUser) {
+        if (instance == null) {
+            instance = new ProjectDialog(mainUser);
+            instance.setOnShown(e -> instance.toFront());
+        }
+        return instance;
     }
 
     @Override
@@ -262,9 +272,9 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void showMeasuredGoalDialog() {
-        MeasuredGoalDialog dialog = new MeasuredGoalDialog();
-        dialog.showAndWait();
-//        dialog.getResult().ifPresent(measuredGoals::add);
+        MeasuredGoalDialog dialog = MeasuredGoalDialog.getInstance(mainUser);
+        this.addChildDialog(dialog);
+        dialog.show();
     }
 
     private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {
@@ -280,5 +290,10 @@ public class ProjectDialog extends Entity<Project> {
                 priorityValid.get();
 
         submitButton.setDisable(!formIsValid);
+    }
+
+    @Override
+    protected void cleanup() {
+        instance = null;
     }
 }
