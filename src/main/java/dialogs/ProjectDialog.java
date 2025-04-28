@@ -63,7 +63,6 @@ public class ProjectDialog extends Entity<Project> {
     private final Button deleteGoalButton = new Button("Delete Selected Goals");
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
-    private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
     private static final Color TEXT_COLOR_SELECTED = Color.WHITE;
     private static final Color TEXT_COLOR_UNSELECTED = Color.BLACK;
     private static final BackgroundFill SELECTED_BACKGROUND_FILL =
@@ -129,7 +128,7 @@ public class ProjectDialog extends Entity<Project> {
                 (ListChangeListener<Project>) change -> validateForm()
         );
         measuredGoals.setCellFactory(this::createDynamicStyledMeasuredGoalCell);
-        configureListEmptinessError(measuredGoals, "At least one measured goal is required!", measuredGoalsValid);
+        configureListEmptinessError(measuredGoals, measuredGoalsValid);
         measuredGoals.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
         deleteGoalButton.setOnAction((e) -> {
@@ -155,7 +154,7 @@ public class ProjectDialog extends Entity<Project> {
     private void createListingValidations() {
         priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
         priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
-        measuredGoalsValid.setValue(observableMeasuredGoals.isEmpty());
+        measuredGoalsValid.setValue(measuredGoals.getItems().isEmpty());
     }
 
     protected void addFormRows() {
@@ -180,10 +179,10 @@ public class ProjectDialog extends Entity<Project> {
         personalRadio.setSelected(true);
     }
 
-    private void configureListEmptinessError(ListView<?> listView, String errorMessage, BooleanProperty validityProperty) {
+    private void configureListEmptinessError(ListView<?> listView, BooleanProperty validityProperty) {
         Label placeholderLabel = new Label();
         placeholderLabel.textProperty().bind(Bindings.when(validityProperty.not())
-                .then(errorMessage)
+                .then("At least one measured goal is required!")
                 .otherwise("No items available."));
         placeholderLabel.styleProperty().bind(Bindings.when(validityProperty.not())
                 .then("-fx-text-fill: red; -fx-font-style: italic;")
