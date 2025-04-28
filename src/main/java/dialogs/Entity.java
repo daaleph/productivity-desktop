@@ -7,7 +7,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import records.MeasuredGoal;
 import services.ApiException;
 
 import java.util.ArrayList;

@@ -23,7 +23,6 @@ import javafx.scene.paint.Color;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -57,14 +56,13 @@ public class ProjectDialog extends Entity<Project> {
     private final ListView<Project> parentProjects = new ListView<>();
     private final HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
     private final ListView<MeasuredGoal> measuredGoals = new ListView<>();
+    private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
     private final CheckBox isFavorite = new CheckBox();
     private final Button addGoalButton = new Button("Add Measured Goal");
-    private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
     private final Button deleteGoalButton = new Button("Delete Selected Goals");
 
     private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
-    private static final Color UNSELECTED_COLOR = Color.TRANSPARENT;
     private static final Color TEXT_COLOR_SELECTED = Color.WHITE;
     private static final Color TEXT_COLOR_UNSELECTED = Color.BLACK;
     private static final BackgroundFill SELECTED_BACKGROUND_FILL =
@@ -121,19 +119,26 @@ public class ProjectDialog extends Entity<Project> {
 
     @Override
     protected void setupDynamicBehaviors() {
+
         priorityList.setCellFactory(this::createDynamicStyledPriorityCell);
         priorityList.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Priority>) c -> validateForm()
         );
+
         parentProjects.setCellFactory(this::createDynamicStyledProjectCell);
         parentProjects.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Project>) change -> validateForm()
         );
 
         measuredGoals.setCellFactory(this::createDynamicStyledMeasuredGoalCell);
-        deleteGoalButton.disableProperty().bind(
-                Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems())
-        );
+
+        addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
+
+        deleteGoalButton.setOnAction((e) -> {
+            observableMeasuredGoals.removeAll(measuredGoals.getSelectionModel().getSelectedItems());
+            childDialogs.getLast().cleanup();
+        });
+        deleteGoalButton.disableProperty().bind(Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems()));
     }
 
     @Override
@@ -148,8 +153,7 @@ public class ProjectDialog extends Entity<Project> {
 
     private void createListingValidations() {
         priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
-        priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
-        measuredGoalsValid.setValue(observableMeasuredGoals.isEmpty());
+        measuredGoalsValid.bind(FieldConfigurator.forFillableListView(measuredGoals));
     }
 
     protected void addFormRows() {
@@ -172,36 +176,26 @@ public class ProjectDialog extends Entity<Project> {
         personalRadio.setToggleGroup(projectTypeGroup);
         organizationalRadio.setToggleGroup(projectTypeGroup);
         personalRadio.setSelected(true);
-        addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
-        deleteGoalButton.setOnAction(e ->
-                observableMeasuredGoals.removeAll(
-                        measuredGoals.getSelectionModel().getSelectedItems()
-                )
-        );
     }
 
     private void configureListViews() {
-        configureListView(
-                priorityList,
-                mainUser.getPriorities(),
-                "No priorities available.",
-                "Populated priority list with {0} items.",
-                "No priorities found for user."
+        configureSelectableListView(
+            priorityList,
+            mainUser.getPriorities(),
+            "No priorities available.",
+            "Populated priority list with {0} items.",
+            "No priorities found for user."
         );
-        configureListView(
-                parentProjects,
-                mainUser.getProjects(),
-                "No parent projects available.",
-                "Populated parent projects list to select with {0} items.",
-                "No parent projects found for user."
+        configureSelectableListView(
+            parentProjects,
+            mainUser.getProjects(),
+            "No parent projects available.",
+            "Populated parent projects list to select with {0} items.",
+            "No parent projects found for user."
         );
         measuredGoals.setMinHeight(100);
         measuredGoals.setPrefHeight(100);
         measuredGoals.setItems(observableMeasuredGoals);
-        Label measuredGoalsPlaceholder = new Label("At least one measured goal is required!");
-        measuredGoalsPlaceholder.setStyle("-fx-text-fill: red; -fx-font-style: italic;");
-        measuredGoals.setPlaceholder(measuredGoalsPlaceholder);
-        measuredGoals.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
     private <T> ListCell<T> createStyledListCell(Function<T, String> textExtractor) {
@@ -253,7 +247,7 @@ public class ProjectDialog extends Entity<Project> {
         return createStyledListCell(MeasuredGoal::item);
     }
 
-    private <T> void configureListView(
+    private <T> void configureSelectableListView(
             ListView<T> listView,
             Map<?, T> items,
             String placeholderText,
@@ -277,7 +271,8 @@ public class ProjectDialog extends Entity<Project> {
         MeasuredGoalDialog dialog = MeasuredGoalDialog.getInstance(mainUser);
         dialog.show();
         dialog.setOnHidden(e -> {
-            observableMeasuredGoals.add(dialog.getResult(MeasuredGoal.class));
+            MeasuredGoal result = dialog.getResult(MeasuredGoal.class);
+            if (result != null) observableMeasuredGoals.add(result);
         });
         this.addChildDialog(dialog);
     }
