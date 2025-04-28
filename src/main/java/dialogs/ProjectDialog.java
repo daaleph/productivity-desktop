@@ -154,7 +154,9 @@ public class ProjectDialog extends Entity<Project> {
     private void createListingValidations() {
         priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
         priorityValid.addListener((obs, oldVal, newVal) -> validateForm());
-        measuredGoalsValid.setValue(measuredGoals.getItems().isEmpty());
+        System.out.print("MEASURED GOALS: ");
+        System.out.println(measuredGoals.getItems());
+        measuredGoalsValid.setValue(!measuredGoals.getItems().isEmpty());
     }
 
     protected void addFormRows() {
