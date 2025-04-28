@@ -1,6 +1,7 @@
 package dialogs;
 
 import javafx.beans.InvalidationListener;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.beans.property.*;
@@ -133,6 +134,14 @@ public class FieldConfigurator {
     public static BooleanProperty forFillableListView(ListView<?> listView) {
         BooleanProperty isValid = new SimpleBooleanProperty();
         isValid.set(!listView.getSelectionModel().isEmpty());
+        Label placeholderLabel = new Label();
+        placeholderLabel.textProperty().bind(Bindings.when(isValid.not())
+                .then("At least one measured goal is required!")
+                .otherwise("No items available."));
+        placeholderLabel.styleProperty().bind(Bindings.when(isValid.not())
+                .then("-fx-text-fill: red; -fx-font-style: italic;")
+                .otherwise("-fx-text-fill: gray;"));
+        listView.setPlaceholder(placeholderLabel);
         return isValid;
     }
 

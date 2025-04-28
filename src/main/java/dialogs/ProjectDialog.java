@@ -179,14 +179,14 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void configureListViews() {
-        configureListView(
+        configureSelectableListView(
             priorityList,
             mainUser.getPriorities(),
             "No priorities available.",
             "Populated priority list with {0} items.",
             "No priorities found for user."
         );
-        configureListView(
+        configureSelectableListView(
             parentProjects,
             mainUser.getProjects(),
             "No parent projects available.",
@@ -196,18 +196,6 @@ public class ProjectDialog extends Entity<Project> {
         measuredGoals.setMinHeight(100);
         measuredGoals.setPrefHeight(100);
         measuredGoals.setItems(observableMeasuredGoals);
-        configureListEmptinessError(measuredGoals, measuredGoalsValid);
-    }
-
-    private void configureListEmptinessError(ListView<?> listView, BooleanProperty validityProperty) {
-        Label placeholderLabel = new Label();
-        placeholderLabel.textProperty().bind(Bindings.when(validityProperty.not())
-                .then("At least one measured goal is required!")
-                .otherwise("No items available."));
-        placeholderLabel.styleProperty().bind(Bindings.when(validityProperty.not())
-                .then("-fx-text-fill: red; -fx-font-style: italic;")
-                .otherwise("-fx-text-fill: gray;"));
-        listView.setPlaceholder(placeholderLabel);
     }
 
     private <T> ListCell<T> createStyledListCell(Function<T, String> textExtractor) {
@@ -259,7 +247,7 @@ public class ProjectDialog extends Entity<Project> {
         return createStyledListCell(MeasuredGoal::item);
     }
 
-    private <T> void configureListView(
+    private <T> void configureSelectableListView(
             ListView<T> listView,
             Map<?, T> items,
             String placeholderText,
