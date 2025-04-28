@@ -130,6 +130,12 @@ public class FieldConfigurator {
         return isValid;
     }
 
+    public static BooleanProperty forFillableListView(ListView<?> listView) {
+        BooleanProperty isValid = new SimpleBooleanProperty();
+        isValid.set(!listView.getSelectionModel().isEmpty());
+        return isValid;
+    }
+
     private static Number[] parseLengths(Number... lengths) {
         if (lengths == null || lengths.length == 0) return new Number[]{1, 10};
         return switch (lengths.length) {
