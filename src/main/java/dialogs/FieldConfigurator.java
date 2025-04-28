@@ -2,6 +2,7 @@ package dialogs;
 
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
@@ -146,12 +147,22 @@ public class FieldConfigurator {
         return isValid;
     }
 
-    public static BooleanProperty forFillableListView(ListView<?> listView) {
+    public static <T> BooleanProperty forFillableListView(ListView<T> listView, String type) {
         BooleanProperty isValid = new SimpleBooleanProperty();
-        isValid.set(!listView.getSelectionModel().isEmpty());
+        isValid.set(!listView.getItems().isEmpty());
+        listView.setStyle(isValid.get() ? VALID_STYLE : WARNING_STYLE);
+        listView.getItems().addListener((ListChangeListener<T>) change -> {
+            while (change.next()) {
+                if (change.wasAdded() || change.wasRemoved()) {
+                    boolean hasItems = !listView.getItems().isEmpty();
+                    isValid.set(hasItems);
+                    listView.setStyle(hasItems ? VALID_STYLE : WARNING_STYLE);
+                }
+            }
+        });
         Label placeholderLabel = new Label();
         placeholderLabel.textProperty().bind(Bindings.when(isValid.not())
-                .then("At least one measured goal is required!")
+                .then(String.format("At least one %s is required!", type))
                 .otherwise("No items available."));
         placeholderLabel.styleProperty().bind(Bindings.when(isValid.not())
                 .then("-fx-text-fill: red; -fx-font-style: italic;")
