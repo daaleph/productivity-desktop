@@ -1,8 +1,10 @@
 package dialogs;
 
 import javafx.beans.InvalidationListener;
+import javafx.collections.FXCollections;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.beans.property.*;
 import javafx.beans.binding.Bindings;
@@ -14,12 +16,18 @@ import records.BoundedPair;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class FieldConfigurator {
     private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1;";
     private static final String VALID_STYLE = "-fx-border-color: lime; -fx-border-width: 1;";
+
+    private static final Logger LOGGER = Logger.getLogger(ProjectDialog.class.getName());
 
     public static BooleanProperty forGregorianTimeCategories(
             TextField field,
@@ -117,7 +125,13 @@ public class FieldConfigurator {
         return forNumber(field, prompt, Double::parseDouble, Arrays.stream(bounds).boxed().toArray(Double[]::new));
     }
 
-    public static BooleanProperty forListViewSelector(ListView<?> listView) {
+    public static <T> BooleanProperty forListViewSelector(
+            ListView<T> listView,
+            Map<?, T> items,
+            String placeholderText,
+            String successLogTemplate,
+            String warningLogMessage
+    ) {
         BooleanProperty isValid = new SimpleBooleanProperty();
         isValid.set(!listView.getSelectionModel().isEmpty());
         listView.setStyle(isValid.get() ? VALID_STYLE : WARNING_STYLE);
@@ -128,6 +142,7 @@ public class FieldConfigurator {
                     listView.setStyle(hasSelection ? VALID_STYLE : WARNING_STYLE);
                 }
         );
+        configureSelectableListView(listView, items, placeholderText, successLogTemplate, warningLogMessage);
         return isValid;
     }
 
@@ -175,6 +190,26 @@ public class FieldConfigurator {
         field.textProperty().addListener((o, oldVal, newVal) -> isValid.set(rule.validate(newVal)));
         field.styleProperty().bind(Bindings.when(isValid).then(VALID_STYLE).otherwise(WARNING_STYLE));
         return isValid;
+    }
+
+    public static <T> void configureSelectableListView(
+            ListView<T> listView,
+            Map<?, T> items,
+            String placeholderText,
+            String successLogTemplate,
+            String warningLogMessage
+    ) {
+        listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        listView.setMaxHeight(100);
+        listView.setPrefWidth(100);
+
+        if (items != null && !items.isEmpty()) {
+            listView.setItems(FXCollections.observableArrayList(items.values()));
+            LOGGER.log(Level.INFO, successLogTemplate, items.size());
+        } else {
+            listView.setPlaceholder(new Label(placeholderText));
+            LOGGER.log(Level.WARNING, warningLogMessage);
+        }
     }
 
     @FunctionalInterface

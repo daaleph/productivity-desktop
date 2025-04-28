@@ -28,6 +28,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static dialogs.FieldConfigurator.configureSelectableListView;
 import static dialogs.Questions.*;
 
 public class ProjectDialog extends Entity<Project> {
@@ -152,7 +153,13 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void createListingValidations() {
-        priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
+        priorityValid.bind(FieldConfigurator.forListViewSelector(
+                priorityList,
+                mainUser.getPriorities(),
+                "No priorities available.",
+                "Populated priority list with {0} items.",
+                "No priorities found for user.")
+        );
         measuredGoalsValid.bind(FieldConfigurator.forFillableListView(measuredGoals));
     }
 
@@ -179,13 +186,6 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void configureListViews() {
-        configureSelectableListView(
-            priorityList,
-            mainUser.getPriorities(),
-            "No priorities available.",
-            "Populated priority list with {0} items.",
-            "No priorities found for user."
-        );
         configureSelectableListView(
             parentProjects,
             mainUser.getProjects(),
@@ -245,26 +245,6 @@ public class ProjectDialog extends Entity<Project> {
 
     private ListCell<MeasuredGoal> createDynamicStyledMeasuredGoalCell(ListView<MeasuredGoal> listView) {
         return createStyledListCell(MeasuredGoal::item);
-    }
-
-    private <T> void configureSelectableListView(
-            ListView<T> listView,
-            Map<?, T> items,
-            String placeholderText,
-            String successLogTemplate,
-            String warningLogMessage
-    ) {
-        listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        listView.setMaxHeight(100);
-        listView.setPrefWidth(100);
-
-        if (items != null && !items.isEmpty()) {
-            listView.setItems(FXCollections.observableArrayList(items.values()));
-            LOGGER.log(Level.INFO, successLogTemplate, items.size());
-        } else {
-            listView.setPlaceholder(new Label(placeholderText));
-            LOGGER.log(Level.WARNING, warningLogMessage);
-        }
     }
 
     private void showMeasuredGoalDialog() {
