@@ -23,7 +23,6 @@ import javafx.scene.paint.Color;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -129,11 +128,18 @@ public class ProjectDialog extends Entity<Project> {
         parentProjects.getSelectionModel().getSelectedItems().addListener(
                 (ListChangeListener<Project>) change -> validateForm()
         );
-
         measuredGoals.setCellFactory(this::createDynamicStyledMeasuredGoalCell);
-        deleteGoalButton.disableProperty().bind(
-                Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems())
+        configureListEmptinessError(measuredGoals, "At least one measured goal is required!", measuredGoalsValid);
+        measuredGoals.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
+        deleteGoalButton.setOnAction((e) -> {
+                    observableMeasuredGoals.removeAll(
+                            measuredGoals.getSelectionModel().getSelectedItems()
+                    );
+                    childDialogs.getLast().cleanup();
+                }
         );
+        deleteGoalButton.disableProperty().bind(Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems()));
     }
 
     @Override
@@ -172,36 +178,37 @@ public class ProjectDialog extends Entity<Project> {
         personalRadio.setToggleGroup(projectTypeGroup);
         organizationalRadio.setToggleGroup(projectTypeGroup);
         personalRadio.setSelected(true);
-        addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
-        deleteGoalButton.setOnAction(e ->
-                observableMeasuredGoals.removeAll(
-                        measuredGoals.getSelectionModel().getSelectedItems()
-                )
-        );
+    }
+
+    private void configureListEmptinessError(ListView<?> listView, String errorMessage, BooleanProperty validityProperty) {
+        Label placeholderLabel = new Label();
+        placeholderLabel.textProperty().bind(Bindings.when(validityProperty.not())
+                .then(errorMessage)
+                .otherwise("No items available."));
+        placeholderLabel.styleProperty().bind(Bindings.when(validityProperty.not())
+                .then("-fx-text-fill: red; -fx-font-style: italic;")
+                .otherwise("-fx-text-fill: gray;"));
+        listView.setPlaceholder(placeholderLabel);
     }
 
     private void configureListViews() {
         configureListView(
-                priorityList,
-                mainUser.getPriorities(),
-                "No priorities available.",
-                "Populated priority list with {0} items.",
-                "No priorities found for user."
+            priorityList,
+            mainUser.getPriorities(),
+            "No priorities available.",
+            "Populated priority list with {0} items.",
+            "No priorities found for user."
         );
         configureListView(
-                parentProjects,
-                mainUser.getProjects(),
-                "No parent projects available.",
-                "Populated parent projects list to select with {0} items.",
-                "No parent projects found for user."
+            parentProjects,
+            mainUser.getProjects(),
+            "No parent projects available.",
+            "Populated parent projects list to select with {0} items.",
+            "No parent projects found for user."
         );
         measuredGoals.setMinHeight(100);
         measuredGoals.setPrefHeight(100);
         measuredGoals.setItems(observableMeasuredGoals);
-        Label measuredGoalsPlaceholder = new Label("At least one measured goal is required!");
-        measuredGoalsPlaceholder.setStyle("-fx-text-fill: red; -fx-font-style: italic;");
-        measuredGoals.setPlaceholder(measuredGoalsPlaceholder);
-        measuredGoals.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
     private <T> ListCell<T> createStyledListCell(Function<T, String> textExtractor) {
@@ -276,9 +283,7 @@ public class ProjectDialog extends Entity<Project> {
     private void showMeasuredGoalDialog() {
         MeasuredGoalDialog dialog = MeasuredGoalDialog.getInstance(mainUser);
         dialog.show();
-        dialog.setOnHidden(e -> {
-            observableMeasuredGoals.add(dialog.getResult(MeasuredGoal.class));
-        });
+        dialog.setOnHidden(e -> observableMeasuredGoals.add(dialog.getResult(MeasuredGoal.class)));
         this.addChildDialog(dialog);
     }
 
