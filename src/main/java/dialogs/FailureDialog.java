@@ -36,8 +36,7 @@ public class FailureDialog extends Entity<Failure> {
 
     @Override
     protected void initializeForm() {
-        grid.setHgap(10);
-        grid.setVgap(10);
+        super.initializeForm();
         addFormRows();
         setupDynamicBehaviors();
         createAlphanumericValidations();
@@ -66,11 +65,13 @@ public class FailureDialog extends Entity<Failure> {
 
     @Override
     protected Failure validateAndCreate() {
-        return new Failure(new Triplet<>(
+        Failure failure = new Failure(new Triplet<>(
                 reasonField.getText().trim(),
                 solutionField.getText().trim(),
                 descriptionField.getText().trim()
         ));
+        setResult(failure);
+        return failure;
     }
 
     @Override

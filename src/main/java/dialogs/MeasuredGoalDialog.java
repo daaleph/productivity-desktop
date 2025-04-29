@@ -1,19 +1,23 @@
 package dialogs;
 
 import home.MainUser;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import records.Failure;
 import records.MeasuredGoal;
 import records.MeasuredSet;
+import records.Priority;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.Function;
 
+import static dialogs.FormLayoutHelper.addFormRow;
 import static dialogs.Questions.*;
 
 public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
@@ -36,15 +40,16 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final TextField discreteGoalField = new TextField();
     private final TextField discreteAdvanceField = new TextField();
     private final CheckBox finishedCheck = new CheckBox("Finished");
-    private final ObservableList<Failure> failures = FXCollections.observableArrayList();
-    private final ListView<Failure> failuresList = new ListView<>(failures);
-    private final Button addFailureBtn = new Button("Add Failure");
+    private final ObservableList<Failure> observableFailures = FXCollections.observableArrayList();
+    private final ListView<Failure> failuresList = new ListView<>(observableFailures);
+    private final Button addFailureButton = new Button("Add Failure");
+    private final Button deleteFailureButton = new Button("Delete Selected Failures");
 
     public MeasuredGoalDialog(MainUser mainUser) {
         super("New Measured Goal", mainUser);
         initializeForm();
         createAlphanumericValidations();
-        configureFailureList();
+        configureListViews();
     }
 
     public static synchronized MeasuredGoalDialog getInstance(MainUser user) {
@@ -57,25 +62,21 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
 
     @Override
     protected void initializeForm() {
-        grid.setHgap(10);
-        grid.setVgap(10);
+        super.initializeForm();
         addFormRows();
         createAlphanumericValidations();
+        createListingValidations();
         setupDynamicBehaviors();
     }
 
-    private void configureFailureList() {
-        failuresList.setCellFactory(lv -> new ListCell<Failure>() {
-            @Override
-            protected void updateItem(Failure item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item.triplet().first());
-                }
-            }
-        });
+    private void configureListViews() {
+        failuresList.setMinHeight(100);
+        failuresList.setPrefHeight(100);
+        failuresList.setItems(observableFailures);
+    }
+
+    private ListCell<Failure> createDynamicStyledFailuresCell(ListView<Failure> failures) {
+        return createStyledListCell(Failure::description);
     }
 
     @Override
@@ -91,6 +92,10 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         realAdvanceValid.bind(FieldConfigurator.forDouble(realAdvanceField, "Real advance (0, 100)%",100));
     }
 
+    private void createListingValidations() {
+        failuresValid.bind(FieldConfigurator.forFillableListView(failuresList, "failure", false));
+    }
+
     @Override
     protected MeasuredGoal validateAndCreate() {
         MeasuredGoal goal = new MeasuredGoal(
@@ -100,7 +105,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
                 createMeasuredSet(realGoalField, realAdvanceField, Double.class),
                 createMeasuredSet(discreteGoalField, discreteAdvanceField, Integer.class),
                 finishedCheck.isSelected(),
-                new ArrayList<>(failures)
+                new ArrayList<>(observableFailures)
         );
         setResult(goal);
         return goal;
@@ -108,22 +113,33 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
 
     @Override
     protected void setupDynamicBehaviors() {
-        addFailureBtn.setOnAction(e -> showFailureDialog());
+        failuresList.setCellFactory(this::createDynamicStyledFailuresCell);
+        addFailureButton.setOnAction(e -> showFailureDialog());
+        deleteFailureButton.setOnAction((e) -> {
+            observableFailures.removeAll(failuresList.getSelectionModel().getSelectedItems());
+            childDialogs.getLast().cleanup();
+        });
+        deleteFailureButton.disableProperty().bind(Bindings.isEmpty(failuresList.getSelectionModel().getSelectedItems()));
         submitButton.disableProperty().bind(orderValid.not().or(itemValid.not()).or(weightValid.not()));
     }
 
     @Override
     protected void addFormRows() {
-        grid.addRow(0, new Label("Order*:"), orderField);
-        grid.addRow(1, new Label("Item*:"), itemField);
-        grid.addRow(2, new Label("Weight*:"), weightField);
-        grid.addRow(3, new Label("Real Goal:"), realGoalField);
-        grid.addRow(4, new Label("Real Advance:"), realAdvanceField);
-        grid.addRow(5, new Label("Discrete Goal:"), discreteGoalField);
-        grid.addRow(6, new Label("Discrete Advance:"), discreteAdvanceField);
-        grid.addRow(7, new Label("Finished:"), finishedCheck);
-        grid.addRow(8, new Label("Failures:"), failuresList);
-        grid.addRow(9, addFailureBtn);
+        addFormRow("Order*:", grid, orderField, 0);
+        addFormRow("Item*:", grid, itemField, 1);
+        addFormRow("Weight*:", grid, weightField, 2);
+        addFormRow("Real Goal:", grid, realGoalField, 3);
+        addFormRow("Real Advance:", grid, realAdvanceField, 4);
+        addFormRow("Discrete Goal:", grid, discreteGoalField, 5);
+        addFormRow("Discrete Advance:", grid, discreteAdvanceField, 6);
+        addFormRow("Finished:", grid, finishedCheck, 7);
+        addFormRow("Failures:", grid, failuresList, 8);
+        HBox buttonsContainer = new HBox(10, addFailureButton, deleteFailureButton);
+        addFormRow("", grid, buttonsContainer, 9);
+    }
+
+    private ListCell<Failure> createDynamicStyledFailureCell(ListView<Failure> listView) {
+        return createStyledListCell(Failure::description);
     }
 
     private <T> MeasuredSet<T> createMeasuredSet(TextField goalField, TextField advanceField, Class<T> type) {
@@ -140,18 +156,19 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
 
     private void showFailureDialog() {
         FailureDialog dialog = FailureDialog.getInstance(mainUser);
-        this.addChildDialog(dialog);
         dialog.show();
         dialog.setOnHidden(e -> {
             Failure result = dialog.getResult(Failure.class);
-            if (result != null) failures.add(result);
+            if (result != null) {
+                observableFailures.add(result);
+                dialog.cleanup();
+            }
         });
+        this.addChildDialog(dialog);
     }
 
     @Override
-    protected void cleanup() {
-        instance = null;
-    }
+    protected void cleanup() { instance = null; }
 
     private static final Map<Class<?>, Function<String, ?>> PARSERS = Map.of(
             Long.class, Long::valueOf,

@@ -147,16 +147,15 @@ public class FieldConfigurator {
         return isValid;
     }
 
-    public static <T> BooleanProperty forFillableListView(ListView<T> listView, String type) {
+    public static <T> BooleanProperty forFillableListView(ListView<T> listView, String type, Boolean mandatory) {
         BooleanProperty isValid = new SimpleBooleanProperty();
-        isValid.set(!listView.getItems().isEmpty());
+        isValid.set(!mandatory || !listView.getItems().isEmpty());
         listView.setStyle(isValid.get() ? VALID_STYLE : WARNING_STYLE);
         listView.getItems().addListener((ListChangeListener<T>) change -> {
             while (change.next()) {
                 if (change.wasAdded() || change.wasRemoved()) {
-                    boolean hasItems = !listView.getItems().isEmpty();
-                    isValid.set(hasItems);
-                    listView.setStyle(hasItems ? VALID_STYLE : WARNING_STYLE);
+                    isValid.set(!mandatory || !listView.getItems().isEmpty());
+                    listView.setStyle(isValid.getValue() ? VALID_STYLE : WARNING_STYLE);
                 }
             }
         });
