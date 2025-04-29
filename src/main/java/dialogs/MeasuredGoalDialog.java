@@ -144,9 +144,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         dialog.show();
         dialog.setOnHidden(e -> {
             Failure result = dialog.getResult(Failure.class);
-            if (result != null) {
-                failures.add(result);
-            }
+            if (result != null) failures.add(result);
         });
     }
 

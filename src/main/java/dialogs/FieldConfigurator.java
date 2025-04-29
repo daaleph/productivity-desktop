@@ -28,7 +28,7 @@ public class FieldConfigurator {
     private static final String WARNING_STYLE = "-fx-border-color: red; -fx-border-width: 1;";
     private static final String VALID_STYLE = "-fx-border-color: lime; -fx-border-width: 1;";
 
-    private static final Logger LOGGER = Logger.getLogger(ProjectDialog.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FieldConfigurator.class.getName());
 
     public static BooleanProperty forGregorianTimeCategories(
             TextField field,
@@ -160,6 +160,7 @@ public class FieldConfigurator {
                 }
             }
         });
+        listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         Label placeholderLabel = new Label();
         placeholderLabel.textProperty().bind(Bindings.when(isValid.not())
                 .then(String.format("At least one %s is required!", type))

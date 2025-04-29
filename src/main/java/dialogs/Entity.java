@@ -79,12 +79,14 @@ public abstract class Entity<T> extends Stage {
         });
 
         cancelButton.setOnAction(e -> {
-            close();
             onCancel();
+            close();
         });
     }
 
-    protected void onCancel() {}
+    protected void onCancel() {
+        this.cleanup();
+    }
     protected void showError(String message) {}
 
     protected void setResult(T result) {

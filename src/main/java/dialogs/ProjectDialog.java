@@ -11,7 +11,6 @@ import records.Priority;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
@@ -247,7 +246,10 @@ public class ProjectDialog extends Entity<Project> {
         dialog.show();
         dialog.setOnHidden(e -> {
             MeasuredGoal result = dialog.getResult(MeasuredGoal.class);
-            if (result != null) observableMeasuredGoals.add(result);
+            if (result != null) {
+                observableMeasuredGoals.add(result);
+                dialog.cleanup();
+            }
         });
         this.addChildDialog(dialog);
     }
