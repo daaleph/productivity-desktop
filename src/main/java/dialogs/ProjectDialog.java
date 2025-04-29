@@ -12,21 +12,16 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.PseudoClass;
-import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static dialogs.FieldConfigurator.configureSelectableListView;
+import static dialogs.FormLayoutHelper.addFormRow;
 import static dialogs.Questions.*;
 
 public class ProjectDialog extends Entity<Project> {
@@ -58,17 +53,8 @@ public class ProjectDialog extends Entity<Project> {
     private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
     private final CheckBox isFavorite = new CheckBox();
-    private final Button addGoalButton = new Button("Add Measured Goal");
-    private final Button deleteGoalButton = new Button("Delete Selected Goals");
-
-    private static final Color SELECTED_COLOR = Color.rgb(100, 149, 237, 0.8);
-    private static final Color TEXT_COLOR_SELECTED = Color.WHITE;
-    private static final Color TEXT_COLOR_UNSELECTED = Color.BLACK;
-    private static final BackgroundFill SELECTED_BACKGROUND_FILL =
-            new BackgroundFill(SELECTED_COLOR, new CornerRadii(3), Insets.EMPTY);
-    private static final Background SELECTED_BACKGROUND = new Background(SELECTED_BACKGROUND_FILL);
-    private static final Background UNSELECTED_BACKGROUND = Background.EMPTY;
-    private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("custom-selected");
+    private final Button buttonAddMeasuredGoal = new Button("Add Measured Goal");
+    private final Button buttonDeleteMeasuredGoal = new Button("Delete Selected Goals");
 
     public ProjectDialog(MainUser mainUser) {
         super("New Project", mainUser);
@@ -118,18 +104,17 @@ public class ProjectDialog extends Entity<Project> {
 
     @Override
     protected void setupDynamicBehaviors() {
-
         priorityList.setCellFactory(this::createDynamicStyledPriorityCell);
         parentProjects.setCellFactory(this::createDynamicStyledProjectCell);
         measuredGoals.setCellFactory(this::createDynamicStyledMeasuredGoalCell);
-        addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
+        buttonAddMeasuredGoal.setOnAction(e -> showMeasuredGoalDialog());
 
-        deleteGoalButton.setOnAction((e) -> {
+        buttonDeleteMeasuredGoal.setOnAction((e) -> {
             observableMeasuredGoals.removeAll(measuredGoals.getSelectionModel().getSelectedItems());
             childDialogs.getLast().cleanup();
         });
+        buttonDeleteMeasuredGoal.disableProperty().bind(Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems()));
 
-        deleteGoalButton.disableProperty().bind(Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems()));
         submitButton.disableProperty().bind(
                 nameValid.not().or(daysValid.not()).or(monthsValid.not())
                 .or(yearsValid.not()).or(priorityValid.not()).or(measuredGoalsValid.not())
@@ -148,29 +133,29 @@ public class ProjectDialog extends Entity<Project> {
 
     private void createListingValidations() {
         priorityValid.bind(FieldConfigurator.forListViewSelector(
-                priorityList,
-                mainUser.getPriorities(),
-                "No priorities available.",
-                "Populated priority list with {0} items.",
-                "No priorities found for user.")
+            priorityList,
+            mainUser.getPriorities(),
+            "No priorities available.",
+            "Populated priority list with {0} items.",
+            "No priorities found for user.")
         );
-        measuredGoalsValid.bind(FieldConfigurator.forFillableListView(measuredGoals, "measured goal"));
+        measuredGoalsValid.bind(FieldConfigurator.forFillableListView(measuredGoals, "measured goal", true));
     }
 
     protected void addFormRows() {
-        addFormRow("Project Name:", nameField, 0);
-        addFormRow("Project Type:", typeBox, 1);
-        addFormRow("Priority (Click to select/deselect):", priorityList, 2);
-        addFormRow("Parent Projects (Click to select/deselect):", parentProjects, 3);
-        addFormRow("Completing years:", completingYears, 4);
-        addFormRow("Completing months:", completingMonths, 5);
-        addFormRow("Completing weeks:", completingWeeks, 6);
-        addFormRow("Completing days:", completingDays, 7);
-        addFormRow("The details!", descriptionField, 8);
-        addFormRow("Will you enjoy it?", isFavorite, 9);
-        addFormRow("Measured Goals:", measuredGoals, 10);
-        HBox buttonContainer = new HBox(10, addGoalButton, deleteGoalButton);
-        addFormRow("", buttonContainer, 11);
+        addFormRow("Project Name:", grid, nameField, 0);
+        addFormRow("Project Type:", grid, typeBox, 1);
+        addFormRow("Priority (Click to select/deselect):", grid, priorityList, 2);
+        addFormRow("Parent Projects (Click to select/deselect):", grid, parentProjects, 3);
+        addFormRow("Completing years:", grid, completingYears, 4);
+        addFormRow("Completing months:", grid, completingMonths, 5);
+        addFormRow("Completing weeks:", grid, completingWeeks, 6);
+        addFormRow("Completing days:", grid, completingDays, 7);
+        addFormRow("The details!", grid, descriptionField, 8);
+        addFormRow("Will you enjoy it?", grid, isFavorite, 9);
+        addFormRow("Measured Goals:", grid, measuredGoals, 10);
+        HBox buttonContainer = new HBox(10, buttonAddMeasuredGoal, buttonDeleteMeasuredGoal);
+        addFormRow("", grid, buttonContainer, 11);
     }
 
     private void configureNotListViews() {
@@ -190,43 +175,6 @@ public class ProjectDialog extends Entity<Project> {
         measuredGoals.setMinHeight(100);
         measuredGoals.setPrefHeight(100);
         measuredGoals.setItems(observableMeasuredGoals);
-    }
-
-    private <T> ListCell<T> createStyledListCell(Function<T, String> textExtractor) {
-        return new ListCell<>() {
-            {
-                addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-                    if (isEmpty() || getItem() == null) return;
-                    ListView<T> lv = getListView();
-                    SelectionModel<T> sm = lv.getSelectionModel();
-                    int index = getIndex();
-
-                    if (sm.isSelected(index)) {
-                        sm.clearSelection(index);
-                    } else {
-                        sm.select(index);
-                    }
-                    event.consume();
-                });
-            }
-
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                    applyCellStyle(this, false);
-                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, false);
-                } else {
-                    setText(textExtractor.apply(item));
-                    setGraphic(null);
-                    boolean isSelected = getListView().getSelectionModel().isSelected(getIndex());
-                    applyCellStyle(this, isSelected);
-                    pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-                }
-            }
-        };
     }
 
     private ListCell<Priority> createDynamicStyledPriorityCell(ListView<Priority> listView) {
@@ -254,18 +202,6 @@ public class ProjectDialog extends Entity<Project> {
         this.addChildDialog(dialog);
     }
 
-    private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {
-        cell.setBackground(isSelected ? SELECTED_BACKGROUND : UNSELECTED_BACKGROUND);
-        cell.setTextFill(isSelected ? TEXT_COLOR_SELECTED : TEXT_COLOR_UNSELECTED);
-    }
-
-    private void addFormRow(String label, Node field, int row) {
-        grid.add(new Label(label), 0, row);
-        grid.add(field, 1, row);
-    }
-
     @Override
-    protected void cleanup() {
-        instance = null;
-    }
+    protected void cleanup() { instance = null; }
 }
