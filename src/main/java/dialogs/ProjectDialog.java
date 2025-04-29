@@ -11,7 +11,6 @@ import records.Priority;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
@@ -22,12 +21,12 @@ import javafx.scene.paint.Color;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static dialogs.FieldConfigurator.configureSelectableListView;
 import static dialogs.Questions.*;
 
 public class ProjectDialog extends Entity<Project> {
@@ -113,32 +112,28 @@ public class ProjectDialog extends Entity<Project> {
         configureNotListViews();
         configureListViews();
         createListingValidations();
-        setupDynamicBehaviors();
         createAlphanumericValidations();
+        setupDynamicBehaviors();
     }
 
     @Override
     protected void setupDynamicBehaviors() {
 
         priorityList.setCellFactory(this::createDynamicStyledPriorityCell);
-        priorityList.getSelectionModel().getSelectedItems().addListener(
-                (ListChangeListener<Priority>) c -> validateForm()
-        );
-
         parentProjects.setCellFactory(this::createDynamicStyledProjectCell);
-        parentProjects.getSelectionModel().getSelectedItems().addListener(
-                (ListChangeListener<Project>) change -> validateForm()
-        );
-
         measuredGoals.setCellFactory(this::createDynamicStyledMeasuredGoalCell);
-
         addGoalButton.setOnAction(e -> showMeasuredGoalDialog());
 
         deleteGoalButton.setOnAction((e) -> {
             observableMeasuredGoals.removeAll(measuredGoals.getSelectionModel().getSelectedItems());
             childDialogs.getLast().cleanup();
         });
+
         deleteGoalButton.disableProperty().bind(Bindings.isEmpty(measuredGoals.getSelectionModel().getSelectedItems()));
+        submitButton.disableProperty().bind(
+                nameValid.not().or(daysValid.not()).or(monthsValid.not())
+                .or(yearsValid.not()).or(priorityValid.not()).or(measuredGoalsValid.not())
+        );
     }
 
     @Override
@@ -152,8 +147,14 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void createListingValidations() {
-        priorityValid.bind(FieldConfigurator.forListViewSelector(priorityList));
-        measuredGoalsValid.bind(FieldConfigurator.forFillableListView(measuredGoals));
+        priorityValid.bind(FieldConfigurator.forListViewSelector(
+                priorityList,
+                mainUser.getPriorities(),
+                "No priorities available.",
+                "Populated priority list with {0} items.",
+                "No priorities found for user.")
+        );
+        measuredGoalsValid.bind(FieldConfigurator.forFillableListView(measuredGoals, "measured goal"));
     }
 
     protected void addFormRows() {
@@ -179,13 +180,6 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     private void configureListViews() {
-        configureSelectableListView(
-            priorityList,
-            mainUser.getPriorities(),
-            "No priorities available.",
-            "Populated priority list with {0} items.",
-            "No priorities found for user."
-        );
         configureSelectableListView(
             parentProjects,
             mainUser.getProjects(),
@@ -247,32 +241,15 @@ public class ProjectDialog extends Entity<Project> {
         return createStyledListCell(MeasuredGoal::item);
     }
 
-    private <T> void configureSelectableListView(
-            ListView<T> listView,
-            Map<?, T> items,
-            String placeholderText,
-            String successLogTemplate,
-            String warningLogMessage
-    ) {
-        listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        listView.setMaxHeight(100);
-        listView.setPrefWidth(100);
-
-        if (items != null && !items.isEmpty()) {
-            listView.setItems(FXCollections.observableArrayList(items.values()));
-            LOGGER.log(Level.INFO, successLogTemplate, items.size());
-        } else {
-            listView.setPlaceholder(new Label(placeholderText));
-            LOGGER.log(Level.WARNING, warningLogMessage);
-        }
-    }
-
     private void showMeasuredGoalDialog() {
         MeasuredGoalDialog dialog = MeasuredGoalDialog.getInstance(mainUser);
         dialog.show();
         dialog.setOnHidden(e -> {
             MeasuredGoal result = dialog.getResult(MeasuredGoal.class);
-            if (result != null) observableMeasuredGoals.add(result);
+            if (result != null) {
+                observableMeasuredGoals.add(result);
+                dialog.cleanup();
+            }
         });
         this.addChildDialog(dialog);
     }
@@ -280,17 +257,6 @@ public class ProjectDialog extends Entity<Project> {
     private <T> void applyCellStyle(ListCell<T> cell, boolean isSelected) {
         cell.setBackground(isSelected ? SELECTED_BACKGROUND : UNSELECTED_BACKGROUND);
         cell.setTextFill(isSelected ? TEXT_COLOR_SELECTED : TEXT_COLOR_UNSELECTED);
-    }
-
-    private void validateForm() {
-        boolean formIsValid = nameValid.get() &&
-                daysValid.get() &&
-                monthsValid.get() &&
-                yearsValid.get() &&
-                priorityValid.get() &&
-                measuredGoalsValid.get();
-
-        submitButton.setDisable(!formIsValid);
     }
 
     private void addFormRow(String label, Node field, int row) {

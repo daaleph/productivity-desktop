@@ -40,6 +40,7 @@ public class FailureDialog extends Entity<Failure> {
         grid.setVgap(10);
         addFormRows();
         setupDynamicBehaviors();
+        createAlphanumericValidations();
     }
 
     @Override
