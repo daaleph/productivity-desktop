@@ -6,12 +6,17 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import records.Failure;
+import records.MeasuredGoal;
 import records.Triplet;
+
+import java.util.logging.Logger;
 
 import static dialogs.Questions.PROJECT_NAME;
 
 public class FailureDialog extends Entity<Failure> {
     private static FailureDialog instance;
+
+    private static final Logger LOGGER = Logger.getLogger(FailureDialog.class.getName());
 
     BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
     BooleanProperty reasonValid = new SimpleBooleanProperty(false);
@@ -54,6 +59,13 @@ public class FailureDialog extends Entity<Failure> {
         submitButton.disableProperty().bind(
                 reasonValid.not().or(solutionValid.not()).or(descriptionValid.not())
         );
+    }
+
+    @Override
+    protected void logObjectStructure() {
+        LOGGER.info("=== Failures ===");
+        this.getResult(Failure.class).logEntity();
+        LOGGER.info("=========================");
     }
 
     @Override

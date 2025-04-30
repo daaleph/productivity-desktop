@@ -29,5 +29,16 @@ public record Failure(Triplet<String, String, String> triplet) {
             )
         );
     }
-
+    public void logEntity() {
+        String measuredGoalStructure = String.format(
+                """
+                Failure {
+                    description: %s,
+                    reason: "%s",
+                    solution: %s,
+                }""",
+                description(), reason(), solution()
+        );
+        System.out.println(measuredGoalStructure);
+    }
 }

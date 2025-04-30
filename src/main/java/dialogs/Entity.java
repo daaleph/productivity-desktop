@@ -1,15 +1,17 @@
 package dialogs;
 
 import home.MainUser;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import model.projects.Project;
 import services.ApiException;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 public abstract class Entity<T> extends Stage {
@@ -22,7 +24,7 @@ public abstract class Entity<T> extends Stage {
     protected final Button submitButton = new Button("Submit");
     protected final Button cancelButton = new Button("Cancel");
 
-    protected final List<Entity<?>> childDialogs = new ArrayList<>();
+    protected final ObservableList<Entity<?>> childDialogs = FXCollections.observableArrayList();
 
     protected Entity(String title, MainUser mainUser) {
         this.mainUser = mainUser;
@@ -70,7 +72,8 @@ public abstract class Entity<T> extends Stage {
 
         submitButton.setOnAction(ae -> {
             try {
-                T entity = validateAndCreate();
+                validateAndCreate();
+                logObjectStructure();
                 close();
             } catch (ValidationException | ApiException e) {
                 showError(e.getMessage());
@@ -85,10 +88,6 @@ public abstract class Entity<T> extends Stage {
 
     protected <S> ListCell<S> createStyledListCell(Function<S, String> textExtractor) {
         return UIComponentFactory.createStyledListCell(textExtractor);
-    }
-
-    protected <S> void applyCellStyle(ListCell<S> cell, boolean isSelected) {
-        UIComponentFactory.applyCellStyle(cell, isSelected);
     }
 
     protected void onCancel() {
@@ -107,6 +106,7 @@ public abstract class Entity<T> extends Stage {
     protected abstract void cleanup();
     protected abstract void addFormRows();
     protected abstract void setupDynamicBehaviors();
+    protected abstract void logObjectStructure();
     protected abstract void createAlphanumericValidations();
     protected abstract T validateAndCreate() throws ValidationException;
 

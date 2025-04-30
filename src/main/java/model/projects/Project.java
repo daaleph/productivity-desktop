@@ -1,7 +1,6 @@
 package model.projects;
 
 import records.*;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +18,15 @@ public class Project extends CoreProject {
 
     public List<UUID> getParentProjects() {
         return parentProjects;
+    }
+
+    @Override
+    public void logEntity() {
+        super.logEntity();
+        System.out.println("Parent projects:");
+        for (UUID parentProject : getParentProjects()) {
+            System.out.printf("  - Parent project: %s", parentProject);
+        }
     }
 
     public static class ProjectInfo extends CoreProjectInfo {

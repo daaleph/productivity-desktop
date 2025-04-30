@@ -38,6 +38,31 @@ public class CoreProject {
     public List<Tuple<UUID,Triplet<Integer, String, Double>>> getUnderlyingCategories() { return underlyingCategories; }
     public void setUnderlyingCategories(List<Tuple<UUID,Triplet<Integer, String, Double>>> uc) { underlyingCategories = uc; }
 
+    public void logEntity() {
+        System.out.printf("UUID: %s%n", getUuid());
+        System.out.printf("Name: %s%n", getName());
+        System.out.printf("Type: %d%n", getType());
+        System.out.printf("Favorite: %b%n", isFavorite());
+        System.out.printf("Date to start: %s%n", getDateToStart());
+
+        System.out.println("Priorities:");
+        for (Priority priority : getPriorities()) {
+            System.out.printf("  - %s%n", priority);
+        }
+
+        System.out.println("Measured Goals:");
+        for (MeasuredGoal goal : getMeasuredGoals()) {
+            System.out.printf("  - %s%n", goal);
+        }
+
+        System.out.printf("Necessary Time: %s%n", getNecessaryTime());
+
+        System.out.println("Underlying Categories:");
+        for (Tuple<UUID, Triplet<Integer, String, Double>> category : getUnderlyingCategories()) {
+            System.out.printf("  - UUID: %s, Triplet: %s%n", category.first(), category.second());
+        }
+    }
+
     public static class CoreProjectInfo {
         protected EssentialInfo essential;
         protected List<Priority> priorities;
