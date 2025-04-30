@@ -8,20 +8,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import model.projects.Project;
 import records.Failure;
 import records.MeasuredGoal;
 import records.MeasuredSet;
-import records.Priority;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 import static dialogs.FormLayoutHelper.addFormRow;
 import static dialogs.Questions.*;
 
 public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private static MeasuredGoalDialog instance;
+
+    private static final Logger LOGGER = Logger.getLogger(MeasuredGoalDialog.class.getName());
 
     private final BooleanProperty orderValid = new SimpleBooleanProperty(false);
     private final BooleanProperty itemValid  = new SimpleBooleanProperty(false);
@@ -75,7 +78,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         failuresList.setItems(observableFailures);
     }
 
-    private ListCell<Failure> createDynamicStyledFailuresCell(ListView<Failure> failures) {
+    private ListCell<Failure> createDynamicStyledFailureCell(ListView<Failure> failures) {
         return createStyledListCell(Failure::description);
     }
 
@@ -113,7 +116,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
 
     @Override
     protected void setupDynamicBehaviors() {
-        failuresList.setCellFactory(this::createDynamicStyledFailuresCell);
+        failuresList.setCellFactory(this::createDynamicStyledFailureCell);
         addFailureButton.setOnAction(e -> showFailureDialog());
         deleteFailureButton.setOnAction((e) -> {
             observableFailures.removeAll(failuresList.getSelectionModel().getSelectedItems());
@@ -121,6 +124,13 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         });
         deleteFailureButton.disableProperty().bind(Bindings.isEmpty(failuresList.getSelectionModel().getSelectedItems()));
         submitButton.disableProperty().bind(orderValid.not().or(itemValid.not()).or(weightValid.not()));
+    }
+
+    @Override
+    protected void logObjectStructure() {
+        LOGGER.info("=== Measured Goals ===");
+        this.getResult(MeasuredGoal.class).logEntity();
+        LOGGER.info("=========================");
     }
 
     @Override
@@ -136,10 +146,6 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         addFormRow("Failures:", grid, failuresList, 8);
         HBox buttonsContainer = new HBox(10, addFailureButton, deleteFailureButton);
         addFormRow("", grid, buttonsContainer, 9);
-    }
-
-    private ListCell<Failure> createDynamicStyledFailureCell(ListView<Failure> listView) {
-        return createStyledListCell(Failure::description);
     }
 
     private <T> MeasuredSet<T> createMeasuredSet(TextField goalField, TextField advanceField, Class<T> type) {

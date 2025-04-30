@@ -6,6 +6,7 @@ import javafx.scene.layout.*;
 import model.projects.EssentialInfo;
 import model.projects.Project;
 import records.MeasuredGoal;
+import records.MeasuredSet;
 import records.Priority;
 
 import javafx.beans.property.BooleanProperty;
@@ -15,11 +16,14 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static data.Abbreviations.getAbbreviation;
 import static dialogs.FieldConfigurator.configureSelectableListView;
 import static dialogs.FormLayoutHelper.addFormRow;
 import static dialogs.Questions.*;
@@ -46,9 +50,9 @@ public class ProjectDialog extends Entity<Project> {
     private final ToggleGroup projectTypeGroup = new ToggleGroup();
     private final RadioButton personalRadio = new RadioButton("Personal");
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
+    private final HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
     private final ListView<Priority> priorityList = new ListView<>();
     private final ListView<Project> parentProjects = new ListView<>();
-    private final HBox typeBox = new HBox(10, personalRadio, organizationalRadio);
     private final ListView<MeasuredGoal> measuredGoals = new ListView<>();
     private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
     private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
@@ -81,13 +85,31 @@ public class ProjectDialog extends Entity<Project> {
         ObservableList<Priority> currentlySelected = priorityList.getSelectionModel().getSelectedItems();
         if (currentlySelected.isEmpty()) throw new ValidationException("Must select at least one priority.");
 
-        EssentialInfo essentialInfo = new EssentialInfo(projectName, 0, false, ZonedDateTime.now());
+        EssentialInfo essentialInfo = new EssentialInfo(
+                projectName,
+                personalRadio.isSelected() ? 0 : 1,
+                isFavorite.isSelected(),
+                ZonedDateTime.now()
+        );
+        Map<String, Integer> necessaryTimeMap = Map.of(
+                getAbbreviation("completingDays"), Integer.parseInt(completingDays.getText().trim()),
+                getAbbreviation("completingWeeks"), Integer.parseInt(completingWeeks.getText().trim()),
+                getAbbreviation("completingMonths"), Integer.parseInt(completingMonths.getText().trim()),
+                getAbbreviation("completingYears"), Integer.parseInt(completingYears.getText().trim())
+        );
+        MeasuredSet<Integer> necessaryTimeSet = MeasuredSet.create(Integer.class, necessaryTimeMap);
         Project.ProjectInfo projectInfo = new Project.ProjectInfo(
-                essentialInfo, List.copyOf(currentlySelected), List.of(), null, List.of(), List.of()
+                essentialInfo,
+                List.copyOf(currentlySelected),
+                observableMeasuredGoals,
+                necessaryTimeSet,
+                List.of(),
+                getParentUUIDSFromList()
         );
 
         Project project = new Project(UUID.randomUUID());
         project.setInfo(projectInfo);
+        setResult(project);
         return project;
     }
 
@@ -119,6 +141,13 @@ public class ProjectDialog extends Entity<Project> {
                 nameValid.not().or(daysValid.not()).or(monthsValid.not())
                 .or(yearsValid.not()).or(priorityValid.not()).or(measuredGoalsValid.not())
         );
+    }
+
+    @Override
+    protected void logObjectStructure() {
+        LOGGER.info("=== Project Structure ===");
+        this.getResult(Project.class).logEntity();
+        LOGGER.info("=========================");
     }
 
     @Override
@@ -200,6 +229,15 @@ public class ProjectDialog extends Entity<Project> {
             }
         });
         this.addChildDialog(dialog);
+    }
+
+    private ArrayList<UUID> getParentUUIDSFromList() {
+        ArrayList<UUID> features = new ArrayList<>();
+        List<Project> items = parentProjects.getItems();
+        for (Project item : items) {
+            features.add(item.getUuid());
+        }
+        return features;
     }
 
     @Override
