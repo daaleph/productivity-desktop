@@ -42,11 +42,16 @@ public class ProjectDialog extends Entity<Project> {
     private final BooleanProperty descriptionValid = new SimpleBooleanProperty(false);
     private final BooleanProperty measuredGoalsValid = new SimpleBooleanProperty(false);
 
-    private final TextField nameField = new TextField(PROJECT_NAME.get());
-    private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
-    private final TextField completingWeeks = new TextField(COMPLETING_WEEKS.get());
-    private final TextField completingMonths = new TextField(COMPLETING_MONTHS.get());
-    private final TextField completingYears = new TextField(COMPLETING_YEARS.get());
+//    private final TextField nameField = new TextField(PROJECT_NAME.get());
+//    private final TextField completingDays = new TextField(COMPLETING_DAYS.get());
+//    private final TextField completingWeeks = new TextField(COMPLETING_WEEKS.get());
+//    private final TextField completingMonths = new TextField(COMPLETING_MONTHS.get());
+//    private final TextField completingYears = new TextField(COMPLETING_YEARS.get());
+    private final TextField nameField = new TextField("Project 1");
+    private final TextField completingDays = new TextField("10");
+    private final TextField completingWeeks = new TextField("10");
+    private final TextField completingMonths = new TextField("10");
+    private final TextField completingYears = new TextField("10");
     private final ToggleGroup projectTypeGroup = new ToggleGroup();
     private final RadioButton personalRadio = new RadioButton("Personal");
     private final RadioButton organizationalRadio = new RadioButton("Organizational");
@@ -55,7 +60,8 @@ public class ProjectDialog extends Entity<Project> {
     private final ListView<Project> parentProjects = new ListView<>();
     private final ListView<MeasuredGoal> measuredGoals = new ListView<>();
     private final ObservableList<MeasuredGoal> observableMeasuredGoals = FXCollections.observableArrayList();
-    private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
+//    private final TextField descriptionField = new TextField(PROJECT_DESCRIPTION.get());
+    private final TextField descriptionField = new TextField("Details detailed detailing ");
     private final CheckBox isFavorite = new CheckBox();
     private final Button buttonAddMeasuredGoal = new Button("Add Measured Goal");
     private final Button buttonDeleteMeasuredGoal = new Button("Delete Selected Goals");
@@ -78,7 +84,7 @@ public class ProjectDialog extends Entity<Project> {
     }
 
     @Override
-    protected Project validateAndCreate() throws ValidationException {
+    protected void validateAndCreate() throws ValidationException {
         String projectName = nameField.getText().trim();
         if (projectName.isEmpty()) throw new ValidationException("Project name cannot be empty.");
 
@@ -106,11 +112,9 @@ public class ProjectDialog extends Entity<Project> {
                 List.of(),
                 getParentUUIDSFromList()
         );
-
         Project project = new Project(UUID.randomUUID());
         project.setInfo(projectInfo);
         setResult(project);
-        return project;
     }
 
     @Override
@@ -146,7 +150,7 @@ public class ProjectDialog extends Entity<Project> {
     @Override
     protected void logObjectStructure() {
         LOGGER.info("=== Project Structure ===");
-        this.getResult(Project.class).logEntity();
+        this.getResult().logEntity();
         LOGGER.info("=========================");
     }
 
@@ -222,7 +226,7 @@ public class ProjectDialog extends Entity<Project> {
         MeasuredGoalDialog dialog = MeasuredGoalDialog.getInstance(mainUser);
         dialog.show();
         dialog.setOnHidden(e -> {
-            MeasuredGoal result = dialog.getResult(MeasuredGoal.class);
+            MeasuredGoal result = dialog.getResult();
             if (result != null) {
                 observableMeasuredGoals.add(result);
                 dialog.cleanup();
@@ -234,9 +238,7 @@ public class ProjectDialog extends Entity<Project> {
     private ArrayList<UUID> getParentUUIDSFromList() {
         ArrayList<UUID> features = new ArrayList<>();
         List<Project> items = parentProjects.getItems();
-        for (Project item : items) {
-            features.add(item.getUuid());
-        }
+        for (Project item : items) features.add(item.getUuid());
         return features;
     }
 

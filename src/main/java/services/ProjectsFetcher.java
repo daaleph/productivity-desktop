@@ -1,9 +1,8 @@
-package model.projects;
+package services;
 
 import enumerations.Languages;
 
 import home.Entity;
-import home.HomeFetcher;
 import model.Entities;
 import home.MainUser;
 import java.time.ZonedDateTime;
@@ -19,19 +18,19 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import model.projects.CoreProject;
+import model.projects.Enumerations;
+import model.projects.EssentialInfo;
+import model.projects.Project;
 import records.*;
-
-import services.JsonApiClient;
 
 import static data.Abbreviations.getAbbreviation;
 
 public class ProjectsFetcher extends HomeFetcher<ProjectsFetcher.Config> {
     private final String CORE = getAbbreviation("core");
     private final String USER = getAbbreviation("user");
-    private final String EMAIL = getAbbreviation("email");
     private final String PROJECTS = getAbbreviation("projects");
     private final String FAVORITE = getAbbreviation("favorite");
-    private final String ORG = getAbbreviation("organizations");
 
     private static Config config;
     private static volatile ProjectsFetcher instance;

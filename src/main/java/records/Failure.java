@@ -10,11 +10,9 @@ public record Failure(Triplet<String, String, String> triplet) {
     public String reason() {
         return triplet.first();
     }
-
     public String solution() {
         return triplet.second();
     }
-
     public String description() {
         return triplet.third();
     }
@@ -29,6 +27,7 @@ public record Failure(Triplet<String, String, String> triplet) {
             )
         );
     }
+
     public void logEntity() {
         String measuredGoalStructure = String.format(
                 """

@@ -6,7 +6,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import records.Failure;
-import records.MeasuredGoal;
 import records.Triplet;
 
 import java.util.logging.Logger;
@@ -64,7 +63,7 @@ public class FailureDialog extends Entity<Failure> {
     @Override
     protected void logObjectStructure() {
         LOGGER.info("=== Failures ===");
-        this.getResult(Failure.class).logEntity();
+        this.getResult().logEntity();
         LOGGER.info("=========================");
     }
 
@@ -76,14 +75,13 @@ public class FailureDialog extends Entity<Failure> {
     }
 
     @Override
-    protected Failure validateAndCreate() {
+    protected void validateAndCreate() {
         Failure failure = new Failure(new Triplet<>(
                 reasonField.getText().trim(),
                 solutionField.getText().trim(),
                 descriptionField.getText().trim()
         ));
         setResult(failure);
-        return failure;
     }
 
     @Override

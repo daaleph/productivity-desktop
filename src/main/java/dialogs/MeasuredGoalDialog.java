@@ -8,7 +8,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import model.projects.Project;
 import records.Failure;
 import records.MeasuredGoal;
 import records.MeasuredSet;
@@ -35,13 +34,13 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     private final BooleanProperty discreteAdvanceValid = new SimpleBooleanProperty(false);
     private final BooleanProperty failuresValid = new SimpleBooleanProperty(false);
 
-    private final TextField orderField = new TextField();
-    private final TextField itemField = new TextField();
-    private final TextField weightField = new TextField();
-    private final TextField realGoalField = new TextField();
-    private final TextField realAdvanceField = new TextField();
-    private final TextField discreteGoalField = new TextField();
-    private final TextField discreteAdvanceField = new TextField();
+    private final TextField orderField = new TextField("10");
+    private final TextField itemField = new TextField("The first item here is ");
+    private final TextField weightField = new TextField("10");
+    private final TextField realGoalField = new TextField("100");
+    private final TextField realAdvanceField = new TextField("10");
+    private final TextField discreteGoalField = new TextField("100");
+    private final TextField discreteAdvanceField = new TextField("10");
     private final CheckBox finishedCheck = new CheckBox("Finished");
     private final ObservableList<Failure> observableFailures = FXCollections.observableArrayList();
     private final ListView<Failure> failuresList = new ListView<>(observableFailures);
@@ -100,7 +99,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     }
 
     @Override
-    protected MeasuredGoal validateAndCreate() {
+    protected void validateAndCreate() {
         MeasuredGoal goal = new MeasuredGoal(
                 Integer.parseInt(orderField.getText()),
                 itemField.getText(),
@@ -111,7 +110,6 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
                 new ArrayList<>(observableFailures)
         );
         setResult(goal);
-        return goal;
     }
 
     @Override
@@ -129,7 +127,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
     @Override
     protected void logObjectStructure() {
         LOGGER.info("=== Measured Goals ===");
-        this.getResult(MeasuredGoal.class).logEntity();
+        this.getResult().logEntity();
         LOGGER.info("=========================");
     }
 
@@ -164,7 +162,7 @@ public class MeasuredGoalDialog extends Entity<MeasuredGoal> {
         FailureDialog dialog = FailureDialog.getInstance(mainUser);
         dialog.show();
         dialog.setOnHidden(e -> {
-            Failure result = dialog.getResult(Failure.class);
+            Failure result = dialog.getResult();
             if (result != null) {
                 observableFailures.add(result);
                 dialog.cleanup();

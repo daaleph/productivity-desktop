@@ -4,7 +4,7 @@ package records;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.JsonNode;
 import enumerations.Languages;
-import records.secrets.PriorityJson;
+import records.json.Priority;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public record User(
         String completeName,
         String preferredName,
         int age,
-        List<PriorityJson> priorities,
+        List<Priority> priorities,
         String email,
         Languages language
 ) {
@@ -42,10 +42,10 @@ public record User(
         );
     }
 
-    private static List<PriorityJson> parsePriorities(JsonNode node, Languages language) {
+    private static List<Priority> parsePriorities(JsonNode node, Languages language) {
         if (node == null || !node.isArray()) return new ArrayList<>();
         return StreamSupport.stream(node.spliterator(), false)
-                .map(priorityNode -> new PriorityJson(
+                .map(priorityNode -> new Priority(
                                 priorityNode.get("id").asInt(),
                                 priorityNode.get(getAbbreviation("descriptionEn")).asText(),
                                 priorityNode.get(getAbbreviation("descriptionEs")).asText()

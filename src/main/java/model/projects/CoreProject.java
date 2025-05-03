@@ -1,6 +1,8 @@
 package model.projects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import records.*;
+import records.secrets.JsonProps;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -9,7 +11,9 @@ import java.util.UUID;
 public class CoreProject {
     private final UUID uuid;
     private EssentialInfo essential;
+    @JsonProperty(JsonProps.PRIORITIES)
     private List<Priority> priorities;
+    @JsonProperty(JsonProps.MEASURED_GOALS)
     private List<MeasuredGoal> measuredGoals;
     private MeasuredSet<Integer> necessaryTime;
     private List<Tuple<UUID, Triplet<Integer, String, Double>>> underlyingCategories;

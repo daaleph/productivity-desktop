@@ -8,11 +8,11 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.projects.Project;
 import services.ApiException;
 
 import java.util.ArrayList;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class Entity<T> extends Stage {
 
@@ -49,6 +49,24 @@ public abstract class Entity<T> extends Stage {
         childDialogs.clear();
     }
 
+    @SuppressWarnings("unchecked")
+    public ObservableList<Entity<T>> getChildren(Class<T> type) {
+        return childDialogs.stream()
+                .filter(child -> {
+                    try {
+                        return type.isInstance(child.getResult());
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .map(child -> (Entity<T>) child)
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+    }
+
+    public T getResult() {
+        return result;
+    }
+
     private void initializeUI(String title) {
         grid.setVgap(10);
         grid.setHgap(10);
@@ -73,7 +91,6 @@ public abstract class Entity<T> extends Stage {
         submitButton.setOnAction(ae -> {
             try {
                 validateAndCreate();
-                logObjectStructure();
                 close();
             } catch (ValidationException | ApiException e) {
                 showError(e.getMessage());
@@ -99,15 +116,10 @@ public abstract class Entity<T> extends Stage {
         this.result = result;
     }
 
-    public T getResult(Class<T> type) {
-        return type.cast(result);
-    }
-
     protected abstract void cleanup();
     protected abstract void addFormRows();
     protected abstract void setupDynamicBehaviors();
     protected abstract void logObjectStructure();
     protected abstract void createAlphanumericValidations();
-    protected abstract T validateAndCreate() throws ValidationException;
-
+    protected abstract void validateAndCreate() throws ValidationException;
 }

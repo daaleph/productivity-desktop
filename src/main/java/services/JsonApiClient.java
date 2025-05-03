@@ -1,6 +1,7 @@
 // JsonApiClient.java
 package services;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import records.ApiRequest;
@@ -21,16 +22,39 @@ public final class JsonApiClient implements ApiClient {
     private final String EMAIL = getAbbreviation("email");
     private static final String BASE_URL = "http://localhost:4000/api";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
 
     @Override
-    public <T> ApiRequest<T> buildUserApiRequest(Class<T> responseType, String email, String... pathSegments) {
+    public <T> ApiRequest<T> buildUserApiRequest(
+            Class<T> responseType,
+            String email,
+            String... pathSegments
+    ) {
         String path = "/" + String.join("/", pathSegments);
         return new ApiRequest<T>(
                 path,
                 ApiClient.HttpMethod.GET,
                 Map.of(EMAIL, email),
                 null,
+                responseType
+        );
+    }
+
+    @Override
+    public <T> ApiRequest<T> buildWritingRequest(
+            Class<T> responseType,
+            HttpMethod method,
+            String email,
+            Object body,
+            String... pathSegments
+    ) {
+        String path = "/" + String.join("/", pathSegments);
+        return new ApiRequest<T>(
+                path,
+                method,
+                Map.of(EMAIL, email),
+                body,
                 responseType
         );
     }
@@ -62,6 +86,7 @@ public final class JsonApiClient implements ApiClient {
                 HttpResponse<String> response = CLIENT.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 return processResponse(response, request.responseType());
             } catch (Exception e) {
+                System.err.println("Request execution error: " + e.getMessage());
                 throw new ApiException("API request failed", e);
             }
         });
@@ -70,18 +95,21 @@ public final class JsonApiClient implements ApiClient {
     private HttpRequest buildHttpRequest(ApiRequest<?> request) throws JsonProcessingException {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(buildUri(request))
-                .header("Content-Type", "application/json");
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json");
 
-        return switch (request.method()) {
-            case GET -> builder.GET().build();
-            case DELETE -> builder.DELETE().build();
-            default -> {
-                String methodName = request.method().name();
+        switch (request.method()) {
+            case GET: return builder.GET().build();
+            case DELETE: return builder.DELETE().build();
+            case POST:
+            case PUT:
+            case PATCH:
                 HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers
                         .ofString(MAPPER.writeValueAsString(request.body()));
-                yield builder.method(methodName, bodyPublisher).build();
-            }
-        };
+                System.out.println("Request body: " + MAPPER.writeValueAsString(request.body()));
+                return builder.method(request.method().name(), bodyPublisher).build();
+            default: throw new UnsupportedOperationException("Unsupported HTTP method: " + request.method());
+        }
     }
 
     private URI buildUri(ApiRequest<?> request) {
@@ -99,10 +127,15 @@ public final class JsonApiClient implements ApiClient {
             HttpResponse<String> response,
             Class<T> type
     ) throws JsonProcessingException {
-        return new ApiResponse<T>(
-            response.statusCode(),
-            MAPPER.readValue(response.body(), type),
-            response.headers().map()
-        );
+        try {
+            return new ApiResponse<T>(
+                    response.statusCode(),
+                    MAPPER.readValue(response.body(), type),
+                    response.headers().map()
+            );
+        } catch (JsonProcessingException e) {
+            System.err.println("Deserialization error: " + e.getMessage());
+            throw e;
+        }
     }
 }

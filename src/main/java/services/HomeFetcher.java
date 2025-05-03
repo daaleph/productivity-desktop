@@ -1,4 +1,6 @@
-package home;
+package services;
+
+import home.Entity;
 
 public abstract class HomeFetcher<C> {
     protected Entity entity;

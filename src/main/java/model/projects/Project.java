@@ -1,10 +1,14 @@
 package model.projects;
 
+import com.fasterxml.jackson.annotation.*;
 import records.*;
+import records.secrets.JsonProps;
+
 import java.util.List;
 import java.util.UUID;
 
 public class Project extends CoreProject {
+    @JsonProperty(JsonProps.PARENT_PROJECTS)
     private List<UUID> parentProjects;
 
     public Project(UUID uuid) {

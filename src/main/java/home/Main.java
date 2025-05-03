@@ -12,6 +12,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
         MainUser mainUser = MainUser.getInstance("nicalcoca@gmail.com");
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/home.fxml"));
@@ -35,6 +36,11 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.setMaximized(true);
         primaryStage.show();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
     }
 
     public static void main(String[] args) {

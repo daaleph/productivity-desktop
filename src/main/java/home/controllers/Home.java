@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.concurrent.CompletableFuture;
 
 import home.MainUser;
 
@@ -28,6 +29,8 @@ import model.branchs.UserBranch;
 import model.projects.CoreProject;
 import model.organizations.UserOrganization;
 
+import records.MeasuredGoal;
+import services.ProjectsManager;
 import records.Priority;
 
 public class Home {
@@ -306,7 +309,7 @@ public class Home {
     private Label createBranchLabel(Branch branch) {
         Label label = new Label(branch.getName());
         label.getStyleClass().add("branch-label");
-        Path icon = iconizedItem();
+        Path icon = createIconizedItem();
         icon.setStroke(Color.web("#6c757d"));
         icon.setStrokeWidth(1.5);
         icon.setStrokeLineCap(StrokeLineCap.ROUND);
@@ -325,7 +328,7 @@ public class Home {
     private Label createProjectLabel(Project project) {
         Label label = new Label(project.getName());
         label.getStyleClass().add("project-label");
-        Path icon = iconizedItem();
+        Path icon = createIconizedItem();
         icon.setStroke(Color.web("#6c757d"));
         icon.setStrokeWidth(1.5);
         icon.setStrokeLineCap(StrokeLineCap.ROUND);
@@ -341,7 +344,7 @@ public class Home {
         return label;
     }
 
-    private Path iconizedItem() {
+    private Path createIconizedItem() {
         return new Path(
                 new MoveTo(4, 0),
                 new LineTo(4, 8),
@@ -362,6 +365,24 @@ public class Home {
         }
         ProjectDialog projectDialog = ProjectDialog.getInstance(this.mainUser);
         projectDialog.showAndWait();
+        Project project = projectDialog.getResult();
+//        List<MeasuredGoal> measuredGoals = project.getMeasuredGoals();
+        if (project != null) {
+            ProjectsManager projectsManager = new ProjectsManager(mainUser);
+            projectsManager.createProject(project).thenAccept(createdProject -> {
+                if (createdProject != null) {
+                    System.out.println("Project created: " + createdProject);
+                    setUserProjects(); // Update UI with new project list
+                } else {
+                    System.err.println("Failed to create project: Project is null");
+                }
+            }).exceptionally(ex -> {
+                System.err.println("Error creating project: " + ex.getMessage());
+                return null;
+            });
+        }
+//        mainUser.fetchInfo();
+//        mainUser.fetchAsyncInfo();
     }
 
     public Map<Integer, UserOrganization> getUserOrganizations() {

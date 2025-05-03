@@ -17,9 +17,10 @@ import model.organizations.UserOrganization;
 import model.projects.*;
 
 import records.*;
-import records.secrets.*;
+import records.json.Priority;
 import services.ApiException;
 import services.JsonApiClient;
+import services.ProjectsFetcher;
 
 import static data.Abbreviations.getAbbreviation;
 
@@ -38,7 +39,7 @@ public class MainUser {
     protected Languages language;
     protected String completeName, preferredName, email;
     protected Map<Integer, UserBranch> branches = new HashMap<>();
-    protected Map<Integer, Priority> priorities = new HashMap<>();
+    protected Map<Integer, records.Priority> priorities = new HashMap<>();
     protected Map<UUID, CoreProject> coreProjects = new HashMap<>();
     protected Map<Integer, UserOrganization> organizations = new HashMap<>();
     protected Map<UUID, Project> favoriteProjects, projects = new HashMap<>();
@@ -75,13 +76,13 @@ public class MainUser {
         return instance;
     }
 
-    private void fetchInfo() {
+    public void fetchInfo() {
         fetchPersonalInfo();
         fetchOrganizations();
         fetchBranches();
     }
 
-    private void fetchAsyncInfo() {
+    public void fetchAsyncInfo() {
         fetchProjects();
         fetchCoreProjects();
         fetchFavoriteProjects();
@@ -112,8 +113,8 @@ public class MainUser {
                     .priorities()
                     .stream()
                     .collect(Collectors.toMap(
-                            PriorityJson::id,
-                            p -> new Priority(
+                            Priority::id,
+                            p -> new records.Priority(
                                     new Triplet<>(p.id(), p.descriptionEn(), p.descriptionEs()),
                                     this.language
                             )
@@ -203,7 +204,7 @@ public class MainUser {
     private Project parseProject(JsonNode projectNode, String projectUuidStr) {
         UUID projectUuid = UUID.fromString(projectUuidStr);
 
-        List<Priority> priorities = parsePriorities(projectNode.get("priorities"));
+        List<records.Priority> priorities = parsePriorities(projectNode.get("priorities"));
         List<MeasuredGoal> measuredGoals = parseMeasuredGoals(projectNode.get("measuredGoals"));
         MeasuredSet<Integer> completion = parseMeasuredSet(projectNode.get("completion"));
         List<UUID> parentProjects = parseParentProjects(projectNode.get("parentProjects"));
@@ -232,17 +233,17 @@ public class MainUser {
         return project;
     }
 
-    private List<Priority> parsePriorities(JsonNode prioritiesNode) {
+    private List<records.Priority> parsePriorities(JsonNode prioritiesNode) {
         boolean isConvertibleToIntegerList = this.isConvertibleToIntegerList(prioritiesNode);
-        List<Priority> priorities = new ArrayList<>();
+        List<records.Priority> priorities = new ArrayList<>();
         if (prioritiesNode.isArray()) {
             if (isConvertibleToIntegerList) {
                 prioritiesNode.forEach(priorityNode -> {
-                    priorities.add(Priority.fromInt(priorityNode, this.language));
+                    priorities.add(records.Priority.fromInt(priorityNode, this.language));
                 });
             } else {
                 prioritiesNode.forEach(priorityNode -> {
-                    priorities.add(Priority.fromJson(priorityNode, this.language));
+                    priorities.add(records.Priority.fromJson(priorityNode, this.language));
                 });
             }
         }
@@ -311,18 +312,14 @@ public class MainUser {
     private List<UUID> parseParentProjects(JsonNode parentProjectsNode) {
         if (parentProjectsNode == null || !parentProjectsNode.isArray()) return null;
         List<UUID> parentProjects = new ArrayList<>();
-        parentProjectsNode.forEach(uuidNode -> {
-            parentProjects.add(UUID.fromString(uuidNode.asText()));
-        });
+        parentProjectsNode.forEach(uuidNode -> parentProjects.add(UUID.fromString(uuidNode.asText())));
         return parentProjects;
     }
 
     private List<Failure> parseFailures(JsonNode failuresNode) {
         List<Failure> failures = new ArrayList<>();
         if (failuresNode != null && failuresNode.isArray()) {
-            failuresNode.forEach(failureNode -> {
-                failures.add(Failure.fromJson(failureNode));
-            });
+            failuresNode.forEach(failureNode -> failures.add(Failure.fromJson(failureNode)));
         }
         return failures;
     }
@@ -355,6 +352,15 @@ public class MainUser {
         );
     }
 
+    public void updateProject(Project updated) {
+        this.projects.put(updated.getUuid(), updated);
+        if (updated.isFavorite()) {
+            this.favoriteProjects.put(updated.getUuid(), updated);
+        } else {
+            this.favoriteProjects.remove(updated.getUuid());
+        }
+    }
+
     @Override
     public String toString() {
         return String.format("Name: %s, Email: %s", completeName, email);
@@ -376,11 +382,11 @@ public class MainUser {
         return email;
     }
 
-    public Priority getPriority(Integer index) {
+    public records.Priority getPriority(Integer index) {
         return priorities.get(index);
     }
 
-    public Map<Integer, Priority> getPriorities() {
+    public Map<Integer, records.Priority> getPriorities() {
         return priorities;
     }
 
